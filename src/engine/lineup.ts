@@ -1,4 +1,4 @@
-import { FORMATIONS, type GameState, type Player, type Position, type Team } from './types'
+import { FORMATIONS, type GameState, type Player, type Team } from './types'
 
 export function autoPick(team: Team, players: Record<number, Player>): number[] {
   const squad = team.playerIds.map(id => players[id])
