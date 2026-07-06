@@ -26,3 +26,7 @@ tr.starting { background: rgba(46, 139, 87, 0.25) !important; }
 
 .round-nav { display: flex; gap: 1rem; align-items: center; margin-bottom: 0.5rem; }
 td.home { text-align: right; }
+
+.minute { font-size: 1.5rem; font-weight: bold; margin: 0.25rem 0; }
+.ticker { list-style: none; padding: 0; max-height: 60vh; overflow-y: auto; }
+.ticker li { padding: 0.25rem 0; border-bottom: 1px solid rgba(128, 128, 128, 0.2); }
