@@ -128,6 +128,31 @@ describe('simulateMatch', () => {
     expect(light).toBeGreaterThan(0) // injuries do happen even on light training
   })
 
+  it('does not crash when a red card empties the roster before the injury check', () => {
+    const players: Record<number, Player> = {}
+    const solo = (id: number): Team => {
+      const pid = id * 100
+      players[pid] = {
+        id: pid, name: `P${pid}`, age: 25, position: 'FW', level: 60,
+        form: 0, fitness: 100, injuredForRounds: 0, suspendedForRounds: 0, yellowCards: 0,
+      }
+      return { id, name: `T${id}`, playerIds: [pid], formation: '4-4-2', lineup: [pid], tactic: 'normal', trainingStyle: 'normal' }
+    }
+    const a = solo(1)
+    const b = solo(2)
+    // Rand-call order per side-minute: chance → [shooter + conversion] → yellow →
+    // [culprit] (or straight-red → [culprit]) → injury → [victim].
+    const script = [
+      0.99, 0.0, 0.0, 0.99, // min 1 home: skip chance, first yellow for P100, skip injury
+      0.99, 0.99, 0.99, 0.99, // min 1 away: skip chance, yellow, straight red, injury
+      0.99, 0.0, 0.0, 0.0, // min 2 home: second yellow → red empties roster, then injury check fires
+    ]
+    let i = 0
+    const rand = () => (i < script.length ? script[i++] : 0.5)
+    const r = simulateMatch(a, b, players, rand)
+    expect(r.events.some(e => e.type === 'red' && e.playerId === 100 && e.minute === 2)).toBe(true)
+  })
+
   it('attacking tactic produces more total goals than defensive', () => {
     const total = (tactic: 'attacking' | 'defensive') => {
       const players: Record<number, Player> = {}

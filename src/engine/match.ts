@@ -126,7 +126,7 @@ export function simulateMatch(
         events.push({ minute, type: 'red', teamId: side.team.id, playerId: culprit.id })
       }
 
-      if (rand() < INJURY_P * INJURY_STYLE_MULT[side.team.trainingStyle]) {
+      if (side.active.length > 0 && rand() < INJURY_P * INJURY_STYLE_MULT[side.team.trainingStyle]) {
         const victim = pickUniform(side.active, rand)
         side.active = side.active.filter(p => p.id !== victim.id)
         const sub =
