@@ -7,10 +7,13 @@ function makeTeam(id: number, level: number, players: Record<number, Player>): T
   const positions: Position[] = ['GK', 'DF', 'DF', 'DF', 'DF', 'MF', 'MF', 'MF', 'MF', 'FW', 'FW']
   const lineup = positions.map((position, i) => {
     const pid = id * 100 + i
-    players[pid] = { id: pid, name: `P${pid}`, age: 25, position, level }
+    players[pid] = {
+      id: pid, name: `P${pid}`, age: 25, position, level,
+      form: 0, fitness: 100, injuredForRounds: 0, suspendedForRounds: 0, yellowCards: 0,
+    }
     return pid
   })
-  return { id, name: `T${id}`, playerIds: [...lineup], formation: '4-4-2', lineup }
+  return { id, name: `T${id}`, playerIds: [...lineup], formation: '4-4-2', lineup, tactic: 'normal', trainingStyle: 'normal' }
 }
 
 describe('teamStrength', () => {

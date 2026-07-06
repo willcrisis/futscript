@@ -13,10 +13,16 @@ function makeSquad(): { team: Team; players: Record<number, Player> } {
   const players: Record<number, Player> = {}
   const playerIds = positions.map((position, i) => {
     const id = i + 1
-    players[id] = { id, name: `P${id}`, age: 25, position, level: 90 - i }
+    players[id] = {
+      id, name: `P${id}`, age: 25, position, level: 90 - i,
+      form: 0, fitness: 100, injuredForRounds: 0, suspendedForRounds: 0, yellowCards: 0,
+    }
     return id
   })
-  const team: Team = { id: 0, name: 'Test FC', playerIds, formation: '4-4-2', lineup: [] }
+  const team: Team = {
+    id: 0, name: 'Test FC', playerIds, formation: '4-4-2', lineup: [],
+    tactic: 'normal', trainingStyle: 'normal',
+  }
   return { team, players }
 }
 

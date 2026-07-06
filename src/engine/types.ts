@@ -6,6 +6,22 @@ export interface Player {
   age: number
   position: Position
   level: number // 1-99
+  form: number // -3..+3, random walk each round
+  fitness: number // 0-100; low fitness = weaker play, higher injury risk
+  injuredForRounds: number // 0 = fit; N = misses the next N rounds
+  suspendedForRounds: number // 0 = available
+  yellowCards: number // this season; 3 accumulated = one-round ban
+}
+
+export type Tactic = 'defensive' | 'normal' | 'attacking'
+export type TrainingStyle = 'light' | 'normal' | 'intensive' | 'youth'
+
+export interface MatchEvent {
+  minute: number
+  type: 'goal' | 'chance' | 'yellow' | 'red' | 'injury'
+  teamId: number
+  playerId: number
+  playerInId?: number // injury replacement, if a substitute came on
 }
 
 export type FormationName = '4-4-2' | '4-3-3' | '3-5-2' | '5-3-2' | '5-4-1'
@@ -24,6 +40,8 @@ export interface Team {
   playerIds: number[]
   formation: FormationName
   lineup: number[] // 11 player ids, always valid for the formation
+  tactic: Tactic
+  trainingStyle: TrainingStyle
 }
 
 export interface Fixture {
@@ -32,10 +50,11 @@ export interface Fixture {
   awayId: number
   homeGoals: number | null // null = not played yet
   awayGoals: number | null
+  events?: MatchEvent[]
 }
 
 export interface GameState {
-  version: 1
+  version: 2
   seed: number
   rngState: number // seeds the RNG for the next advanceRound
   season: number

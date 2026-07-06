@@ -5,9 +5,10 @@ import type { Fixture, GameState, Team } from './types'
 function makeState(fixtures: Fixture[]): GameState {
   const teams: Team[] = [0, 1, 2].map(id => ({
     id, name: `T${id}`, playerIds: [], formation: '4-4-2', lineup: [],
+    tactic: 'normal', trainingStyle: 'normal',
   }))
   return {
-    version: 1, seed: 1, rngState: 1, season: 1, round: 1,
+    version: 2, seed: 1, rngState: 1, season: 1, round: 1,
     userTeamId: 0, players: {}, teams, fixtures,
   }
 }

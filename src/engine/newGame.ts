@@ -27,17 +27,22 @@ export function newGame(seed: number): GameState {
         age: randInt(rand, 17, 34),
         position,
         level: randInt(rand, 30, 70),
+        form: 0,
+        fitness: 100,
+        injuredForRounds: 0,
+        suspendedForRounds: 0,
+        yellowCards: 0,
       }
       players[player.id] = player
       playerIds.push(player.id)
     }
-    teams.push({ id: t, name: TEAM_NAMES[t], playerIds, formation: '4-4-2', lineup: [] })
+    teams.push({ id: t, name: TEAM_NAMES[t], playerIds, formation: '4-4-2', lineup: [], tactic: 'normal', trainingStyle: 'normal' })
   }
 
   for (const team of teams) team.lineup = autoPick(team, players)
 
   return {
-    version: 1,
+    version: 2,
     seed,
     rngState: randInt(rand, 1, 2 ** 31 - 1),
     season: 1,
