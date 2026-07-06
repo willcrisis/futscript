@@ -1,23 +1,72 @@
 import { generateFixtures } from './fixtures'
+import { autoPick, patchLineup } from './lineup'
 import { simulateMatch } from './match'
 import { mulberry32, randInt } from './rng'
-import type { GameState } from './types'
+import { ageSquads, applyWeeklyUpdates } from './training'
+import type { GameState, MatchEvent, Player } from './types'
 
 export function totalRounds(state: GameState): number {
   return (state.teams.length - 1) * 2
 }
 
+export function applyMatchConsequences(
+  players: Record<number, Player>,
+  events: MatchEvent[],
+  rand: () => number,
+): Record<number, Player> {
+  const next = { ...players }
+  for (const e of events) {
+    const p = next[e.playerId]
+    if (e.type === 'yellow') {
+      const yellows = p.yellowCards + 1
+      next[p.id] = yellows >= 3
+        ? { ...p, yellowCards: 0, suspendedForRounds: 1 }
+        : { ...p, yellowCards: yellows }
+    } else if (e.type === 'red') {
+      next[p.id] = { ...p, suspendedForRounds: randInt(rand, 1, 2) }
+    } else if (e.type === 'injury') {
+      const rounds = randInt(rand, 1, 6)
+      const levelLoss = rounds >= 4 ? randInt(rand, 1, 2) : 0
+      next[p.id] = { ...p, injuredForRounds: rounds, level: Math.max(1, p.level - levelLoss) }
+    }
+  }
+  return next
+}
+
 export function advanceRound(state: GameState): GameState {
   if (state.round > totalRounds(state)) return state
   const rand = mulberry32(state.rngState)
+
+  // fresh lineups: AI re-picks its best XI, the user's picks are kept but repaired
+  const teams = state.teams.map(t => ({
+    ...t,
+    lineup: t.id === state.userTeamId ? patchLineup(t, state.players) : autoPick(t, state.players),
+  }))
+  const byId = new Map(teams.map(t => [t.id, t]))
+
+  const roundEvents: MatchEvent[] = []
   const fixtures = state.fixtures.map(f => {
     if (f.round !== state.round) return f
-    const home = state.teams.find(t => t.id === f.homeId)!
-    const away = state.teams.find(t => t.id === f.awayId)!
-    const result = simulateMatch(home, away, state.players, rand)
-    return { ...f, homeGoals: result.homeGoals, awayGoals: result.awayGoals }
+    const result = simulateMatch(byId.get(f.homeId)!, byId.get(f.awayId)!, state.players, rand)
+    roundEvents.push(...result.events)
+    return { ...f, homeGoals: result.homeGoals, awayGoals: result.awayGoals, events: result.events }
   })
-  return { ...state, fixtures, round: state.round + 1, rngState: randInt(rand, 1, 2 ** 31 - 1) }
+
+  // existing bans/injuries tick down BEFORE this round's knocks land,
+  // so a fresh 3-round injury really costs 3 future rounds
+  let players: Record<number, Player> = Object.fromEntries(
+    Object.values(state.players).map(p => [p.id, {
+      ...p,
+      injuredForRounds: Math.max(0, p.injuredForRounds - 1),
+      suspendedForRounds: Math.max(0, p.suspendedForRounds - 1),
+    }]),
+  )
+  players = applyMatchConsequences(players, roundEvents, rand)
+
+  const starters = new Set(teams.flatMap(t => t.lineup))
+  players = applyWeeklyUpdates(players, teams, starters, rand)
+
+  return { ...state, teams, players, fixtures, round: state.round + 1, rngState: randInt(rand, 1, 2 ** 31 - 1) }
 }
 
 export function newSeason(state: GameState): GameState {
@@ -26,6 +75,7 @@ export function newSeason(state: GameState): GameState {
     ...state,
     season: state.season + 1,
     round: 1,
+    players: ageSquads(state.players, rand),
     fixtures: generateFixtures(state.teams.map(t => t.id), rand),
     rngState: randInt(rand, 1, 2 ** 31 - 1),
   }
