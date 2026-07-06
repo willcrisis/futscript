@@ -63,6 +63,13 @@ describe('swapIn', () => {
 })
 
 describe('availability', () => {
+  it('isAvailable is true only when neither injured nor suspended', () => {
+    const { players } = makeSquad()
+    expect(isAvailable(players[1])).toBe(true)
+    expect(isAvailable({ ...players[1], injuredForRounds: 2 })).toBe(false)
+    expect(isAvailable({ ...players[1], suspendedForRounds: 1 })).toBe(false)
+  })
+
   it('autoPick skips injured and suspended players', () => {
     const { team, players } = makeSquad()
     players[1] = { ...players[1], injuredForRounds: 3 } // best GK out
