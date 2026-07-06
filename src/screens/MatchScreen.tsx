@@ -23,10 +23,12 @@ interface Props {
 
 export default function MatchScreen({ fixture, state, onClose }: Props) {
   const [minute, setMinute] = useState(0)
+  const done = minute >= 90
   useEffect(() => {
+    if (done) return
     const id = setInterval(() => setMinute(m => (m >= 90 ? m : m + 1)), 65)
     return () => clearInterval(id)
-  }, [])
+  }, [done])
 
   const name = (id: number) => state.teams.find(t => t.id === id)!.name
   const events = (fixture.events ?? []).filter(e => e.minute <= minute)
