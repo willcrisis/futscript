@@ -1,8 +1,31 @@
 import type { Dispatch, SetStateAction } from 'react'
-import { autoPick, swapIn, updateTeam } from '../engine/lineup'
-import { FORMATIONS, type FormationName, type GameState, type Position } from '../engine/types'
+import { autoPick, isAvailable, swapIn, updateTeam } from '../engine/lineup'
+import {
+  FORMATIONS,
+  type FormationName,
+  type GameState,
+  type Player,
+  type Position,
+  type Tactic,
+  type TrainingStyle,
+} from '../engine/types'
 
 const ORDER: Position[] = ['GK', 'DF', 'MF', 'FW']
+const TACTICS: Tactic[] = ['defensive', 'normal', 'attacking']
+const TRAINING_STYLES: TrainingStyle[] = ['light', 'normal', 'intensive', 'youth']
+
+function status(p: Player): string {
+  if (p.injuredForRounds > 0) return `🚑 ${p.injuredForRounds}`
+  if (p.suspendedForRounds > 0) return `⛔ ${p.suspendedForRounds}`
+  if (p.yellowCards > 0) return '🟨'.repeat(p.yellowCards)
+  return ''
+}
+
+function formArrow(form: number): string {
+  if (form > 0) return `▲${form}`
+  if (form < 0) return `▼${-form}`
+  return '–'
+}
 
 interface Props {
   state: GameState
@@ -36,13 +59,37 @@ export default function SquadScreen({ state, setState }: Props) {
             {Object.keys(FORMATIONS).map(f => <option key={f}>{f}</option>)}
           </select>
         </label>{' '}
+        <label>
+          Tactic:{' '}
+          <select
+            value={team.tactic}
+            onChange={e => {
+              const tactic = e.target.value as Tactic
+              withUserTeam((s, t) => updateTeam(s, t.id, { tactic }))
+            }}
+          >
+            {TACTICS.map(t => <option key={t}>{t}</option>)}
+          </select>
+        </label>{' '}
+        <label>
+          Training:{' '}
+          <select
+            value={team.trainingStyle}
+            onChange={e => {
+              const trainingStyle = e.target.value as TrainingStyle
+              withUserTeam((s, t) => updateTeam(s, t.id, { trainingStyle }))
+            }}
+          >
+            {TRAINING_STYLES.map(t => <option key={t}>{t}</option>)}
+          </select>
+        </label>{' '}
         <button onClick={() => withUserTeam((s, t) => updateTeam(s, t.id, { lineup: autoPick(t, s.players) }))}>
           Auto-pick
         </button>
       </div>
       <table>
         <thead>
-          <tr><th>Pos</th><th>Name</th><th>Age</th><th>Level</th><th></th></tr>
+          <tr><th>Pos</th><th>Name</th><th>Age</th><th>Level</th><th>Form</th><th>Fit</th><th>Status</th><th></th></tr>
         </thead>
         <tbody>
           {squad.map(p => {
@@ -53,10 +100,16 @@ export default function SquadScreen({ state, setState }: Props) {
                 <td>{p.name}</td>
                 <td>{p.age}</td>
                 <td>{p.level}</td>
+                <td>{formArrow(p.form)}</td>
+                <td>{p.fitness}%</td>
+                <td>{status(p)}</td>
                 <td>
                   {starting
                     ? 'Starting'
-                    : <button onClick={() => withUserTeam((s, t) => updateTeam(s, t.id, { lineup: swapIn(t, s.players, p.id) }))}>
+                    : <button
+                        disabled={!isAvailable(p)}
+                        onClick={() => withUserTeam((s, t) => updateTeam(s, t.id, { lineup: swapIn(t, s.players, p.id) }))}
+                      >
                         Start
                       </button>}
                 </td>

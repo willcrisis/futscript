@@ -16,6 +16,8 @@ nav { display: flex; gap: 0.5rem; margin: 1rem 0; }
 nav button { text-transform: capitalize; }
 nav button.active { font-weight: bold; text-decoration: underline; }
 
+.controls { display: flex; gap: 1rem; margin-bottom: 1rem; flex-wrap: wrap; align-items: center; }
+
 table { border-collapse: collapse; width: 100%; }
 th, td { padding: 0.3rem 0.5rem; text-align: left; }
 tbody tr:nth-child(odd) { background: rgba(128, 128, 128, 0.1); }
