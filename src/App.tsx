@@ -5,6 +5,7 @@ import { advanceRound, newSeason, totalRounds } from './engine/season'
 import { standings } from './engine/standings'
 import type { GameState } from './engine/types'
 import FixturesScreen from './screens/FixturesScreen'
+import SquadScreen from './screens/SquadScreen'
 import TableScreen from './screens/TableScreen'
 
 type Screen = 'squad' | 'table' | 'fixtures'
@@ -38,7 +39,7 @@ export default function App() {
           </button>
         ))}
       </nav>
-      {screen === 'squad' && <p>Squad screen coming next.</p>}
+      {screen === 'squad' && <SquadScreen state={state} setState={setState} />}
       {screen === 'table' && <TableScreen state={state} />}
       {screen === 'fixtures' && <FixturesScreen state={state} />}
     </div>
