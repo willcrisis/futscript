@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { autoPick, swapIn } from './lineup'
+import { autoPick, isAvailable, patchLineup, swapIn } from './lineup'
 import { FORMATIONS, type Player, type Position, type Team } from './types'
 
 // 18-player squad: 2 GK, 6 DF, 6 MF, 4 FW — levels descend within each group
@@ -59,5 +59,49 @@ describe('swapIn', () => {
     expect(next).toContain(2)
     expect(next).not.toContain(1)
     expect(next).toHaveLength(11)
+  })
+})
+
+describe('availability', () => {
+  it('autoPick skips injured and suspended players', () => {
+    const { team, players } = makeSquad()
+    players[1] = { ...players[1], injuredForRounds: 3 } // best GK out
+    players[3] = { ...players[3], suspendedForRounds: 1 } // best DF out
+    const lineup = autoPick(team, players)
+    expect(lineup).toHaveLength(11)
+    expect(lineup).not.toContain(1)
+    expect(lineup).not.toContain(3)
+    expect(lineup).toContain(2) // backup GK steps in
+  })
+
+  it('autoPick back-fills from other positions when a group runs dry', () => {
+    const { team, players } = makeSquad()
+    players[1] = { ...players[1], injuredForRounds: 2 }
+    players[2] = { ...players[2], injuredForRounds: 2 } // both GKs out
+    const lineup = autoPick(team, players)
+    expect(lineup).toHaveLength(11) // still fields 11, someone deputizes
+    expect(lineup).not.toContain(1)
+    expect(lineup).not.toContain(2)
+  })
+
+  it('patchLineup keeps available starters and replaces unavailable ones', () => {
+    const { team, players } = makeSquad()
+    const original = autoPick(team, players)
+    const t = { ...team, lineup: original }
+    const starter = original.find(id => players[id].position === 'MF')!
+    players[starter] = { ...players[starter], suspendedForRounds: 1 }
+    const patched = patchLineup(t, players)
+    expect(patched).toHaveLength(11)
+    expect(patched).not.toContain(starter)
+    // every other starter kept
+    for (const id of original) if (id !== starter) expect(patched).toContain(id)
+    // replacement is the best benched MF (all MFs available: ids 9-14, 9-12 start in 4-4-2 → 13 is next)
+    expect(patched).toContain(13)
+  })
+
+  it('patchLineup returns the lineup unchanged when everyone is available', () => {
+    const { team, players } = makeSquad()
+    const original = autoPick(team, players)
+    expect(patchLineup({ ...team, lineup: original }, players)).toEqual(original)
   })
 })
