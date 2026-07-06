@@ -31,4 +31,16 @@ describe('save/load', () => {
     storage.setItem('futscript-save', JSON.stringify({ version: 999 }))
     expect(load(storage)).toBeNull()
   })
+
+  it('returns null on corrupted JSON', () => {
+    const storage = fakeStorage()
+    storage.setItem('futscript-save', '{not json')
+    expect(load(storage)).toBeNull()
+  })
+
+  it('returns null on literal null', () => {
+    const storage = fakeStorage()
+    storage.setItem('futscript-save', 'null')
+    expect(load(storage)).toBeNull()
+  })
 })
