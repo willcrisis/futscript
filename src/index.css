@@ -23,6 +23,8 @@ th, td { padding: 0.3rem 0.5rem; text-align: left; }
 tbody tr:nth-child(odd) { background: rgba(128, 128, 128, 0.1); }
 tr.user { outline: 2px solid seagreen; }
 tr.starting { background: rgba(46, 139, 87, 0.25) !important; }
+tr.selected { outline: 2px solid steelblue; }
+.report { margin-top: 1rem; }
 
 .round-nav { display: flex; gap: 1rem; align-items: center; margin-bottom: 0.5rem; }
 td.home { text-align: right; }
