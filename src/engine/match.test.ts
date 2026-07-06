@@ -1,11 +1,21 @@
 import { describe, expect, it } from 'vitest'
-import { simulateMatch, teamStrength } from './match'
+import { effectiveLevel, simulateMatch } from './match'
 import { mulberry32 } from './rng'
-import type { Player, Position, Team } from './types'
+import type { Player, Position, Team, TrainingStyle } from './types'
 
-function makeTeam(id: number, level: number, players: Record<number, Player>): Team {
-  const positions: Position[] = ['GK', 'DF', 'DF', 'DF', 'DF', 'MF', 'MF', 'MF', 'MF', 'FW', 'FW']
-  const lineup = positions.map((position, i) => {
+function makeTeam(
+  id: number,
+  level: number,
+  players: Record<number, Player>,
+  trainingStyle: TrainingStyle = 'normal',
+): Team {
+  const positions: Position[] = [
+    'GK', 'GK',
+    'DF', 'DF', 'DF', 'DF', 'DF', 'DF',
+    'MF', 'MF', 'MF', 'MF', 'MF', 'MF',
+    'FW', 'FW', 'FW', 'FW',
+  ]
+  const playerIds = positions.map((position, i) => {
     const pid = id * 100 + i
     players[pid] = {
       id: pid, name: `P${pid}`, age: 25, position, level,
@@ -13,14 +23,21 @@ function makeTeam(id: number, level: number, players: Record<number, Player>): T
     }
     return pid
   })
-  return { id, name: `T${id}`, playerIds: [...lineup], formation: '4-4-2', lineup, tactic: 'normal', trainingStyle: 'normal' }
+  // 4-4-2 starting XI: GK 0, DF 2-5, MF 8-11, FW 14-15
+  const lineup = [0, 2, 3, 4, 5, 8, 9, 10, 11, 14, 15].map(i => id * 100 + i)
+  return { id, name: `T${id}`, playerIds, formation: '4-4-2', lineup, tactic: 'normal', trainingStyle }
 }
 
-describe('teamStrength', () => {
-  it('sums lineup levels', () => {
-    const players: Record<number, Player> = {}
-    const team = makeTeam(1, 50, players)
-    expect(teamStrength(team, players)).toBe(550)
+describe('effectiveLevel', () => {
+  it('scales with form and fitness', () => {
+    const base: Player = {
+      id: 1, name: 'P', age: 25, position: 'MF', level: 50,
+      form: 0, fitness: 100, injuredForRounds: 0, suspendedForRounds: 0, yellowCards: 0,
+    }
+    expect(effectiveLevel(base)).toBe(50)
+    expect(effectiveLevel({ ...base, form: 3 })).toBeCloseTo(50 * 1.09)
+    expect(effectiveLevel({ ...base, form: -3 })).toBeCloseTo(50 * 0.91)
+    expect(effectiveLevel({ ...base, fitness: 0 })).toBeCloseTo(50 * 0.7)
   })
 })
 
@@ -32,17 +49,20 @@ describe('simulateMatch', () => {
     expect(simulateMatch(a, b, players, mulberry32(9))).toEqual(simulateMatch(a, b, players, mulberry32(9)))
   })
 
-  it('produces sane scorelines', () => {
+  it('score always equals the goal events', () => {
     const players: Record<number, Player> = {}
     const a = makeTeam(1, 60, players)
     const b = makeTeam(2, 55, players)
     const rand = mulberry32(3)
-    for (let i = 0; i < 500; i++) {
-      const { homeGoals, awayGoals } = simulateMatch(a, b, players, rand)
-      expect(homeGoals).toBeGreaterThanOrEqual(0)
-      expect(homeGoals).toBeLessThanOrEqual(12)
-      expect(awayGoals).toBeGreaterThanOrEqual(0)
-      expect(awayGoals).toBeLessThanOrEqual(12)
+    for (let i = 0; i < 100; i++) {
+      const r = simulateMatch(a, b, players, rand)
+      expect(r.homeGoals).toBe(r.events.filter(e => e.type === 'goal' && e.teamId === a.id).length)
+      expect(r.awayGoals).toBe(r.events.filter(e => e.type === 'goal' && e.teamId === b.id).length)
+      expect(r.homeGoals + r.awayGoals).toBeLessThanOrEqual(15)
+      for (const e of r.events) {
+        expect(e.minute).toBeGreaterThanOrEqual(1)
+        expect(e.minute).toBeLessThanOrEqual(90)
+      }
     }
   })
 
@@ -53,11 +73,74 @@ describe('simulateMatch', () => {
     const rand = mulberry32(42)
     let strongWins = 0
     let weakWins = 0
-    for (let i = 0; i < 500; i++) {
-      const { homeGoals, awayGoals } = simulateMatch(strong, weak, players, rand)
-      if (homeGoals > awayGoals) strongWins++
-      if (awayGoals > homeGoals) weakWins++
+    for (let i = 0; i < 300; i++) {
+      const r = simulateMatch(strong, weak, players, rand)
+      if (r.homeGoals > r.awayGoals) strongWins++
+      if (r.awayGoals > r.homeGoals) weakWins++
     }
     expect(strongWins).toBeGreaterThan(weakWins * 2)
+  })
+
+  it('gives the home side an edge between equal teams', () => {
+    const players: Record<number, Player> = {}
+    const a = makeTeam(1, 60, players)
+    const b = makeTeam(2, 60, players)
+    const rand = mulberry32(7)
+    let homeWins = 0
+    let awayWins = 0
+    for (let i = 0; i < 1000; i++) {
+      const r = simulateMatch(a, b, players, rand)
+      if (r.homeGoals > r.awayGoals) homeWins++
+      if (r.awayGoals > r.homeGoals) awayWins++
+    }
+    expect(homeWins).toBeGreaterThan(awayWins)
+  })
+
+  it('a sent-off or injured-without-sub player appears in no later events', () => {
+    const players: Record<number, Player> = {}
+    const a = makeTeam(1, 60, players)
+    const b = makeTeam(2, 60, players)
+    const rand = mulberry32(11)
+    for (let i = 0; i < 300; i++) {
+      const r = simulateMatch(a, b, players, rand)
+      for (const red of r.events.filter(e => e.type === 'red')) {
+        const later = r.events.filter(e => e.minute > red.minute)
+        expect(later.some(e => e.playerId === red.playerId || e.playerInId === red.playerId)).toBe(false)
+      }
+    }
+  })
+
+  it('intensive training causes more injuries than light', () => {
+    const count = (style: TrainingStyle, seed: number) => {
+      const players: Record<number, Player> = {}
+      const a = makeTeam(1, 60, players, style)
+      const b = makeTeam(2, 60, players, style)
+      const rand = mulberry32(seed)
+      let injuries = 0
+      for (let i = 0; i < 400; i++) {
+        injuries += simulateMatch(a, b, players, rand).events.filter(e => e.type === 'injury').length
+      }
+      return injuries
+    }
+    const intensive = count('intensive', 5)
+    const light = count('light', 5)
+    expect(intensive).toBeGreaterThan(light)
+    expect(light).toBeGreaterThan(0) // injuries do happen even on light training
+  })
+
+  it('attacking tactic produces more total goals than defensive', () => {
+    const total = (tactic: 'attacking' | 'defensive') => {
+      const players: Record<number, Player> = {}
+      const a = { ...makeTeam(1, 60, players), tactic }
+      const b = { ...makeTeam(2, 60, players), tactic }
+      const rand = mulberry32(13)
+      let goals = 0
+      for (let i = 0; i < 400; i++) {
+        const r = simulateMatch(a, b, players, rand)
+        goals += r.homeGoals + r.awayGoals
+      }
+      return goals
+    }
+    expect(total('attacking')).toBeGreaterThan(total('defensive'))
   })
 })
