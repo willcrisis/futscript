@@ -3,7 +3,10 @@ import { salaryFor } from './finance'
 import { generateFixtures } from './fixtures'
 import { newGame } from './newGame'
 import { mulberry32 } from './rng'
-import { load, save } from './save'
+import {
+  activeSlot, deleteSlot, exportSave, importSave, listSlots, load, loadSlot,
+  save, saveToSlot, setActiveSlot,
+} from './save'
 import { newSeason } from './season'
 
 function fakeStorage(): Storage {
@@ -196,5 +199,61 @@ describe('save/load', () => {
     expect(next.history[0].cupWinner).toBe('—')
     expect(next.history[0].champions).toHaveLength(1)
     expect(next.teams.every(t => t.capacity > 0 && t.fanMood >= 0)).toBe(true)
+  })
+})
+
+describe('save slots', () => {
+  it('adopts a legacy save into slot 1 and keeps loading it', () => {
+    const storage = fakeStorage()
+    storage.setItem('futscript-save', JSON.stringify(newGame(5)))
+    const state = load(storage)
+    expect(state).not.toBeNull()
+    expect(storage.getItem('futscript-save')).toBeNull() // legacy key removed
+    expect(storage.getItem('futscript-slot-1')).not.toBeNull()
+    expect(activeSlot(storage)).toBe(1)
+  })
+
+  it('saves to the active slot and round-trips per slot', () => {
+    const storage = fakeStorage()
+    const a = newGame(1)
+    const b = newGame(2)
+    save(a, storage) // active defaults to 1
+    setActiveSlot(2, storage)
+    save(b, storage)
+    expect(load(storage)!.seed).toBe(2) // active slot 2
+    setActiveSlot(1, storage)
+    expect(load(storage)!.seed).toBe(1)
+    expect(loadSlot(2, storage)!.seed).toBe(2)
+  })
+
+  it('lists slot summaries and deletes', () => {
+    const storage = fakeStorage()
+    const s = newGame(3)
+    saveToSlot(s, 2, storage)
+    const slots = listSlots(storage)
+    expect(slots[0]).toBeNull()
+    expect(slots[1]).toMatchObject({ slot: 2, season: 1, division: 3 })
+    expect(slots[1]!.teamName).toBe(s.teams[0].name)
+    deleteSlot(2, storage)
+    expect(listSlots(storage)[1]).toBeNull()
+  })
+
+  it('exports and imports across versions', () => {
+    const s = newGame(4)
+    const round = importSave(exportSave(s))
+    expect(round).toEqual(s)
+    // an old v3-era export still imports via the migration chain
+    const v3ish: Record<string, unknown> = { ...JSON.parse(exportSave(s)) }
+    v3ish.version = 4
+    delete v3ish.construction
+    delete v3ish.allTimeScorers
+    ;(v3ish.teams as Record<string, unknown>[]).forEach(t => {
+      delete t.capacity; delete t.ticketPrice; delete t.fanMood
+    })
+    const imported = importSave(JSON.stringify(v3ish))
+    expect(imported).not.toBeNull()
+    expect(imported!.version).toBe(5)
+    expect(importSave('not json at all')).toBeNull()
+    expect(importSave('{"version": 999}')).toBeNull()
   })
 })
