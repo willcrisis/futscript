@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest'
 import { mulberry32 } from './rng'
 import { newGame } from './newGame'
 import {
-  adjustCash, borrow, formatMoney, marketValue, LOAN_CAP, repayLoan, runWeeklyFinances, salaryFor,
+  adjustCash, borrow, DIVISION_FACTOR, formatMoney, marketValue, LOAN_CAP, repayLoan, runWeeklyFinances, salaryFor,
   severanceFor, STARTING_CASH, wageBill, SPONSOR_BASE, MAINTENANCE_PER_SEAT,
 } from './finance'
 import type { GameState, Player } from './types'
@@ -196,5 +196,9 @@ describe('stadium finances', () => {
     expect(labels).toContain('Wages')
     expect(labels).toContain('Stadium maintenance')
     expect(labels).toContain('Sponsors')
+  })
+
+  it('lower divisions draw proportionally smaller crowds', () => {
+    expect(DIVISION_FACTOR).toEqual({ 1: 1, 2: 0.8, 3: 0.6 })
   })
 })

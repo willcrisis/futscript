@@ -255,5 +255,7 @@ describe('save slots', () => {
     expect(imported!.version).toBe(5)
     expect(importSave('not json at all')).toBeNull()
     expect(importSave('{"version": 999}')).toBeNull()
+    expect(importSave('{"version": 5}')).toBeNull()
+    expect(importSave(JSON.stringify({ version: 5, teams: [], players: {}, userTeamId: 0 }))).toBeNull()
   })
 })

@@ -69,7 +69,7 @@ export default function FinanceScreen({ state, setState }: Props) {
       </div>
       <table>
         <thead>
-          <tr><th>Season</th><th>Round</th><th>Item</th><th>Amount</th></tr>
+          <tr><th>Season</th><th>Week</th><th>Item</th><th>Amount</th></tr>
         </thead>
         <tbody>
           {state.finances.slice(-50).reverse().map((e, i) => (

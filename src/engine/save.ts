@@ -15,7 +15,14 @@ export function migrateToCurrent(raw: unknown): GameState | null {
     if (state?.version === 2) state = migrateV2(state)
     if (state?.version === 3) state = migrateV3(state)
     if (state?.version === 4) state = migrateV4(state)
-    return state?.version === 5 ? (state as GameState) : null
+    if (state?.version !== 5) return null
+    const shaped =
+      Array.isArray(state.teams) &&
+      state.players !== null &&
+      typeof state.players === 'object' &&
+      typeof state.userTeamId === 'number' &&
+      state.teams.some((t: any) => t?.id === state.userTeamId)
+    return shaped ? (state as GameState) : null
   } catch {
     return null
   }

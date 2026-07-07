@@ -238,6 +238,25 @@ describe('backlog semantics', () => {
     const s2 = advanceRound(s) // cup week, club rests — physio still works
     expect(s2.players[hurt].injuredForRounds).toBe(2)
   })
+
+  it('a friendly does not burn a suspension', () => {
+    let s = { ...newGame(8), playFriendlies: true }
+    // eliminate the user from cup round 1 so week 4 is a friendly week for them
+    s = {
+      ...s,
+      cupFixtures: s.cupFixtures.map(f =>
+        f.homeId === s.userTeamId || f.awayId === s.userTeamId
+          ? { ...f, homeGoals: 0, awayGoals: 3, winnerId: f.homeId === s.userTeamId ? f.awayId : f.homeId, week: 0 }
+          : f,
+      ),
+    }
+    for (let week = 1; week <= 3; week++) s = advanceRound(s)
+    const banned = s.teams.find(t => t.id === s.userTeamId)!.playerIds[5]
+    s = { ...s, players: { ...s.players, [banned]: { ...s.players[banned], suspendedForRounds: 2, injuredForRounds: 0 } } }
+    const s2 = advanceRound(s) // week 4: user plays only a friendly
+    expect(s2.finances.some(e => e.label === 'Friendly gate receipts')).toBe(true) // friendly actually happened
+    expect(s2.players[banned].suspendedForRounds).toBe(2) // ban untouched
+  })
 })
 
 describe('newSeason', () => {

@@ -54,6 +54,8 @@ export function advanceRound(state: GameState): GameState {
   const cupToday = state.cupFixtures.filter(f => f.week === week)
   const playingIds = new Set([...leagueToday, ...cupToday].flatMap(f => [f.homeId, f.awayId]))
 
+  const competitiveIds = new Set(playingIds)
+
   // an idle user on a cup week can host a friendly (user setting)
   let friendly: { homeId: number; awayId: number } | null = null
   if (state.playFriendlies && cupToday.length > 0 && !playingIds.has(state.userTeamId)) {
@@ -118,8 +120,9 @@ export function advanceRound(state: GameState): GameState {
 
   // existing bans/injuries tick down BEFORE this week's knocks land
   // injuries heal by the week (physio time); bans only burn on matchdays the club plays
+  // bans burn on competitive matchdays only — a friendly doesn't serve a suspension
   const playingPlayerIds = new Set(
-    teams.filter(t => playingIds.has(t.id)).flatMap(t => t.playerIds),
+    teams.filter(t => competitiveIds.has(t.id)).flatMap(t => t.playerIds),
   )
   let players: Record<number, Player> = Object.fromEntries(
     Object.values(state.players).map(p => [p.id, {
