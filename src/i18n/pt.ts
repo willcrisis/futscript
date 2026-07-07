@@ -1,0 +1,26 @@
+import type { TranslationKey } from './en'
+
+export const pt: Record<TranslationKey, string> = {
+  'nav.home': 'Início',
+  'nav.squad': 'Elenco',
+  'nav.table': 'Tabela',
+  'nav.fixtures': 'Jogos',
+  'nav.cup': 'Copa',
+  'nav.stats': 'Estatísticas',
+  'nav.transfers': 'Transferências',
+  'nav.finance': 'Finanças',
+  'nav.history': 'História',
+  'nav.saves': 'Jogos salvos',
+  'nav.more': 'Mais',
+  'nav.moreSections': 'Mais seções',
+  'nav.needsAttention': 'requer atenção',
+  'shell.advanceWeek': 'Avançar semana',
+  'shell.newSeason': 'Nova temporada',
+  'shell.theme': 'Tema',
+  'shell.seasonWeek': 'T{season} S{week}',
+  'common.weeksShort': '{n}sem',
+  'saves.settings': 'Configurações',
+  'saves.language': 'Idioma',
+  'saves.languageEnglish': 'English',
+  'saves.languagePortuguese': 'Português',
+}

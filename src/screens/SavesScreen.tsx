@@ -5,6 +5,8 @@ import {
   saveToSlot, setActiveSlot, SLOTS,
 } from '../engine/save'
 import type { GameState } from '../engine/types'
+import { setLang, t, useLang } from '../i18n'
+import type { Lang } from '../i18n'
 import Badge from '../ui/Badge'
 import Button from '../ui/Button'
 import ConfirmButton from '../ui/ConfirmButton'
@@ -21,6 +23,7 @@ interface Props {
 
 export default function SavesScreen({ state, setState }: Props) {
   const [, bump] = useState(0) // slots live in localStorage; re-render after writes
+  const lang = useLang()
   const fileInput = useRef<HTMLInputElement>(null)
   const { push } = useToasts()
   const slots = listSlots()
@@ -122,6 +125,21 @@ export default function SavesScreen({ state, setState }: Props) {
           Importing replaces the active slot. Deleting slot {active} (the active one) keeps your in-memory game
           until the next autosave.
         </p>
+      </Panel>
+
+      <Panel label={t('saves.settings')} className="mt-4">
+        <div className="flex items-center justify-between gap-3 text-sm">
+          <span className="text-ink-muted">{t('saves.language')}</span>
+          <select
+            value={lang}
+            onChange={e => setLang(e.target.value as Lang)}
+            aria-label={t('saves.language')}
+            className="rounded-md border border-rule bg-surface px-2 py-1.5 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 focus-visible:ring-offset-surface"
+          >
+            <option value="en">{t('saves.languageEnglish')}</option>
+            <option value="pt">{t('saves.languagePortuguese')}</option>
+          </select>
+        </div>
       </Panel>
     </div>
   )

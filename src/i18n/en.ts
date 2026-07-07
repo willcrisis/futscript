@@ -1,0 +1,26 @@
+export const en = {
+  'nav.home': 'Home',
+  'nav.squad': 'Squad',
+  'nav.table': 'Table',
+  'nav.fixtures': 'Fixtures',
+  'nav.cup': 'Cup',
+  'nav.stats': 'Stats',
+  'nav.transfers': 'Transfers',
+  'nav.finance': 'Finance',
+  'nav.history': 'History',
+  'nav.saves': 'Saves',
+  'nav.more': 'More',
+  'nav.moreSections': 'More sections',
+  'nav.needsAttention': 'needs attention',
+  'shell.advanceWeek': 'Advance Week',
+  'shell.newSeason': 'New Season',
+  'shell.theme': 'Theme',
+  'shell.seasonWeek': 'S{season} W{week}',
+  'common.weeksShort': '{n}w',
+  'saves.settings': 'Settings',
+  'saves.language': 'Language',
+  'saves.languageEnglish': 'English',
+  'saves.languagePortuguese': 'Português',
+} as const
+
+export type TranslationKey = keyof typeof en

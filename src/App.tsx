@@ -5,6 +5,7 @@ import { load, save } from './engine/save'
 import { advanceRound, newSeason, totalRounds } from './engine/season'
 import { standings } from './engine/standings'
 import type { GameState } from './engine/types'
+import { t, useLang } from './i18n'
 import Button from './ui/Button'
 import Panel from './ui/Panel'
 import SectionLabel from './ui/SectionLabel'
@@ -34,6 +35,8 @@ export default function App() {
 }
 
 function Game() {
+  // Subscribing here re-renders the whole tree on language change — acceptable at this app's size.
+  useLang()
   const { push } = useToasts()
   const [state, setState] = useState<GameState>(() => load() ?? newGame(Date.now() % 2147483647))
   const [screen, setScreen] = useState<ScreenId>('home')
@@ -101,7 +104,7 @@ function Game() {
       screen={screen}
       onNavigate={setScreen}
       state={state}
-      advanceLabel={seasonOver ? 'New Season' : 'Advance Week'}
+      advanceLabel={seasonOver ? t('shell.newSeason') : t('shell.advanceWeek')}
       onAdvance={advance}
     >
       {champion && (

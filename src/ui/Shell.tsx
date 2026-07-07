@@ -2,6 +2,8 @@ import { useEffect, useRef, useState } from 'react'
 import type { FC, ReactNode } from 'react'
 import type { GameState } from '../engine/types'
 import { totalRounds } from '../engine/season'
+import { t, useLang } from '../i18n'
+import type { TranslationKey } from '../i18n'
 import Button from './Button'
 import MoneyText from './MoneyText'
 import ThemeToggle from './ThemeToggle'
@@ -14,17 +16,17 @@ export type ScreenId =
   | 'home' | 'squad' | 'table' | 'fixtures' | 'cup'
   | 'stats' | 'transfers' | 'finance' | 'history' | 'saves'
 
-export const NAV: { id: ScreenId; label: string; icon: FC<{ className?: string }> }[] = [
-  { id: 'home', label: 'Home', icon: HomeIcon },
-  { id: 'squad', label: 'Squad', icon: SquadIcon },
-  { id: 'table', label: 'Table', icon: TableIcon },
-  { id: 'fixtures', label: 'Fixtures', icon: FixturesIcon },
-  { id: 'cup', label: 'Cup', icon: CupIcon },
-  { id: 'stats', label: 'Stats', icon: StatsIcon },
-  { id: 'transfers', label: 'Transfers', icon: TransfersIcon },
-  { id: 'finance', label: 'Finance', icon: FinanceIcon },
-  { id: 'history', label: 'History', icon: HistoryIcon },
-  { id: 'saves', label: 'Saves', icon: SavesIcon },
+export const NAV: { id: ScreenId; labelKey: TranslationKey; icon: FC<{ className?: string }> }[] = [
+  { id: 'home', labelKey: 'nav.home', icon: HomeIcon },
+  { id: 'squad', labelKey: 'nav.squad', icon: SquadIcon },
+  { id: 'table', labelKey: 'nav.table', icon: TableIcon },
+  { id: 'fixtures', labelKey: 'nav.fixtures', icon: FixturesIcon },
+  { id: 'cup', labelKey: 'nav.cup', icon: CupIcon },
+  { id: 'stats', labelKey: 'nav.stats', icon: StatsIcon },
+  { id: 'transfers', labelKey: 'nav.transfers', icon: TransfersIcon },
+  { id: 'finance', labelKey: 'nav.finance', icon: FinanceIcon },
+  { id: 'history', labelKey: 'nav.history', icon: HistoryIcon },
+  { id: 'saves', labelKey: 'nav.saves', icon: SavesIcon },
 ]
 
 const MOBILE_PRIMARY: ScreenId[] = ['home', 'squad', 'table', 'finance']
@@ -45,6 +47,7 @@ function attentionFor(id: ScreenId, state: GameState): boolean {
 }
 
 export default function Shell({ screen, onNavigate, state, advanceLabel, onAdvance, children }: Props) {
+  useLang() // subscribes Shell to language changes; re-renders nav/labels below
   const [moreOpen, setMoreOpen] = useState(false)
   const moreButtonRef = useRef<HTMLButtonElement>(null)
   const sheetRef = useRef<HTMLDivElement>(null)
@@ -92,7 +95,7 @@ export default function Shell({ screen, onNavigate, state, advanceLabel, onAdvan
       <aside className="fixed inset-y-0 left-0 hidden w-52 flex-col border-r border-rule bg-surface-raised p-3 md:flex">
         <div className="px-2 py-1 font-mono text-sm font-bold tracking-tight">FUT_</div>
         <nav className="mt-4 flex flex-1 flex-col gap-0.5" aria-label="Sections">
-          {NAV.map(({ id, label, icon: NavIcon }) => (
+          {NAV.map(({ id, labelKey, icon: NavIcon }) => (
             <button
               key={id}
               onClick={() => navigate(id)}
@@ -102,8 +105,8 @@ export default function Shell({ screen, onNavigate, state, advanceLabel, onAdvan
               }`}
             >
               <NavIcon />
-              {label}
-              {attentionFor(id, state) && <span aria-label="needs attention" className="ml-auto size-1.5 rounded-full bg-accent" />}
+              {t(labelKey)}
+              {attentionFor(id, state) && <span aria-label={t('nav.needsAttention')} className="ml-auto size-1.5 rounded-full bg-accent" />}
             </button>
           ))}
         </nav>
@@ -112,7 +115,7 @@ export default function Shell({ screen, onNavigate, state, advanceLabel, onAdvan
             <div className="min-w-0">
               <div className="truncate font-medium">{user.name}</div>
               <div className="font-mono text-xs tabular-nums text-ink-muted">
-                <MoneyText amount={user.cash} size="sm" /> · S{state.season} W{week}
+                <MoneyText amount={user.cash} size="sm" /> · {t('shell.seasonWeek', { season: state.season, week })}
               </div>
             </div>
             <ThemeToggle />
@@ -129,7 +132,7 @@ export default function Shell({ screen, onNavigate, state, advanceLabel, onAdvan
         <div className="mb-4 flex items-center justify-between text-xs text-ink-muted md:hidden">
           <span className="font-medium text-ink">{user.name}</span>
           <span className="font-mono tabular-nums">
-            <MoneyText amount={user.cash} size="sm" /> · S{state.season} W{week}
+            <MoneyText amount={user.cash} size="sm" /> · {t('shell.seasonWeek', { season: state.season, week })}
           </span>
         </div>
         {children}
@@ -153,7 +156,7 @@ export default function Shell({ screen, onNavigate, state, advanceLabel, onAdvan
               }`}
             >
               <NavIcon />
-              {item.label}
+              {t(item.labelKey)}
               {attentionFor(id, state) && <span className="absolute right-1/4 top-1.5 size-1.5 rounded-full bg-accent" />}
             </button>
           )
@@ -167,29 +170,29 @@ export default function Shell({ screen, onNavigate, state, advanceLabel, onAdvan
           }`}
         >
           <MoreIcon />
-          More
+          {t('nav.more')}
         </button>
       </nav>
 
       {/* mobile more-sheet */}
       {moreOpen && (
-        <div className="fixed inset-0 z-50 md:hidden" role="dialog" aria-modal="true" aria-label="More sections">
+        <div className="fixed inset-0 z-50 md:hidden" role="dialog" aria-modal="true" aria-label={t('nav.moreSections')}>
           <div className="absolute inset-0 bg-ink/30" onClick={closeMore} />
           <div ref={sheetRef} className="absolute inset-x-0 bottom-0 rounded-t-xl border-t border-rule bg-surface p-4">
             <div className="grid grid-cols-3 gap-2">
-              {NAV.filter(n => !MOBILE_PRIMARY.includes(n.id)).map(({ id, label, icon: NavIcon }) => (
+              {NAV.filter(n => !MOBILE_PRIMARY.includes(n.id)).map(({ id, labelKey, icon: NavIcon }) => (
                 <button
                   key={id}
                   onClick={() => navigate(id)}
                   className="flex min-h-16 flex-col items-center justify-center gap-1 rounded-lg border border-rule bg-surface-raised text-xs focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 focus-visible:ring-offset-surface"
                 >
                   <NavIcon />
-                  {label}
+                  {t(labelKey)}
                 </button>
               ))}
               <div className="flex min-h-16 flex-col items-center justify-center gap-1 rounded-lg border border-rule bg-surface-raised text-xs">
                 <ThemeToggle />
-                Theme
+                {t('shell.theme')}
               </div>
             </div>
           </div>
