@@ -4,6 +4,7 @@ import { newGame } from './newGame'
 import { advanceRound, applyMatchConsequences, newSeason, totalRounds } from './season'
 import { standings } from './standings'
 import { adjustCash, salaryFor } from './finance'
+import { cupWinner } from './cup'
 import type { MatchEvent, Player } from './types'
 
 function makePlayer(id: number, over: Partial<Player> = {}): Player {
@@ -49,6 +50,64 @@ describe('applyMatchConsequences', () => {
         expect(next[1].level).toBe(50)
       }
     }
+  })
+})
+
+describe('applyMatchConsequences — goals', () => {
+  it('counts season goals and ignores events for unknown players', () => {
+    const rand = mulberry32(1)
+    const goal: MatchEvent = { minute: 10, type: 'goal', teamId: 0, playerId: 1 }
+    const ghost: MatchEvent = { minute: 11, type: 'goal', teamId: 0, playerId: 999 }
+    const next = applyMatchConsequences({ 1: makePlayer(1) }, [goal, goal, ghost], rand)
+    expect(next[1].seasonGoals).toBe(2)
+  })
+})
+
+describe('advanceRound — cup weeks', () => {
+  it('plays cup ties on cup weeks, decides ties, and draws the next round', () => {
+    let s = newGame(5)
+    for (let week = 1; week <= 9; week++) s = advanceRound(s) // through cup rounds 1 (wk 4) and 2 (wk 9)
+    const round1 = s.cupFixtures.filter(f => f.cupRound === 1)
+    expect(round1.every(f => f.homeGoals !== null && f.winnerId !== null)).toBe(true)
+    for (const f of round1) {
+      if (f.homeGoals! > f.awayGoals!) expect(f.winnerId).toBe(f.homeId)
+      else if (f.awayGoals! > f.homeGoals!) expect(f.winnerId).toBe(f.awayId)
+      else expect([f.homeId, f.awayId]).toContain(f.winnerId) // penalties
+    }
+    const round2 = s.cupFixtures.filter(f => f.cupRound === 2)
+    expect(round2).toHaveLength(16) // 16 winners + 16 div-1 entrants
+    // no league fixtures were scheduled on the cup week
+    expect(s.fixtures.filter(f => f.round === 4)).toHaveLength(0)
+  })
+
+  it('completes the whole cup by season end', () => {
+    let s = newGame(6)
+    for (let i = 0; i < totalRounds(s); i++) s = advanceRound(s)
+    expect(s.cupFixtures.filter(f => f.cupRound === 6)).toHaveLength(1)
+    expect(cupWinner(s)).not.toBeNull()
+    expect(s.fixtures.every(f => f.homeGoals !== null)).toBe(true) // league unharmed
+  })
+
+  it('accumulates season goals matching stored events', () => {
+    let s = newGame(7)
+    for (let week = 1; week <= 6; week++) s = advanceRound(s)
+    const eventGoals = [...s.fixtures, ...s.cupFixtures]
+      .flatMap(f => f.events ?? [])
+      .filter(e => e.type === 'goal').length
+    const playerGoals = Object.values(s.players).reduce((sum, p) => sum + p.seasonGoals, 0)
+    expect(playerGoals).toBe(eventGoals)
+    expect(eventGoals).toBeGreaterThan(0)
+  })
+
+  it('rests non-participants on cup weeks', () => {
+    let s = newGame(8)
+    for (let week = 1; week <= 3; week++) s = advanceRound(s)
+    // week 4 is a cup week: division clubs not in the cup (all of division 1) rest
+    const div1 = s.teams.find(t => t.division === 1)!
+    const tiredBefore = div1.lineup.map(id => s.players[id].fitness)
+    const s2 = advanceRound(s)
+    const after = div1.lineup.map(id => s2.players[id].fitness)
+    after.forEach((f, i) => expect(f).toBeGreaterThanOrEqual(tiredBefore[i])) // recovery only
   })
 })
 

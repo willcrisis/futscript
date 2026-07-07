@@ -1,3 +1,4 @@
+import { drawNextCupRound } from './cup'
 import { adjustCash, runWeeklyFinances } from './finance'
 import { generateDivisionFixtures } from './fixtures'
 import { autoPick, patchLineup } from './lineup'
@@ -23,7 +24,10 @@ export function applyMatchConsequences(
   const next = { ...players }
   for (const e of events) {
     const p = next[e.playerId]
-    if (e.type === 'yellow') {
+    if (!p) continue // event for a player no longer in the world
+    if (e.type === 'goal') {
+      next[p.id] = { ...p, seasonGoals: p.seasonGoals + 1 }
+    } else if (e.type === 'yellow') {
       const yellows = p.yellowCards + 1
       next[p.id] = yellows >= 3
         ? { ...p, yellowCards: 0, suspendedForRounds: 1 }
@@ -42,24 +46,40 @@ export function applyMatchConsequences(
 export function advanceRound(state: GameState): GameState {
   if (state.gameOver || state.round > totalRounds(state)) return state
   const rand = mulberry32(state.rngState)
+  const week = state.round
 
-  // fresh lineups: AI re-picks its best XI, the user's picks are kept but repaired
-  const teams = state.teams.map(t => ({
-    ...t,
-    lineup: t.id === state.userTeamId ? patchLineup(t, state.players) : autoPick(t, state.players),
-  }))
+  const leagueToday = state.fixtures.filter(f => f.round === week)
+  const cupToday = state.cupFixtures.filter(f => f.week === week)
+  const playingIds = new Set([...leagueToday, ...cupToday].flatMap(f => [f.homeId, f.awayId]))
+
+  // refresh lineups only for clubs that play this week
+  const teams = state.teams.map(t =>
+    playingIds.has(t.id)
+      ? { ...t, lineup: t.id === state.userTeamId ? patchLineup(t, state.players) : autoPick(t, state.players) }
+      : t,
+  )
   const byId = new Map(teams.map(t => [t.id, t]))
 
   const roundEvents: MatchEvent[] = []
   const fixtures = state.fixtures.map(f => {
-    if (f.round !== state.round) return f
+    if (f.round !== week) return f
     const result = simulateMatch(byId.get(f.homeId)!, byId.get(f.awayId)!, state.players, rand)
     roundEvents.push(...result.events)
     return { ...f, homeGoals: result.homeGoals, awayGoals: result.awayGoals, events: result.events }
   })
 
-  // existing bans/injuries tick down BEFORE this round's knocks land,
-  // so a fresh 3-round injury really costs 3 future rounds
+  let cupFixtures = state.cupFixtures.map(f => {
+    if (f.week !== week || f.winnerId !== null) return f
+    const result = simulateMatch(byId.get(f.homeId)!, byId.get(f.awayId)!, state.players, rand)
+    roundEvents.push(...result.events)
+    const winnerId =
+      result.homeGoals > result.awayGoals ? f.homeId
+      : result.awayGoals > result.homeGoals ? f.awayId
+      : rand() < 0.5 ? f.homeId : f.awayId // ponytail: penalty shootout is a coin flip
+    return { ...f, homeGoals: result.homeGoals, awayGoals: result.awayGoals, winnerId, events: result.events }
+  })
+
+  // existing bans/injuries tick down BEFORE this week's knocks land
   let players: Record<number, Player> = Object.fromEntries(
     Object.values(state.players).map(p => [p.id, {
       ...p,
@@ -69,14 +89,21 @@ export function advanceRound(state: GameState): GameState {
   )
   players = applyMatchConsequences(players, roundEvents, rand)
 
-  const starters = new Set(teams.flatMap(t => t.lineup))
+  // only this week's participants drain fitness; everyone else recovers
+  const starters = new Set(teams.filter(t => playingIds.has(t.id)).flatMap(t => t.lineup))
   players = applyWeeklyUpdates(players, teams, starters, rand)
 
-  let s: GameState = { ...state, teams, players, fixtures }
+  let s: GameState = { ...state, teams, players, fixtures, cupFixtures }
   s = runTransfers(s, rand)
   s = runWeeklyFinances(s, rand)
 
-  return { ...s, round: s.round + 1, rngState: randInt(rand, 1, 2 ** 31 - 1) }
+  // once a cup week fully resolves, the next round is drawn
+  if (cupToday.length > 0) {
+    const next = drawNextCupRound(s, rand)
+    if (next.length > 0) s = { ...s, cupFixtures: [...s.cupFixtures, ...next] }
+  }
+
+  return { ...s, round: week + 1, rngState: randInt(rand, 1, 2 ** 31 - 1) }
 }
 
 export function newSeason(state: GameState): GameState {
