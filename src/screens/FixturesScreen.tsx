@@ -3,8 +3,8 @@ import { totalRounds } from '../engine/season'
 import type { Fixture, GameState } from '../engine/types'
 import Button from '../ui/Button'
 import EmptyState from '../ui/EmptyState'
+import EventFeed from '../ui/EventFeed'
 import ScreenHeader from '../ui/ScreenHeader'
-import { eventText } from './MatchScreen'
 
 const ROW = 'grid w-full grid-cols-[1fr_auto_1fr] items-center gap-3 rounded-lg border border-rule bg-surface-raised px-3 py-2'
 const SPINE = 'shadow-[inset_3px_0_0_0_var(--accent)]'
@@ -96,14 +96,7 @@ export default function FixturesScreen({ state }: { state: GameState }) {
       {selected && fixtures.includes(selected) && (
         <div className="report">
           <h3>{name(selected.homeId)} {selected.homeGoals} – {selected.awayGoals} {name(selected.awayId)}</h3>
-          <ul className="ticker">
-            {(selected.events ?? []).map((e, i) => (
-              <li key={i}>
-                <strong>{e.minute}'</strong> {eventText(e, state)} <em>({name(e.teamId)})</em>
-              </li>
-            ))}
-            {(selected.events ?? []).length === 0 && <li>No report available for this match.</li>}
-          </ul>
+          <EventFeed events={selected.events ?? []} state={state} />
         </div>
       )}
     </div>

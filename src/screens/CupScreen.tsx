@@ -3,10 +3,10 @@ import { CUP_WEEKS } from '../engine/fixtures'
 import type { CupFixture, GameState } from '../engine/types'
 import Badge from '../ui/Badge'
 import EmptyState from '../ui/EmptyState'
+import EventFeed from '../ui/EventFeed'
 import Panel from '../ui/Panel'
 import ScreenHeader from '../ui/ScreenHeader'
 import SectionLabel from '../ui/SectionLabel'
-import { eventText } from './MatchScreen'
 
 const ROUND_NAMES = ['Round 1', 'Round 2', 'Round of 16', 'Quarter-finals', 'Semi-finals', 'Final']
 
@@ -98,12 +98,7 @@ export default function CupScreen({ state }: { state: GameState }) {
       {selected && (
         <div className="report">
           <h3>{name(selected.homeId)} {selected.homeGoals} – {selected.awayGoals} {name(selected.awayId)}</h3>
-          <ul className="ticker">
-            {(selected.events ?? []).map((e, i) => (
-              <li key={i}><strong>{e.minute}'</strong> {eventText(e, state)} <em>({name(e.teamId)})</em></li>
-            ))}
-            {(selected.events ?? []).length === 0 && <li>No report available for this match.</li>}
-          </ul>
+          <EventFeed events={selected.events ?? []} state={state} />
         </div>
       )}
     </div>

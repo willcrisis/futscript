@@ -6,6 +6,8 @@ import { advanceRound, newSeason, totalRounds } from './engine/season'
 import { standings } from './engine/standings'
 import type { GameState } from './engine/types'
 import Button from './ui/Button'
+import Panel from './ui/Panel'
+import SectionLabel from './ui/SectionLabel'
 import Shell from './ui/Shell'
 import type { ScreenId } from './ui/Shell'
 import { ToastProvider, useToasts } from './ui/Toast'
@@ -65,7 +67,8 @@ function Game() {
 
   if (state.gameOver) {
     return (
-      <div className="flex min-h-dvh flex-col items-center justify-center gap-4 p-6 text-center">
+      <div className="flex min-h-dvh flex-col items-center justify-center gap-3 p-6 text-center">
+        <SectionLabel>THE BOARD HAS DECIDED</SectionLabel>
         <h1 className="font-mono text-4xl font-bold">Sacked!</h1>
         <p className="max-w-md text-ink-muted">
           {userTeam.name} spent too long in the red. The board has shown you the door
@@ -95,14 +98,21 @@ function Game() {
       onAdvance={advance}
     >
       {champion && (
-        <div className="mb-4 rounded-lg border border-accent/40 bg-surface-raised px-4 py-3 text-sm">
-          🏆 {champion.name} are the Division {userTeam.division} champions!
-          {cupChampId !== null && <> · 🏆 {state.teams.find(t => t.id === cupChampId)!.name} win the Cup!</>}
-          {expiringCount > 0 && (
-            <> · ⚠ {expiringCount} contract{expiringCount > 1 ? 's' : ''} expire — unrenewed players leave
-            (cheapest are kept automatically if the squad would drop below 14)</>
+        <Panel className="mb-4 border-accent/40!">
+          <p className="text-lg font-semibold">
+            🏆 {champion.name} are the Division {userTeam.division} champions!
+          </p>
+          {(cupChampId !== null || expiringCount > 0) && (
+            <p className="mt-1 text-sm text-ink-muted">
+              {cupChampId !== null && <>🏆 {state.teams.find(t => t.id === cupChampId)!.name} win the Cup!</>}
+              {cupChampId !== null && expiringCount > 0 && ' · '}
+              {expiringCount > 0 && (
+                <>⚠ {expiringCount} contract{expiringCount > 1 ? 's' : ''} expire — unrenewed players leave
+                (cheapest are kept automatically if the squad would drop below 14)</>
+              )}
+            </p>
           )}
-        </div>
+        </Panel>
       )}
       {screen === 'home' && <HomeScreen state={state} onAdvance={advance} onNavigate={setScreen} />}
       {screen === 'squad' && <SquadScreen state={state} setState={setState} />}
