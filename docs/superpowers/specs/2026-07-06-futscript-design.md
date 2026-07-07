@@ -97,6 +97,7 @@ Full stadium management (capacity tiers, construction time, ticket pricing, main
   - Home's Next Match opponent is clickable → Table at that club's division, row highlighted (shares the search mechanic's "focus team" pathway).
   - Home/away clarity (mechanics unchanged — gates are home-only and home advantage exists): H/A markers on the user's fixtures, and the finance summary's gate line hints "earned at home matches".
   - **Welcome screen** on new careers: a dismissible takeover describing the game's features (localized), shown once per new save; not shown when loading existing careers.
+  - **Labeled controls** *(playtest)*: bare selects are ambiguous (Squad's "attacking"/"normal" dropdowns are indistinguishable). Every control group gets a visible micro-label above it (uppercase, faint — FORMATION / TACTIC / TRAINING, DIVISION on Table/Fixtures), and Friendlies regains its explanation ("Friendlies on free weeks") plus a tooltip describing the tradeoff (gate income, injury risk).
 **Done when:** the game plays comfortably in either language at any speed, and a new career takes one click.
 
 ### Phase 6.5 — The News *(playtest feedback, 2026-07-07)*
