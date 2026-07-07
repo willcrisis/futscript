@@ -185,15 +185,58 @@ describe('advanceRound', () => {
     // Since Task 6, the market/finance pipeline can end a season early (board patience runs
     // out), so scale the goal floor to fixtures actually played rather than assuming all 240 ran.
     const played = s.fixtures.filter(f => f.homeGoals !== null).length
-    // match.ts targets ~1.3 goals/match; Task 12's richer division economy lets seed 31 play a
-    // full season instead of ending early, so the floor needs real margin below that true mean.
-    expect(events.filter(e => e.type === 'goal').length).toBeGreaterThan(played * 1.1)
+    // ~2.4 goals/match after the Phase-5 retune, floored for variance
+    expect(events.filter(e => e.type === 'goal').length).toBeGreaterThan(played * 2.0)
     expect(events.filter(e => e.type === 'yellow').length).toBeGreaterThan(100)
     expect(events.filter(e => e.type === 'injury').length).toBeGreaterThan(5)
     // training moved at least someone
     const s0 = newGame(31)
     const levelsChanged = Object.values(s.players).some(p => p.level !== s0.players[p.id].level)
     expect(levelsChanged).toBe(true)
+  })
+})
+
+describe('backlog semantics', () => {
+  it('goal density lands near 2.4 per match', () => {
+    let s = newGame(41)
+    s = { ...s, teams: adjustCash(s.teams, s.userTeamId, 50_000_000) } // bankruptcy must not truncate the sample
+    for (let i = 0; i < totalRounds(s); i++) s = advanceRound(s)
+    const played = s.fixtures.filter(f => f.homeGoals !== null)
+    const goals = played.reduce((sum, f) => sum + f.homeGoals! + f.awayGoals!, 0)
+    const density = goals / played.length
+    expect(density).toBeGreaterThan(2.0)
+    expect(density).toBeLessThan(3.0)
+  })
+
+  it('suspensions only count weeks the club actually plays', () => {
+    let s = newGame(8)
+    // week 4 is a cup week; division-1 clubs (not in cup round 1) rest
+    const restingClub = s.teams.find(t => t.division === 1)!
+    const restingPlayer = restingClub.lineup[3]
+    const playingClub = s.cupFixtures[0].homeId
+    const playingPlayer = s.teams.find(t => t.id === playingClub)!.lineup[3]
+    for (let week = 1; week <= 3; week++) s = advanceRound(s)
+    s = {
+      ...s,
+      players: {
+        ...s.players,
+        [restingPlayer]: { ...s.players[restingPlayer], suspendedForRounds: 2, injuredForRounds: 0 },
+        [playingPlayer]: { ...s.players[playingPlayer], suspendedForRounds: 2, injuredForRounds: 0 },
+      },
+    }
+    const s2 = advanceRound(s) // cup week
+    expect(s2.players[restingPlayer].suspendedForRounds).toBe(2) // no match, no tick
+    expect(s2.players[playingPlayer].suspendedForRounds).toBe(1) // club played (he sat it out)
+  })
+
+  it('injuries heal by the week regardless of the calendar', () => {
+    let s = newGame(8)
+    const restingClub = s.teams.find(t => t.division === 1)!
+    const hurt = restingClub.lineup[4]
+    for (let week = 1; week <= 3; week++) s = advanceRound(s)
+    s = { ...s, players: { ...s.players, [hurt]: { ...s.players[hurt], injuredForRounds: 3 } } }
+    const s2 = advanceRound(s) // cup week, club rests — physio still works
+    expect(s2.players[hurt].injuredForRounds).toBe(2)
   })
 })
 

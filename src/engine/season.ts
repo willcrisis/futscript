@@ -103,11 +103,15 @@ export function advanceRound(state: GameState): GameState {
   }
 
   // existing bans/injuries tick down BEFORE this week's knocks land
+  // injuries heal by the week (physio time); bans only burn on matchdays the club plays
+  const playingPlayerIds = new Set(
+    teams.filter(t => playingIds.has(t.id)).flatMap(t => t.playerIds),
+  )
   let players: Record<number, Player> = Object.fromEntries(
     Object.values(state.players).map(p => [p.id, {
       ...p,
       injuredForRounds: Math.max(0, p.injuredForRounds - 1),
-      suspendedForRounds: Math.max(0, p.suspendedForRounds - 1),
+      suspendedForRounds: playingPlayerIds.has(p.id) ? Math.max(0, p.suspendedForRounds - 1) : p.suspendedForRounds,
     }]),
   )
   players = applyMatchConsequences(players, roundEvents, rand)
