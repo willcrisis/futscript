@@ -1,8 +1,12 @@
+import { useState } from 'react'
 import type { Dispatch, SetStateAction } from 'react'
 import { borrow, formatMoney, LOAN_CAP, MAINTENANCE_PER_SEAT, repayLoan, wageBill } from '../engine/finance'
 import { EXPANSION, expandStadium, setTicketPrice } from '../engine/stadium'
-import type { GameState } from '../engine/types'
+import type { FinanceEntry, GameState } from '../engine/types'
+import { t, useLang } from '../i18n'
+import type { TranslationKey } from '../i18n'
 import { describeLedger } from '../i18n/ledger'
+import type { LedgerCategory } from '../i18n/ledger'
 import Button from '../ui/Button'
 import ConfirmButton from '../ui/ConfirmButton'
 import DataTable from '../ui/DataTable'
@@ -33,13 +37,79 @@ const ledgerColumns: Column<LedgerRow>[] = [
   { key: 'amount', label: 'Amount', align: 'right', render: r => <MoneyText amount={r.amount} signed /> },
 ]
 
+const CATEGORY_KEYS: Record<LedgerCategory, TranslationKey> = {
+  gate: 'category.gate',
+  sponsors: 'category.sponsors',
+  prize: 'category.prize',
+  wages: 'category.wages',
+  maintenance: 'category.maintenance',
+  interest: 'category.interest',
+  loan: 'category.loan',
+  transfers: 'category.transfers',
+  stadium: 'category.stadium',
+  other: 'category.other',
+}
+
+export interface CategoryTotal {
+  category: LedgerCategory
+  total: number
+}
+
+/** Group a week's ledger entries by their display category, income-first by absolute size. */
+export function summarizeByCategory(entries: FinanceEntry[]): CategoryTotal[] {
+  const totals = new Map<LedgerCategory, number>()
+  for (const e of entries) {
+    const { category } = describeLedger(e.label)
+    totals.set(category, (totals.get(category) ?? 0) + e.amount)
+  }
+  return [...totals.entries()]
+    .map(([category, total]) => ({ category, total }))
+    .sort((a, b) => {
+      const aIsIncome = a.total > 0 ? 0 : 1
+      const bIsIncome = b.total > 0 ? 0 : 1
+      return aIsIncome !== bIsIncome ? aIsIncome - bIsIncome : Math.abs(b.total) - Math.abs(a.total)
+    })
+}
+
 export default function FinanceScreen({ state, setState }: Props) {
+  useLang()
   const user = state.teams.find(t => t.id === state.userTeamId)!
   const ledgerRows: LedgerRow[] = state.finances.slice(-50).reverse().map((e, i) => ({ ...e, key: i }))
+  const [showLedger, setShowLedger] = useState(false)
+
+  // "This week" = the last played week's entries, matching HomeScreen's weekDelta scoping.
+  const lastWeekPlayed = state.round - 1
+  const weekEntries = state.finances.filter(e => e.season === state.season && e.round === lastWeekPlayed)
+  const income = weekEntries.filter(e => e.amount > 0).reduce((s, e) => s + e.amount, 0)
+  const expenses = weekEntries.filter(e => e.amount < 0).reduce((s, e) => s + e.amount, 0)
+  const net = income + expenses
+  const categoryTotals = summarizeByCategory(weekEntries)
 
   return (
     <div>
       <ScreenHeader label="THE BOOKS" title="Finance" />
+
+      <Panel label={t('finance.thisWeek')} className="mb-4">
+        {weekEntries.length === 0 ? (
+          <EmptyState>{t('finance.noWeekYet')}</EmptyState>
+        ) : (
+          <>
+            <div className="grid grid-cols-1 gap-3 md:grid-cols-3">
+              <StatChip label={t('finance.income')} value={<MoneyText amount={income} />} />
+              <StatChip label={t('finance.expenses')} value={<MoneyText amount={expenses} />} />
+              <StatChip label={t('finance.net')} value={<MoneyText amount={net} signed />} />
+            </div>
+            <div className="mt-4 flex flex-col gap-1.5 border-t border-rule pt-3 text-sm">
+              {categoryTotals.map(c => (
+                <div key={c.category} className="flex items-center justify-between">
+                  <span className="text-ink-muted">{t(CATEGORY_KEYS[c.category])}</span>
+                  <MoneyText amount={c.total} signed />
+                </div>
+              ))}
+            </div>
+          </>
+        )}
+      </Panel>
 
       <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
         <StatChip label="Cash" value={<MoneyText amount={user.cash} />} />
@@ -129,14 +199,28 @@ export default function FinanceScreen({ state, setState }: Props) {
           </div>
         </Panel>
 
-        <Panel label="Ledger">
-          <DataTable
-            columns={ledgerColumns}
-            rows={ledgerRows}
-            rowKey={r => r.key}
-            groupLabel={r => `S${r.season} · W${r.round}`}
-            empty={<EmptyState>No transactions yet.</EmptyState>}
-          />
+        <Panel
+          label={t('finance.ledger')}
+          action={
+            <Button
+              variant="ghost"
+              size="sm"
+              aria-expanded={showLedger}
+              onClick={() => setShowLedger(v => !v)}
+            >
+              {showLedger ? t('finance.hideDetails') : t('finance.showDetails')}
+            </Button>
+          }
+        >
+          {showLedger && (
+            <DataTable
+              columns={ledgerColumns}
+              rows={ledgerRows}
+              rowKey={r => r.key}
+              groupLabel={r => `S${r.season} · W${r.round}`}
+              empty={<EmptyState>No transactions yet.</EmptyState>}
+            />
+          )}
         </Panel>
       </div>
     </div>

@@ -241,6 +241,28 @@ export const pt: Record<TranslationKey, string> = {
   'ledger.stadiumExpansion': 'Ampliação do estádio (+{n} lugares)',
   'ledger.stadiumExpansionComplete': 'Ampliação do estádio concluída (+{n} lugares)',
 
+  // Finance screen
+  'finance.thisWeek': 'Esta semana',
+  'finance.noWeekYet': 'Nenhuma semana jogada ainda — avance para ver um resumo.',
+  'finance.income': 'Receitas',
+  'finance.expenses': 'Despesas',
+  'finance.net': 'Saldo',
+  'finance.ledger': 'Extrato',
+  'finance.showDetails': 'Mostrar detalhes',
+  'finance.hideDetails': 'Ocultar detalhes',
+
+  // Ledger categories (finance summary breakdown)
+  'category.gate': 'Bilheteria',
+  'category.sponsors': 'Patrocinadores',
+  'category.prize': 'Premiação',
+  'category.wages': 'Salários',
+  'category.maintenance': 'Manutenção',
+  'category.interest': 'Juros',
+  'category.loan': 'Empréstimo',
+  'category.transfers': 'Transferências',
+  'category.stadium': 'Estádio',
+  'category.other': 'Outros',
+
   // Match event feed
   'event.goal': 'GOL! {player}',
   'event.chance': 'Chance para {player} — defendida!',

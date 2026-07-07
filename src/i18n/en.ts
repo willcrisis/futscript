@@ -239,6 +239,28 @@ export const en = {
   'ledger.stadiumExpansion': 'Stadium expansion (+{n} seats)',
   'ledger.stadiumExpansionComplete': 'Stadium expansion complete (+{n} seats)',
 
+  // Finance screen
+  'finance.thisWeek': 'This week',
+  'finance.noWeekYet': 'No week played yet — advance to see a summary.',
+  'finance.income': 'Income',
+  'finance.expenses': 'Expenses',
+  'finance.net': 'Net',
+  'finance.ledger': 'Ledger',
+  'finance.showDetails': 'Show details',
+  'finance.hideDetails': 'Hide details',
+
+  // Ledger categories (finance summary breakdown)
+  'category.gate': 'Gate receipts',
+  'category.sponsors': 'Sponsors',
+  'category.prize': 'Prize money',
+  'category.wages': 'Wages',
+  'category.maintenance': 'Maintenance',
+  'category.interest': 'Interest',
+  'category.loan': 'Loan',
+  'category.transfers': 'Transfers',
+  'category.stadium': 'Stadium',
+  'category.other': 'Other',
+
   // Match event feed
   'event.goal': 'GOAL! {player}',
   'event.chance': 'Chance for {player} — saved!',
