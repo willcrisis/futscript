@@ -34,3 +34,6 @@ td.home { text-align: right; }
 .minute { font-size: 1.5rem; font-weight: bold; margin: 0.25rem 0; }
 .ticker { list-style: none; padding: 0; max-height: 60vh; overflow-y: auto; }
 .ticker li { padding: 0.25rem 0; border-bottom: 1px solid rgba(128, 128, 128, 0.2); }
+
+td.neg { color: crimson; }
+td.pos { color: seagreen; }

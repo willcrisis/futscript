@@ -9,6 +9,7 @@ import SquadScreen from './screens/SquadScreen'
 import TableScreen from './screens/TableScreen'
 import MatchScreen from './screens/MatchScreen'
 import TransfersScreen from './screens/TransfersScreen'
+import FinanceScreen from './screens/FinanceScreen'
 
 type Screen = 'squad' | 'table' | 'fixtures' | 'transfers' | 'finance'
 
@@ -36,6 +37,19 @@ export default function App() {
     return <MatchScreen fixture={replay} state={state} onClose={() => setReplay(null)} />
   }
 
+  if (state.gameOver) {
+    return (
+      <div className="app">
+        <h1>Sacked!</h1>
+        <p>
+          {userTeam.name} spent too long in the red. The board has shown you the door
+          after {state.season} season{state.season > 1 ? 's' : ''}.
+        </p>
+        <button onClick={() => setState(newGame(Date.now() % 2147483647))}>Start a new career</button>
+      </div>
+    )
+  }
+
   return (
     <div className="app">
       <header>
@@ -59,7 +73,7 @@ export default function App() {
       {screen === 'table' && <TableScreen state={state} />}
       {screen === 'fixtures' && <FixturesScreen state={state} />}
       {screen === 'transfers' && <TransfersScreen state={state} setState={setState} />}
-      {screen === 'finance' && <p>Finance screen coming next.</p>}
+      {screen === 'finance' && <FinanceScreen state={state} setState={setState} />}
     </div>
   )
 }
