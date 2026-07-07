@@ -23,7 +23,7 @@ export default function FixturesScreen({ state }: { state: GameState }) {
             <tr
               key={i}
               className={f === selected ? 'selected' : ''}
-              onClick={() => setSelected(f.homeGoals !== null && f === selected ? null : f)}
+              onClick={() => { if (f.homeGoals !== null) setSelected(f === selected ? null : f) }}
               style={{ cursor: f.homeGoals !== null ? 'pointer' : 'default' }}
             >
               <td className="home">{name(f.homeId)}</td>
@@ -33,7 +33,7 @@ export default function FixturesScreen({ state }: { state: GameState }) {
           ))}
         </tbody>
       </table>
-      {selected && (
+      {selected && fixtures.includes(selected) && (
         <div className="report">
           <h3>{name(selected.homeId)} {selected.homeGoals} – {selected.awayGoals} {name(selected.awayId)}</h3>
           <ul className="ticker">
