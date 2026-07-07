@@ -57,7 +57,7 @@ A local-only, browser-based football management game inspired by Elifoot 98 and 
 
 ## Explicitly out of scope (for now)
 
-Player personalities/agents, weather, set-piece takers, national teams, multiple countries, custom club editor. Phase 6 lists optional late additions.
+Player personalities/agents, weather, set-piece takers, national teams, multiple countries, custom club editor. The "Someday" note after the phases lists optional late additions.
 
 ## Delivery phases
 
@@ -83,8 +83,29 @@ Expand to 3 divisions with promotion/relegation. National knockout cup in the ca
 Full stadium management (capacity tiers, construction time, ticket pricing, maintenance, attendance model). Sponsors and fan mood. Stats pages (all-time scorers, records). Multiple save slots + JSON export/import.
 **Done when:** the stadium↔fans↔results money loop feels like Elifoot.
 
-### Phase 6 — Optional
-Hot-seat multiplayer, 2D match visualization, multiple countries + continental cup, custom club editor. Build only if still wanted.
+### Phase 6 — Quality of Life *(added 2026-07-07; UI redesign "Quiet Heritage" shipped between Phases 5 and 6)*
+- **Translations (en, pt)**: UI strings only via a hand-rolled typed dictionary (`t('squad.release')`); player/club names stay as data. Language select persisted alongside the theme, browser-default. Engine ledger labels become translation keys; existing saved ledgers migrate gracefully.
+- **Match speeds**: five ticker presets — Slow / Medium / Fast / Super fast / Ultra fast (~130 / 65 / 32 / 16 / 6 ms per match minute), choice persisted between matches.
+- **Squad icon actions**: Start / Sell / Release / Renew become icon buttons with tooltips and aria-labels.
+- **Simplified finance screen**: leads with "This week: Income · Expenses · Net" and a category breakdown (gates, sponsors, prizes / wages, maintenance, interest); the raw ledger collapses behind a details toggle.
+- **New career (reset)**: a "New career" action with two-click confirm on the Saves screen — today a fresh start is only reachable by getting sacked.
+- **Random starting club**: `newGame` assigns a random Division 3 club (seed-driven) instead of always the first team, so every career starts somewhere new.
+**Done when:** the game plays comfortably in either language at any speed, and a new career takes one click.
+
+### Phase 7 — Career Mode *(added 2026-07-07)*
+Being a manager, not a club.
+- **Board confidence** (visible meter, 0–100, starts 60): moves weekly on results vs *expectations*, where expectation derives from the squad's strength rank within its division (a weak squad in 10th is fine; a strong squad in 10th is not). Relegation-zone streaks and relegation drain it hard; promotion and silverware fill it. At 0: sacked for performance. The financial rule (8 broke weeks) remains a separate instant sacking.
+- **Manager reputation** (career-long, survives sackings): raised by overperforming expectations, promotions, titles, cups; dented by sackings. It is what the job market sees.
+- **Unemployment replaces game over**: sacked → "awaiting offers." The world keeps simulating while the manager spectates (weeks advance freely); job offers arrive probabilistically, weighted by reputation — high reputation attracts Division 1 benches, low reputation gets Division 3 strugglers. Accepting takes over that club as-is (their squad, their books); the old club reverts to AI. A career ends only by choice (reset).
+- **Poaching while employed**: overperforming managers receive offers from richer clubs — mostly at season end, occasionally mid-season; declining carries no penalty.
+- **Manager-centric history**: each season row records which club was managed; honours accumulate across clubs.
+**Done when:** getting sacked in Division 1 and rebuilding a reputation from a Division 3 bench feels like a story, not a game over.
+
+### Phase 8 — 2D Match Visualization *(kept from the original optional list)*
+Animated 2D pitch view (dots/players) as an alternative to the text ticker, driven by the same event stream.
+
+### Someday / out of scope for now
+Hot-seat multiplayer, multiple countries + continental cup, custom club editor. Build only if still wanted.
 
 ## Architecture notes
 
