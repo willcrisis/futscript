@@ -53,17 +53,22 @@ export function retirePlayers(
 // GK 1/6, DF 2/6, MF 2/6, FW 1/6
 const YOUTH_POSITIONS: Position[] = ['GK', 'DF', 'DF', 'MF', 'MF', 'FW']
 
-function nextFreeId(players: Record<number, Player>): number {
-  return Math.max(0, ...Object.keys(players).map(Number)) + 1
+// idFloor guards against id reuse: once retirement/contract departures have pruned
+// `players` this rollover, its own max id can dip below one that's still "taken" in the
+// season's starting roster (dense ids mean a freed low slot would otherwise collide with
+// a departed-but-still-referenced player). Callers pass the pre-rollover max as the floor.
+function nextFreeId(players: Record<number, Player>, idFloor = 0): number {
+  return Math.max(idFloor, 0, ...Object.keys(players).map(Number)) + 1
 }
 
 export function youthIntake(
   players: Record<number, Player>,
   teams: Team[],
   rand: () => number,
+  idFloor = 0,
 ): { players: Record<number, Player>; teams: Team[] } {
   const nextPlayers = { ...players }
-  let nextId = nextFreeId(players)
+  let nextId = nextFreeId(players, idFloor)
   const nextTeams = teams.map(team => {
     const count = team.playerIds.length >= 20 ? 0 : team.playerIds.length < 16 ? 2 : 1
     if (count === 0) return team
@@ -95,6 +100,7 @@ export function ensureThreeDivisions(
   players: Record<number, Player>,
   teams: Team[],
   rand: () => number,
+  idFloor = 0,
 ): { players: Record<number, Player>; teams: Team[] } {
   const missing = [2, 3].filter(d => !teams.some(t => t.division === d))
   if (missing.length === 0) return { players, teams }
@@ -102,7 +108,7 @@ export function ensureThreeDivisions(
   const freeNames = TEAM_NAMES.filter(n => !usedNames.has(n))
   let nameIndex = 0
   let nextTeamId = Math.max(...teams.map(t => t.id)) + 1
-  let nextId = nextFreeId(players)
+  let nextId = nextFreeId(players, idFloor)
   const nextPlayers = { ...players }
   const nextTeams = [...teams]
   for (const division of missing) {

@@ -84,13 +84,14 @@ describe('ageSquads', () => {
   it('ages everyone, declines 30+, resets season fields', () => {
     const rand = mulberry32(7)
     const players: Record<number, Player> = {
-      1: makePlayer(1, 22, { form: 2, fitness: 55, yellowCards: 2, injuredForRounds: 3, suspendedForRounds: 1 }),
+      1: makePlayer(1, 22, { form: 2, fitness: 55, yellowCards: 2, injuredForRounds: 3, suspendedForRounds: 1, seasonGoals: 7 }),
       2: makePlayer(2, 31, { level: 60 }),
     }
     const next = ageSquads(players, rand)
     expect(next[1]!.age).toBe(23)
     expect(next[1]!.level).toBe(50) // under 30: no decline
     expect(next[1]).toMatchObject({ form: 0, fitness: 100, yellowCards: 0, injuredForRounds: 0, suspendedForRounds: 0 })
+    expect(next[1]!.seasonGoals).toBe(0)
     expect(next[2]!.age).toBe(32)
     expect(next[2]!.level).toBeGreaterThanOrEqual(57)
     expect(next[2]!.level).toBeLessThanOrEqual(59) // declined 1-3

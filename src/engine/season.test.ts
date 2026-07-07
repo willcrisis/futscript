@@ -3,9 +3,19 @@ import { mulberry32 } from './rng'
 import { newGame } from './newGame'
 import { advanceRound, applyMatchConsequences, newSeason, totalRounds } from './season'
 import { standings } from './standings'
-import { adjustCash, salaryFor } from './finance'
+import { adjustCash } from './finance'
 import { cupWinner } from './cup'
+import { MIN_SQUAD } from './transfers'
 import type { GameState, MatchEvent, Player } from './types'
+
+function playSeason(seed: number): GameState {
+  let s = newGame(seed)
+  // fund the club so a bankruptcy can't halt the season early (same precaution as the
+  // advanceRound no-op test below) — these tests are about season-end processing, not survival
+  s = { ...s, teams: adjustCash(s.teams, s.userTeamId, 50_000_000) }
+  for (let i = 0; i < totalRounds(s); i++) s = advanceRound(s)
+  return s
+}
 
 function makePlayer(id: number, over: Partial<Player> = {}): Player {
   return {
@@ -188,6 +198,8 @@ describe('advanceRound', () => {
 describe('newSeason', () => {
   it('resets the calendar, bumps the season, and ages squads', () => {
     let s = newGame(7)
+    // fund the club so a bankruptcy can't halt the season early — this test is about rollover, not survival
+    s = { ...s, teams: adjustCash(s.teams, s.userTeamId, 50_000_000) }
     for (let i = 0; i < totalRounds(s); i++) s = advanceRound(s)
     const s2 = newSeason(s)
     expect(s2.season).toBe(2)
@@ -195,6 +207,7 @@ describe('newSeason', () => {
     expect(s2.fixtures).toHaveLength(720)
     expect(s2.fixtures.every(f => f.homeGoals === null)).toBe(true)
     for (const p of Object.values(s2.players)) {
+      if (!s.players[p.id]) continue // youth arrivals have no previous-season self
       expect(p.age).toBe(s.players[p.id].age + 1)
       expect(p.fitness).toBe(100)
       expect(p.yellowCards).toBe(0)
@@ -226,50 +239,82 @@ describe('advanceRound — market and money', () => {
 })
 
 describe('newSeason — money and contracts', () => {
-  function playSeason(seed: number) {
-    let s = newGame(seed)
-    for (let i = 0; i < totalRounds(s); i++) s = advanceRound(s)
-    return s
-  }
-
-  it('pays prize money by final position', () => {
-    const s = playSeason(7)
-    const table = standings(s)
-    const s2 = newSeason(s)
-    const champion = table[0].teamId
-    const last = table[15].teamId
-    const cashDelta = (id: number) =>
-      s2.teams.find(t => t.id === id)!.cash - s.teams.find(t => t.id === id)!.cash
-    expect(cashDelta(champion)).toBe(1_500_000)
-    expect(cashDelta(last)).toBe(1_500_000 - 15 * 75_000)
-  })
-
-  it('settles contracts: AI renews, unrenewed user players leave', () => {
-    const s = playSeason(7)
-    const userTeam = s.teams.find(t => t.id === s.userTeamId)!
-    const leaving = userTeam.playerIds.find(id => s.players[id].contractSeasons === 1)
-    const aiTeam = s.teams.find(t => t.id !== s.userTeamId)!
-    const aiExpiring = aiTeam.playerIds.find(id => s.players[id].contractSeasons === 1)
-    const s2 = newSeason(s)
-    if (leaving) {
-      expect(s2.players[leaving]).toBeUndefined()
-      expect(s2.teams.find(t => t.id === s.userTeamId)!.playerIds).not.toContain(leaving)
-    }
-    if (aiExpiring) {
-      expect(s2.players[aiExpiring].contractSeasons).toBeGreaterThanOrEqual(1)
-      expect(s2.players[aiExpiring].salary).toBeGreaterThanOrEqual(salaryFor(s.players[aiExpiring].level))
-    }
-    // everyone else is one season shorter
-    const survivor = userTeam.playerIds.find(id => s.players[id].contractSeasons === 3)
-    if (survivor) expect(s2.players[survivor].contractSeasons).toBe(2)
-  })
-
   it('clears the market at season end', () => {
     const s = playSeason(7)
     const s2 = newSeason(s)
     expect(s2.transferList).toEqual([])
     expect(s2.incomingOffers).toEqual([])
     expect(s2.brokeRounds).toBe(0)
+  })
+})
+
+describe('newSeason — the long game', () => {
+  it('no-ops when the game is over', () => {
+    const s = { ...newGame(1), gameOver: true }
+    expect(newSeason(s)).toBe(s)
+  })
+
+  it('pays division-scaled prizes and applies promotion and relegation', () => {
+    const s = playSeason(7)
+    const div1Champion = standings(s, 1)[0].teamId
+    const div3Top = standings(s, 3).slice(0, 3).map(r => r.teamId)
+    const div1Bottom = standings(s, 1).slice(-3).map(r => r.teamId)
+    const s2 = newSeason(s)
+    const delta = (id: number) => s2.teams.find(t => t.id === id)!.cash - s.teams.find(t => t.id === id)!.cash
+    expect(delta(div1Champion)).toBeGreaterThanOrEqual(1_500_000) // full-factor first prize (+ maybe cup money)
+    for (const id of div3Top) {
+      expect(s2.teams.find(t => t.id === id)!.division).toBe(2)
+      // division-3 factor halves the prize table
+      expect(delta(id)).toBeGreaterThanOrEqual(Math.round((1_500_000 - 2 * 75_000) * 0.5))
+    }
+    for (const id of div1Bottom) expect(s2.teams.find(t => t.id === id)!.division).toBe(2)
+    for (const d of [1, 2, 3]) expect(s2.teams.filter(t => t.division === d)).toHaveLength(16)
+  })
+
+  it('writes the season into history and restarts the calendar', () => {
+    const s = playSeason(7)
+    const s2 = newSeason(s)
+    expect(s2.history).toHaveLength(1)
+    expect(s2.history[0].season).toBe(1)
+    expect(s2.history[0].champions).toHaveLength(3)
+    expect(s2.season).toBe(2)
+    expect(s2.round).toBe(1)
+    expect(s2.fixtures).toHaveLength(720)
+    expect(s2.fixtures.every(f => f.homeGoals === null)).toBe(true)
+    expect(s2.cupFixtures).toHaveLength(16)
+    expect(s2.cupFixtures.every(f => f.cupRound === 1 && f.winnerId === null)).toBe(true)
+  })
+
+  it('retires the old guard', () => {
+    const s = playSeason(7)
+    const s2 = newSeason(s)
+    expect(Object.values(s2.players).every(p => p.age <= 36)).toBe(true) // 36+ retired before the +1 birthday
+  })
+
+  it('force-renews the cheapest expiring contracts so the user squad never drops below MIN_SQUAD', () => {
+    const s0 = newGame(1)
+    const user = s0.teams[0]
+    const kept = user.playerIds.slice(0, 15)
+    const expiring = kept.slice(0, 3)
+    const players = { ...s0.players }
+    for (const id of kept) players[id] = { ...players[id], age: 25, contractSeasons: expiring.includes(id) ? 1 : 2 }
+    // make salaries unambiguous: expiring[2] is the priciest and must be the one who walks
+    players[expiring[0]] = { ...players[expiring[0]], salary: 1000 }
+    players[expiring[1]] = { ...players[expiring[1]], salary: 2000 }
+    players[expiring[2]] = { ...players[expiring[2]], salary: 9000 }
+    const s: GameState = {
+      ...s0,
+      players,
+      teams: s0.teams.map(t => (t.id === user.id ? { ...t, playerIds: kept, lineup: [] } : t)),
+    }
+    const s2 = newSeason(s)
+    const userAfter = s2.teams.find(t => t.id === user.id)!
+    expect(s2.players[expiring[2]]).toBeUndefined() // priciest expiring walked
+    expect(userAfter.playerIds).not.toContain(expiring[2])
+    expect(s2.players[expiring[0]]).toBeDefined() // cheapest two force-renewed
+    expect(s2.players[expiring[1]]).toBeDefined()
+    expect(s2.players[expiring[0]].contractSeasons).toBeGreaterThanOrEqual(1)
+    expect(userAfter.playerIds.length).toBeGreaterThanOrEqual(MIN_SQUAD)
   })
 })
 

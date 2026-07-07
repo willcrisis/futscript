@@ -1,12 +1,13 @@
-import { drawNextCupRound } from './cup'
+import { drawFirstCupRound, drawNextCupRound } from './cup'
+import { CUP_WEEKS, generateDivisionFixtures } from './fixtures'
 import { adjustCash, DIVISION_FACTOR, runWeeklyFinances, TICKET_PRICE, userLedger } from './finance'
-import { generateDivisionFixtures } from './fixtures'
 import { autoPick, patchLineup } from './lineup'
 import { simulateMatch } from './match'
 import { mulberry32, randInt } from './rng'
+import { applyPromotionRelegation, ensureThreeDivisions, retirePlayers, seasonRecord, youthIntake } from './rollover'
 import { standings } from './standings'
 import { ageSquads, applyWeeklyUpdates } from './training'
-import { renewalSalary, runTransfers } from './transfers'
+import { MIN_SQUAD, renewalSalary, runTransfers } from './transfers'
 import type { GameState, MatchEvent, Player } from './types'
 
 export function totalRounds(state: GameState): number {
@@ -136,31 +137,61 @@ export function advanceRound(state: GameState): GameState {
 }
 
 export function newSeason(state: GameState): GameState {
+  if (state.gameOver) return state
   const rand = mulberry32(state.rngState)
 
-  // prize money by final position
+  // the season's story is written before anything moves
+  const history = [...state.history, seasonRecord(state)]
+
   let teams = state.teams
   let finances = state.finances
-  standings(state).forEach((row, i) => {
-    const prize = 1_500_000 - i * 75_000
-    teams = adjustCash(teams, row.teamId, prize)
-    if (row.teamId === state.userTeamId) {
-      finances = [
-        ...finances,
-        { season: state.season, round: totalRounds(state), label: `Prize money (finished ${i + 1})`, amount: prize },
-      ].slice(-300)
-    }
-  })
+  const addEntry = (label: string, amount: number) => {
+    finances = [...finances, { season: state.season, round: totalRounds(state), label, amount }].slice(-300)
+  }
 
-  // contracts: one season shorter; AI auto-renews, unrenewed user players walk
-  const players = { ...state.players }
-  for (const team of state.teams) {
-    for (const id of team.playerIds) {
+  // league prize money, scaled down the pyramid
+  for (const division of [...new Set(state.teams.map(t => t.division))].sort()) {
+    standings(state, division).forEach((row, i) => {
+      const prize = Math.round((1_500_000 - i * 75_000) * (DIVISION_FACTOR[division] ?? 1))
+      teams = adjustCash(teams, row.teamId, prize)
+      if (row.teamId === state.userTeamId) addEntry(`Prize money (finished ${i + 1} in Division ${division})`, prize)
+    })
+  }
+
+  // cup prizes
+  if (state.cupFixtures.length > 0) {
+    const final = state.cupFixtures.reduce((a, b) => (b.cupRound > a.cupRound ? b : a))
+    if (final.cupRound === CUP_WEEKS.length && final.winnerId !== null) {
+      const runnerUp = final.winnerId === final.homeId ? final.awayId : final.homeId
+      teams = adjustCash(teams, final.winnerId, 1_000_000)
+      teams = adjustCash(teams, runnerUp, 400_000)
+      if (final.winnerId === state.userTeamId) addEntry('Cup winners prize', 1_000_000)
+      if (runnerUp === state.userTeamId) addEntry('Cup runners-up prize', 400_000)
+    }
+  }
+
+  // up and down the pyramid, judged on the final tables
+  teams = applyPromotionRelegation(state, teams)
+
+  // retirements
+  let players: Record<number, Player> = { ...state.players }
+  ;({ players, teams } = retirePlayers(players, teams, rand))
+
+  // contracts: one season shorter; AI auto-renews; unrenewed user players walk,
+  // but never below MIN_SQUAD — the cheapest expiring contracts force-renew first
+  const userTeamNow = teams.find(t => t.id === state.userTeamId)!
+  const expiring = userTeamNow.playerIds.filter(id => players[id].contractSeasons - 1 <= 0)
+  const mustKeep = Math.max(0, MIN_SQUAD - (userTeamNow.playerIds.length - expiring.length))
+  const forceRenewed = new Set(
+    [...expiring].sort((a, b) => players[a].salary - players[b].salary).slice(0, mustKeep),
+  )
+  for (const team of teams) {
+    for (const id of [...team.playerIds]) {
       const p = players[id]
       const remaining = p.contractSeasons - 1
       if (remaining > 0) {
         players[id] = { ...p, contractSeasons: remaining }
-      } else if (team.id !== state.userTeamId) {
+      } else if (team.id !== state.userTeamId || forceRenewed.has(id)) {
         players[id] = { ...p, contractSeasons: randInt(rand, 1, 3), salary: renewalSalary(p) }
       } else {
         delete players[id]
@@ -173,16 +204,29 @@ export function newSeason(state: GameState): GameState {
     }
   }
 
+  // fresh legs and (for migrated worlds) the missing divisions — the id floor is the
+  // pre-rollover max, so retirements/departures pruning the working record never free up
+  // a low id that collides with a still-referenced (pre-rollover) player of the same id
+  const idFloor = Math.max(0, ...Object.keys(state.players).map(Number))
+  ;({ players, teams } = youthIntake(players, teams, rand, idFloor))
+  ;({ players, teams } = ensureThreeDivisions(players, teams, rand, idFloor))
+
+  players = ageSquads(players, rand)
+
+  const fixtures = [...new Set(teams.map(t => t.division))].sort().flatMap(d =>
+    generateDivisionFixtures(teams.filter(t => t.division === d).map(t => t.id), rand),
+  )
+
   return {
     ...state,
     teams,
+    players,
     finances,
-    players: ageSquads(players, rand),
+    history,
     season: state.season + 1,
     round: 1,
-    fixtures: [...new Set(teams.map(t => t.division))].sort().flatMap(d =>
-      generateDivisionFixtures(teams.filter(t => t.division === d).map(t => t.id), rand),
-    ),
+    fixtures,
+    cupFixtures: drawFirstCupRound(teams, rand),
     transferList: [],
     incomingOffers: [],
     brokeRounds: 0,

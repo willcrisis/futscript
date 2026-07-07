@@ -51,7 +51,7 @@ export function ageSquads(players: Record<number, Player>, rand: () => number): 
       return [p.id, {
         ...p, age,
         level: Math.max(1, p.level - decline),
-        form: 0, fitness: 100, yellowCards: 0, injuredForRounds: 0, suspendedForRounds: 0,
+        form: 0, fitness: 100, yellowCards: 0, injuredForRounds: 0, suspendedForRounds: 0, seasonGoals: 0,
       }]
     }),
   )
