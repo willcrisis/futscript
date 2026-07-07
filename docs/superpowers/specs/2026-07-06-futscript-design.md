@@ -85,7 +85,7 @@ Full stadium management (capacity tiers, construction time, ticket pricing, main
 
 ### Phase 6 — Quality of Life *(added 2026-07-07; UI redesign "Quiet Heritage" shipped between Phases 5 and 6)*
 - **Translations (en, pt)**: UI strings only via a hand-rolled typed dictionary (`t('squad.release')`); player/club names stay as data. Language select persisted alongside the theme, browser-default. Engine ledger labels become translation keys; existing saved ledgers migrate gracefully.
-- **Match speeds**: five ticker presets — Slow / Medium / Fast / Super fast / Ultra fast (~130 / 65 / 32 / 16 / 6 ms per match minute), choice persisted between matches.
+- **Match speeds**: five ticker presets — Slow / Medium / Fast / Super fast / Ultra fast (500 / 400 / 300 / 150 / 50 ms per match minute), choice persisted between matches.
 - **Squad icon actions**: Start / Sell / Release / Renew become icon buttons with tooltips and aria-labels.
 - **Simplified finance screen**: leads with "This week: Income · Expenses · Net" and a category breakdown (gates, sponsors, prizes / wages, maintenance, interest); the raw ledger collapses behind a details toggle.
 - **New career (reset)**: a "New career" action with two-click confirm on the Saves screen — today a fresh start is only reachable by getting sacked.
