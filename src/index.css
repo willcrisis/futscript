@@ -26,6 +26,7 @@ tr.starting { background: rgba(46, 139, 87, 0.25) !important; }
 tr.selected { outline: 2px solid steelblue; }
 .report { margin-top: 1rem; }
 td.actions button { margin-left: 0.25rem; }
+.offer { padding: 0.4rem 0.5rem; border-left: 3px solid steelblue; margin: 0.3rem 0; }
 
 .round-nav { display: flex; gap: 1rem; align-items: center; margin-bottom: 0.5rem; }
 td.home { text-align: right; }

@@ -8,8 +8,9 @@ import FixturesScreen from './screens/FixturesScreen'
 import SquadScreen from './screens/SquadScreen'
 import TableScreen from './screens/TableScreen'
 import MatchScreen from './screens/MatchScreen'
+import TransfersScreen from './screens/TransfersScreen'
 
-type Screen = 'squad' | 'table' | 'fixtures'
+type Screen = 'squad' | 'table' | 'fixtures' | 'transfers' | 'finance'
 
 export default function App() {
   const [state, setState] = useState<GameState>(() => load() ?? newGame(Date.now() % 2147483647))
@@ -48,7 +49,7 @@ export default function App() {
       </header>
       {champion && <div className="banner">🏆 {champion.name} are the season {state.season} champions!</div>}
       <nav>
-        {(['squad', 'table', 'fixtures'] as Screen[]).map(s => (
+        {(['squad', 'table', 'fixtures', 'transfers', 'finance'] as Screen[]).map(s => (
           <button key={s} className={screen === s ? 'active' : ''} onClick={() => setScreen(s)}>
             {s}
           </button>
@@ -57,6 +58,8 @@ export default function App() {
       {screen === 'squad' && <SquadScreen state={state} setState={setState} />}
       {screen === 'table' && <TableScreen state={state} />}
       {screen === 'fixtures' && <FixturesScreen state={state} />}
+      {screen === 'transfers' && <TransfersScreen state={state} setState={setState} />}
+      {screen === 'finance' && <p>Finance screen coming next.</p>}
     </div>
   )
 }
