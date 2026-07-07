@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'vitest'
+import { salaryFor, STARTING_CASH } from './finance'
 import { newGame } from './newGame'
 
 describe('newGame', () => {
@@ -33,5 +34,21 @@ describe('newGame', () => {
 
   it('differs between seeds', () => {
     expect(newGame(1)).not.toEqual(newGame(2))
+  })
+
+  it('gives every player a salary and contract, and every club starting cash', () => {
+    const state = newGame(123)
+    for (const p of Object.values(state.players)) {
+      expect(p.salary).toBe(salaryFor(p.level))
+      expect(p.contractSeasons).toBeGreaterThanOrEqual(1)
+      expect(p.contractSeasons).toBeLessThanOrEqual(3)
+    }
+    for (const t of state.teams) expect(t.cash).toBe(STARTING_CASH)
+    expect(state.transferList).toEqual([])
+    expect(state.incomingOffers).toEqual([])
+    expect(state.loanBalance).toBe(0)
+    expect(state.brokeRounds).toBe(0)
+    expect(state.gameOver).toBe(false)
+    expect(state.finances).toEqual([])
   })
 })

@@ -11,6 +11,8 @@ export interface Player {
   injuredForRounds: number // 0 = fit; N = misses the next N rounds
   suspendedForRounds: number // 0 = available
   yellowCards: number // this season; 3 accumulated = one-round ban
+  salary: number // weekly, dollars
+  contractSeasons: number // seasons remaining, including the current one
 }
 
 export type Tactic = 'defensive' | 'normal' | 'attacking'
@@ -42,6 +44,30 @@ export interface Team {
   lineup: number[] // 11 player ids, always valid for the formation
   tactic: Tactic
   trainingStyle: TrainingStyle
+  cash: number
+}
+
+export interface TransferListing {
+  playerId: number
+  sellerTeamId: number
+  minPrice: number
+  currentBid: number | null
+  currentBidderId: number | null
+  roundsLeft: number // sells to the highest bidder when this hits 0
+}
+
+export interface Offer {
+  playerId: number // a user player an AI club wants
+  bidderTeamId: number
+  amount: number
+  roundsLeft: number
+}
+
+export interface FinanceEntry {
+  season: number
+  round: number
+  label: string
+  amount: number // positive = income
 }
 
 export interface Fixture {
@@ -54,7 +80,7 @@ export interface Fixture {
 }
 
 export interface GameState {
-  version: 2
+  version: 3
   seed: number
   rngState: number // seeds the RNG for the next advanceRound
   season: number
@@ -63,4 +89,10 @@ export interface GameState {
   players: Record<number, Player>
   teams: Team[]
   fixtures: Fixture[]
+  transferList: TransferListing[]
+  incomingOffers: Offer[]
+  loanBalance: number // user club only
+  brokeRounds: number // consecutive rounds the user's cash was negative
+  gameOver: boolean // board ran out of patience
+  finances: FinanceEntry[] // user club ledger, newest last
 }

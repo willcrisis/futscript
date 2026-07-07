@@ -20,12 +20,13 @@ function makeTeam(
     players[pid] = {
       id: pid, name: `P${pid}`, age: 25, position, level,
       form: 0, fitness: 100, injuredForRounds: 0, suspendedForRounds: 0, yellowCards: 0,
+      salary: 5000, contractSeasons: 2,
     }
     return pid
   })
   // 4-4-2 starting XI: GK 0, DF 2-5, MF 8-11, FW 14-15
   const lineup = [0, 2, 3, 4, 5, 8, 9, 10, 11, 14, 15].map(i => id * 100 + i)
-  return { id, name: `T${id}`, playerIds, formation: '4-4-2', lineup, tactic: 'normal', trainingStyle }
+  return { id, name: `T${id}`, playerIds, formation: '4-4-2', lineup, tactic: 'normal', trainingStyle, cash: 1_000_000 }
 }
 
 describe('effectiveLevel', () => {
@@ -33,6 +34,7 @@ describe('effectiveLevel', () => {
     const base: Player = {
       id: 1, name: 'P', age: 25, position: 'MF', level: 50,
       form: 0, fitness: 100, injuredForRounds: 0, suspendedForRounds: 0, yellowCards: 0,
+      salary: 5000, contractSeasons: 2,
     }
     expect(effectiveLevel(base)).toBe(50)
     expect(effectiveLevel({ ...base, form: 3 })).toBeCloseTo(50 * 1.09)
@@ -135,8 +137,9 @@ describe('simulateMatch', () => {
       players[pid] = {
         id: pid, name: `P${pid}`, age: 25, position: 'FW', level: 60,
         form: 0, fitness: 100, injuredForRounds: 0, suspendedForRounds: 0, yellowCards: 0,
+        salary: 5000, contractSeasons: 2,
       }
-      return { id, name: `T${id}`, playerIds: [pid], formation: '4-4-2', lineup: [pid], tactic: 'normal', trainingStyle: 'normal' }
+      return { id, name: `T${id}`, playerIds: [pid], formation: '4-4-2', lineup: [pid], tactic: 'normal', trainingStyle: 'normal', cash: 1_000_000 }
     }
     const a = solo(1)
     const b = solo(2)

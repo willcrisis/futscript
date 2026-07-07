@@ -1,3 +1,4 @@
+import { salaryFor, STARTING_CASH } from './finance'
 import { generateFixtures } from './fixtures'
 import { autoPick } from './lineup'
 import { randomName, TEAM_NAMES } from './names'
@@ -21,28 +22,31 @@ export function newGame(seed: number): GameState {
   for (let t = 0; t < 16; t++) {
     const playerIds: number[] = []
     for (const position of SQUAD_TEMPLATE) {
+      const level = randInt(rand, 30, 70)
       const player: Player = {
         id: nextPlayerId++,
         name: randomName(rand),
         age: randInt(rand, 17, 34),
         position,
-        level: randInt(rand, 30, 70),
+        level,
         form: 0,
         fitness: 100,
         injuredForRounds: 0,
         suspendedForRounds: 0,
         yellowCards: 0,
+        salary: salaryFor(level),
+        contractSeasons: randInt(rand, 1, 3),
       }
       players[player.id] = player
       playerIds.push(player.id)
     }
-    teams.push({ id: t, name: TEAM_NAMES[t], playerIds, formation: '4-4-2', lineup: [], tactic: 'normal', trainingStyle: 'normal' })
+    teams.push({ id: t, name: TEAM_NAMES[t], playerIds, formation: '4-4-2', lineup: [], tactic: 'normal', trainingStyle: 'normal', cash: STARTING_CASH })
   }
 
   for (const team of teams) team.lineup = autoPick(team, players)
 
   return {
-    version: 2,
+    version: 3,
     seed,
     rngState: randInt(rand, 1, 2 ** 31 - 1),
     season: 1,
@@ -51,5 +55,11 @@ export function newGame(seed: number): GameState {
     players,
     teams,
     fixtures: generateFixtures(teams.map(t => t.id), rand),
+    transferList: [],
+    incomingOffers: [],
+    loanBalance: 0,
+    brokeRounds: 0,
+    gameOver: false,
+    finances: [],
   }
 }

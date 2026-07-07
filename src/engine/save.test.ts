@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'vitest'
+import { salaryFor } from './finance'
 import { newGame } from './newGame'
 import { load, save } from './save'
 
@@ -44,7 +45,7 @@ describe('save/load', () => {
     expect(load(storage)).toBeNull()
   })
 
-  it('migrates a v1 save to v2 with default new fields', () => {
+  it('migrates a v1 save all the way to v3', () => {
     const storage = fakeStorage()
     const v1 = {
       version: 1, seed: 1, rngState: 1, season: 1, round: 5, userTeamId: 0,
@@ -54,12 +55,31 @@ describe('save/load', () => {
     }
     storage.setItem('futscript-save', JSON.stringify(v1))
     const state = load(storage)
-    expect(state).not.toBeNull()
-    expect(state!.version).toBe(2)
-    expect(state!.round).toBe(5) // progress preserved
+    expect(state!.version).toBe(3)
     expect(state!.players[1]).toMatchObject({
-      level: 50, form: 0, fitness: 100, injuredForRounds: 0, suspendedForRounds: 0, yellowCards: 0,
+      form: 0, fitness: 100, yellowCards: 0, salary: salaryFor(50), contractSeasons: 2,
     })
-    expect(state!.teams[0]).toMatchObject({ tactic: 'normal', trainingStyle: 'normal' })
+    expect(state!.teams[0]).toMatchObject({ tactic: 'normal', trainingStyle: 'normal', cash: 1_000_000 })
+    expect(state!.transferList).toEqual([])
+    expect(state!.gameOver).toBe(false)
+  })
+
+  it('migrates a v2 save to v3', () => {
+    const storage = fakeStorage()
+    const v2 = {
+      version: 2, seed: 1, rngState: 1, season: 1, round: 5, userTeamId: 0,
+      players: { 1: {
+        id: 1, name: 'P1', age: 25, position: 'GK', level: 50,
+        form: 1, fitness: 80, injuredForRounds: 2, suspendedForRounds: 0, yellowCards: 1,
+      } },
+      teams: [{ id: 0, name: 'T0', playerIds: [1], formation: '4-4-2', lineup: [1], tactic: 'attacking', trainingStyle: 'youth' }],
+      fixtures: [],
+    }
+    storage.setItem('futscript-save', JSON.stringify(v2))
+    const state = load(storage)
+    expect(state!.version).toBe(3)
+    expect(state!.players[1]).toMatchObject({ form: 1, fitness: 80, salary: salaryFor(50), contractSeasons: 2 })
+    expect(state!.teams[0]).toMatchObject({ tactic: 'attacking', cash: 1_000_000 })
+    expect(state!.loanBalance).toBe(0)
   })
 })
