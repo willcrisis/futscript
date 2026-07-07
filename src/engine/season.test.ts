@@ -131,7 +131,7 @@ describe('newSeason', () => {
     const s2 = newSeason(s)
     expect(s2.season).toBe(2)
     expect(s2.round).toBe(1)
-    expect(s2.fixtures).toHaveLength(240)
+    expect(s2.fixtures).toHaveLength(720)
     expect(s2.fixtures.every(f => f.homeGoals === null)).toBe(true)
     for (const p of Object.values(s2.players)) {
       expect(p.age).toBe(s.players[p.id].age + 1)

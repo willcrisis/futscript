@@ -5,15 +5,15 @@ import { newGame } from './newGame'
 describe('newGame', () => {
   it('builds a full, valid world', () => {
     const state = newGame(123)
-    expect(state.teams).toHaveLength(16)
-    expect(Object.keys(state.players)).toHaveLength(16 * 18)
+    expect(state.teams).toHaveLength(48)
+    expect(Object.keys(state.players)).toHaveLength(48 * 18)
     expect(state.season).toBe(1)
     expect(state.round).toBe(1)
     expect(state.userTeamId).toBe(state.teams[0].id)
-    expect(state.fixtures).toHaveLength(240)
+    expect(state.fixtures).toHaveLength(720)
 
     const teamNames = new Set(state.teams.map(t => t.name))
-    expect(teamNames.size).toBe(16)
+    expect(teamNames.size).toBe(48)
 
     for (const team of state.teams) {
       expect(team.playerIds).toHaveLength(18)
@@ -21,7 +21,7 @@ describe('newGame', () => {
       for (const id of team.playerIds) {
         const p = state.players[id]
         expect(p.level).toBeGreaterThanOrEqual(30)
-        expect(p.level).toBeLessThanOrEqual(70)
+        expect(p.level).toBeLessThanOrEqual(75)
         expect(p.age).toBeGreaterThanOrEqual(17)
         expect(p.age).toBeLessThanOrEqual(34)
       }
@@ -50,5 +50,29 @@ describe('newGame', () => {
     expect(state.brokeRounds).toBe(0)
     expect(state.gameOver).toBe(false)
     expect(state.finances).toEqual([])
+  })
+
+  it('builds a three-division world with the user at the bottom', () => {
+    const state = newGame(123)
+    expect(state.teams).toHaveLength(48)
+    expect(Object.keys(state.players)).toHaveLength(48 * 18)
+    for (const division of [1, 2, 3]) {
+      expect(state.teams.filter(t => t.division === division)).toHaveLength(16)
+    }
+    expect(state.teams[0].division).toBe(3)
+    expect(state.userTeamId).toBe(state.teams[0].id)
+    expect(state.fixtures).toHaveLength(720) // 240 per division
+    expect(state.cupFixtures).toHaveLength(16)
+    // level bands per division
+    for (const team of state.teams) {
+      for (const id of team.playerIds) {
+        const level = state.players[id].level
+        if (team.division === 1) { expect(level).toBeGreaterThanOrEqual(45); expect(level).toBeLessThanOrEqual(75) }
+        if (team.division === 2) { expect(level).toBeGreaterThanOrEqual(38); expect(level).toBeLessThanOrEqual(68) }
+        if (team.division === 3) { expect(level).toBeGreaterThanOrEqual(30); expect(level).toBeLessThanOrEqual(60) }
+      }
+    }
+    const names = new Set(state.teams.map(t => t.name))
+    expect(names.size).toBe(48)
   })
 })

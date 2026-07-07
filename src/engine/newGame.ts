@@ -1,5 +1,6 @@
+import { drawFirstCupRound } from './cup'
 import { salaryFor, STARTING_CASH } from './finance'
-import { generateFixtures } from './fixtures'
+import { generateDivisionFixtures } from './fixtures'
 import { autoPick } from './lineup'
 import { randomName, TEAM_NAMES } from './names'
 import { mulberry32, randInt } from './rng'
@@ -13,16 +14,21 @@ const SQUAD_TEMPLATE: Position[] = [
   'FW', 'FW', 'FW', 'FW',
 ]
 
+// ids 0-15 are Division 3 (the user's club is teams[0]), 16-31 Division 2, 32-47 Division 1
+const DIVISION_OF = (index: number) => (index < 16 ? 3 : index < 32 ? 2 : 1)
+const LEVEL_RANGE: Record<number, [number, number]> = { 1: [45, 75], 2: [38, 68], 3: [30, 60] }
+
 export function newGame(seed: number): GameState {
   const rand = mulberry32(seed)
   const players: Record<number, Player> = {}
   const teams: Team[] = []
   let nextPlayerId = 1
 
-  for (let t = 0; t < 16; t++) {
+  for (let t = 0; t < 48; t++) {
+    const division = DIVISION_OF(t)
     const playerIds: number[] = []
     for (const position of SQUAD_TEMPLATE) {
-      const level = randInt(rand, 30, 70)
+      const level = randInt(rand, LEVEL_RANGE[division][0], LEVEL_RANGE[division][1])
       const player: Player = {
         id: nextPlayerId++,
         name: randomName(rand),
@@ -41,7 +47,7 @@ export function newGame(seed: number): GameState {
       players[player.id] = player
       playerIds.push(player.id)
     }
-    teams.push({ id: t, name: TEAM_NAMES[t], playerIds, formation: '4-4-2', lineup: [], tactic: 'normal', trainingStyle: 'normal', cash: STARTING_CASH, division: 1 })
+    teams.push({ id: t, name: TEAM_NAMES[t], playerIds, formation: '4-4-2', lineup: [], tactic: 'normal', trainingStyle: 'normal', cash: STARTING_CASH, division })
   }
 
   for (const team of teams) team.lineup = autoPick(team, players)
@@ -52,11 +58,13 @@ export function newGame(seed: number): GameState {
     rngState: randInt(rand, 1, 2 ** 31 - 1),
     season: 1,
     round: 1,
-    userTeamId: teams[0].id, // ponytail: user always gets team 0; team-picker screen when someone asks
+    userTeamId: teams[0].id, // ponytail: user always gets team 0; team-picker screen deferred
     players,
     teams,
-    fixtures: generateFixtures(teams.map(t => t.id), rand),
-    cupFixtures: [],
+    fixtures: [3, 2, 1].flatMap(d =>
+      generateDivisionFixtures(teams.filter(t => t.division === d).map(t => t.id), rand),
+    ),
+    cupFixtures: drawFirstCupRound(teams, rand),
     history: [],
     playFriendlies: false,
     transferList: [],
