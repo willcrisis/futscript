@@ -1309,6 +1309,7 @@ export function seasonRecord(state: GameState): SeasonRecord {
     userPosition: standings(state, userDivision).findIndex(r => r.teamId === state.userTeamId) + 1,
   }
 }
+```
 
 - [ ] **Step 5: Run tests to verify they pass**
 
