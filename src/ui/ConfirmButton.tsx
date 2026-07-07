@@ -8,9 +8,19 @@ interface Props {
   onConfirm: () => void
   size?: 'sm' | 'md'
   disabled?: boolean
+  'aria-label'?: string
+  title?: string
 }
 
-export default function ConfirmButton({ label, confirmLabel, onConfirm, size = 'sm', disabled = false }: Props) {
+export default function ConfirmButton({
+  label,
+  confirmLabel,
+  onConfirm,
+  size = 'sm',
+  disabled = false,
+  'aria-label': ariaLabel,
+  title,
+}: Props) {
   const [armed, setArmed] = useState(false)
   const timer = useRef<ReturnType<typeof setTimeout>>(undefined)
   const armedRef = useRef<HTMLSpanElement>(null)
@@ -41,7 +51,14 @@ export default function ConfirmButton({ label, confirmLabel, onConfirm, size = '
       </Button>
     </span>
   ) : (
-    <Button variant="ghost" size={size} disabled={disabled} onClick={() => !disabled && setArmed(true)}>
+    <Button
+      variant="ghost"
+      size={size}
+      disabled={disabled}
+      aria-label={ariaLabel}
+      title={title}
+      onClick={() => !disabled && setArmed(true)}
+    >
       {label}
     </Button>
   )

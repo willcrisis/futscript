@@ -18,6 +18,7 @@ import Button from '../ui/Button'
 import ConfirmButton from '../ui/ConfirmButton'
 import DataTable from '../ui/DataTable'
 import type { Column } from '../ui/DataTable'
+import { ExitIcon, PlayIcon, RenewIcon, TagIcon } from '../ui/icons'
 import MoneyText from '../ui/MoneyText'
 import ScreenHeader from '../ui/ScreenHeader'
 
@@ -155,27 +156,43 @@ export default function SquadScreen({ state, setState }: Props) {
                 variant="ghost"
                 size="sm"
                 disabled={!isAvailable(p)}
+                aria-label={t('squad.start')}
+                title={t('squad.start')}
                 onClick={() => withUserTeam((s, t) => updateTeam(s, t.id, { lineup: swapIn(t, s.players, p.id) }))}
               >
-                {t('squad.startButton')}
+                <PlayIcon />
               </Button>
             )}
             {listed ? (
               <Badge tone="muted">{t('squad.listedBadge')}</Badge>
             ) : (
-              <Button variant="ghost" size="sm" onClick={() => { setSelling(p.id); setAskingPrice(marketValue(p)) }}>
-                {t('squad.sellButton')}
+              <Button
+                variant="ghost"
+                size="sm"
+                aria-label={t('squad.sell')}
+                title={t('squad.sell')}
+                onClick={() => { setSelling(p.id); setAskingPrice(marketValue(p)) }}
+              >
+                <TagIcon />
               </Button>
             )}
             <ConfirmButton
-              label={t('squad.releaseButton')}
+              label={<ExitIcon />}
               confirmLabel={t('squad.confirmRelease', { amount: formatMoney(-severanceFor(p)) })}
               onConfirm={() => setState(s => releasePlayer(s, p.id))}
               size="sm"
+              aria-label={t('squad.release')}
+              title={t('squad.release')}
             />
             {p.contractSeasons <= 1 && (
-              <Button variant="ghost" size="sm" onClick={() => setState(s => renewContract(s, p.id))}>
-                {t('squad.renewButton', { amount: formatMoney(renewalSalary(p)) })}
+              <Button
+                variant="ghost"
+                size="sm"
+                aria-label={t('squad.renew')}
+                title={t('squad.renewFor', { salary: formatMoney(renewalSalary(p)) })}
+                onClick={() => setState(s => renewContract(s, p.id))}
+              >
+                <RenewIcon />
               </Button>
             )}
           </div>

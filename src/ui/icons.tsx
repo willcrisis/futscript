@@ -45,3 +45,15 @@ export const SavesIcon = ({ className }: { className?: string }) => (
 export const MoreIcon = ({ className }: { className?: string }) => (
   <Icon className={className}><circle cx="5" cy="12" r="1" /><circle cx="12" cy="12" r="1" /><circle cx="19" cy="12" r="1" /></Icon>
 )
+export const PlayIcon = ({ className }: { className?: string }) => (
+  <Icon className={className}><path d="M8 5v14l11-7L8 5Z" /></Icon>
+)
+export const TagIcon = ({ className }: { className?: string }) => (
+  <Icon className={className}><path d="M3 12V4h8l10 10-8 8L3 12Z" /><circle cx="8" cy="9" r="1.2" /></Icon>
+)
+export const ExitIcon = ({ className }: { className?: string }) => (
+  <Icon className={className}><path d="M9 4H5v16h4M14 8l4 4-4 4M18 12H9" /></Icon>
+)
+export const RenewIcon = ({ className }: { className?: string }) => (
+  <Icon className={className}><path d="M20 6v5h-5M4 18v-5h5" /><path d="M19.5 11a8 8 0 0 0-14-4M4.5 13a8 8 0 0 0 14 4" /></Icon>
+)
