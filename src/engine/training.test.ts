@@ -7,7 +7,7 @@ function makePlayer(id: number, age: number, over: Partial<Player> = {}): Player
   return {
     id, name: `P${id}`, age, position: 'MF', level: 50,
     form: 0, fitness: 100, injuredForRounds: 0, suspendedForRounds: 0, yellowCards: 0,
-    salary: 5000, contractSeasons: 2,
+    salary: 5000, contractSeasons: 2, seasonGoals: 0,
     ...over,
   }
 }
@@ -15,7 +15,7 @@ function makePlayer(id: number, age: number, over: Partial<Player> = {}): Player
 function makeTeam(playerIds: number[], trainingStyle: TrainingStyle): Team {
   return {
     id: 0, name: 'T', playerIds, formation: '4-4-2', lineup: [],
-    tactic: 'normal', trainingStyle, cash: 1_000_000,
+    tactic: 'normal', trainingStyle, cash: 1_000_000, division: 1,
   }
 }
 

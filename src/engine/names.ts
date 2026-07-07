@@ -3,6 +3,14 @@ export const TEAM_NAMES = [
   'Nacional AC', 'Portuária FC', 'Ferroviário EC', 'Comercial FC',
   'Operário FC', 'Independência', 'Guarani do Norte', 'Estrela do Sul',
   'Marítimo FC', 'Alvorada EC', 'Cruzeiro do Oeste', 'Tupi da Serra',
+  'Águia Dourada', 'Botafogo da Colina', 'Sereno FC', 'AA Cachoeira',
+  'Primavera EC', 'Vila Rica FC', 'Horizonte AC', 'Pantanal EC',
+  'Costa Azul FC', 'Mineração EC', 'Bandeirante FC', 'Sete Lagoas AC',
+  'Fronteira EC', 'Palmares FC', 'Cabo Verde AC', 'Riacho Grande',
+  'Imperial FC', 'Catarinense EC', 'Boa Vista AC', 'Diamante Negro',
+  'São Rafael FC', 'Amazônia EC', 'Cerrado FC', 'Litorânea AC',
+  'Vale Verde EC', 'Piratininga FC', 'Aurora do Leste', 'Granja Real',
+  'Serra Azul FC', 'Baía Formosa', 'Rio Manso EC', 'Lagoa Dourada',
 ]
 
 const FIRST = [

@@ -14,7 +14,8 @@ export function load(storage: Storage = localStorage): GameState | null {
     let state = JSON.parse(raw)
     if (state?.version === 1) state = migrateV1(state)
     if (state?.version === 2) state = migrateV2(state)
-    return state?.version === 3 ? (state as GameState) : null
+    if (state?.version === 3) state = migrateV3(state)
+    return state?.version === 4 ? (state as GameState) : null
   } catch {
     return null
   }
@@ -34,7 +35,7 @@ function migrateV1(s: any): any {
   }
 }
 
-function migrateV2(s: any): GameState {
+function migrateV2(s: any): any {
   return {
     ...s,
     version: 3,
@@ -48,5 +49,21 @@ function migrateV2(s: any): GameState {
     brokeRounds: 0,
     gameOver: false,
     finances: [],
+  }
+}
+
+// Migrated worlds keep their 16 clubs as Division 1; the next season
+// rollover generates Divisions 2 and 3 (ensureThreeDivisions).
+function migrateV3(s: any): GameState {
+  return {
+    ...s,
+    version: 4,
+    players: Object.fromEntries(
+      Object.values<any>(s.players).map(p => [p.id, { ...p, seasonGoals: 0 }]),
+    ),
+    teams: s.teams.map((t: any) => ({ ...t, division: 1 })),
+    cupFixtures: [],
+    history: [],
+    playFriendlies: false,
   }
 }

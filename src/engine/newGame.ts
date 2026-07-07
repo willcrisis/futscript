@@ -36,17 +36,18 @@ export function newGame(seed: number): GameState {
         yellowCards: 0,
         salary: salaryFor(level),
         contractSeasons: randInt(rand, 1, 3),
+        seasonGoals: 0,
       }
       players[player.id] = player
       playerIds.push(player.id)
     }
-    teams.push({ id: t, name: TEAM_NAMES[t], playerIds, formation: '4-4-2', lineup: [], tactic: 'normal', trainingStyle: 'normal', cash: STARTING_CASH })
+    teams.push({ id: t, name: TEAM_NAMES[t], playerIds, formation: '4-4-2', lineup: [], tactic: 'normal', trainingStyle: 'normal', cash: STARTING_CASH, division: 1 })
   }
 
   for (const team of teams) team.lineup = autoPick(team, players)
 
   return {
-    version: 3,
+    version: 4,
     seed,
     rngState: randInt(rand, 1, 2 ** 31 - 1),
     season: 1,
@@ -55,6 +56,9 @@ export function newGame(seed: number): GameState {
     players,
     teams,
     fixtures: generateFixtures(teams.map(t => t.id), rand),
+    cupFixtures: [],
+    history: [],
+    playFriendlies: false,
     transferList: [],
     incomingOffers: [],
     loanBalance: 0,

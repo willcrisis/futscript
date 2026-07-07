@@ -13,6 +13,7 @@ export interface Player {
   yellowCards: number // this season; 3 accumulated = one-round ban
   salary: number // weekly, dollars
   contractSeasons: number // seasons remaining, including the current one
+  seasonGoals: number // this season, league + cup (friendlies excluded)
 }
 
 export type Tactic = 'defensive' | 'normal' | 'attacking'
@@ -45,6 +46,7 @@ export interface Team {
   tactic: Tactic
   trainingStyle: TrainingStyle
   cash: number
+  division: number // 1 (top) .. 3
 }
 
 export interface TransferListing {
@@ -79,8 +81,28 @@ export interface Fixture {
   events?: MatchEvent[]
 }
 
+export interface CupFixture {
+  week: number // calendar week the tie is played
+  cupRound: number // 1..6; division 1 clubs enter in round 2
+  homeId: number
+  awayId: number
+  homeGoals: number | null
+  awayGoals: number | null
+  winnerId: number | null // set when played; a drawn tie is decided on penalties
+  events?: MatchEvent[]
+}
+
+export interface SeasonRecord {
+  season: number
+  champions: string[] // champion club name per division, index 0 = Division 1
+  cupWinner: string // '—' when no cup ran (not-yet-expanded migrated world)
+  topScorer: { player: string; team: string; goals: number }
+  userDivision: number
+  userPosition: number
+}
+
 export interface GameState {
-  version: 3
+  version: 4
   seed: number
   rngState: number // seeds the RNG for the next advanceRound
   season: number
@@ -89,6 +111,9 @@ export interface GameState {
   players: Record<number, Player>
   teams: Team[]
   fixtures: Fixture[]
+  cupFixtures: CupFixture[]
+  history: SeasonRecord[] // one record per completed season
+  playFriendlies: boolean // user setting: friendlies on free weeks
   transferList: TransferListing[]
   incomingOffers: Offer[]
   loanBalance: number // user club only

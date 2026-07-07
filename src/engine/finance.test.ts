@@ -11,7 +11,7 @@ export function makePlayer(id: number, over: Partial<Player> = {}): Player {
   return {
     id, name: `P${id}`, age: 25, position: 'MF', level: 50,
     form: 0, fitness: 100, injuredForRounds: 0, suspendedForRounds: 0, yellowCards: 0,
-    salary: salaryFor(50), contractSeasons: 2,
+    salary: salaryFor(50), contractSeasons: 2, seasonGoals: 0,
     ...over,
   }
 }

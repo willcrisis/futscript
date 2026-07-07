@@ -16,13 +16,13 @@ function makeSquad(): { team: Team; players: Record<number, Player> } {
     players[id] = {
       id, name: `P${id}`, age: 25, position, level: 90 - i,
       form: 0, fitness: 100, injuredForRounds: 0, suspendedForRounds: 0, yellowCards: 0,
-      salary: 5000, contractSeasons: 2,
+      salary: 5000, contractSeasons: 2, seasonGoals: 0,
     }
     return id
   })
   const team: Team = {
     id: 0, name: 'Test FC', playerIds, formation: '4-4-2', lineup: [],
-    tactic: 'normal', trainingStyle: 'normal', cash: 1_000_000,
+    tactic: 'normal', trainingStyle: 'normal', cash: 1_000_000, division: 1,
   }
   return { team, players }
 }
