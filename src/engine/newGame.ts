@@ -7,7 +7,7 @@ import { mulberry32, randInt } from './rng'
 import type { GameState, Player, Position, Team } from './types'
 
 // 2 GK, 6 DF, 6 MF, 4 FW — enough to fill every formation in FORMATIONS
-const SQUAD_TEMPLATE: Position[] = [
+export const SQUAD_TEMPLATE: Position[] = [
   'GK', 'GK',
   'DF', 'DF', 'DF', 'DF', 'DF', 'DF',
   'MF', 'MF', 'MF', 'MF', 'MF', 'MF',
@@ -16,7 +16,7 @@ const SQUAD_TEMPLATE: Position[] = [
 
 // ids 0-15 are Division 3 (the user's club is teams[0]), 16-31 Division 2, 32-47 Division 1
 const DIVISION_OF = (index: number) => (index < 16 ? 3 : index < 32 ? 2 : 1)
-const LEVEL_RANGE: Record<number, [number, number]> = { 1: [45, 75], 2: [38, 68], 3: [30, 60] }
+export const LEVEL_RANGE: Record<number, [number, number]> = { 1: [45, 75], 2: [38, 68], 3: [30, 60] }
 
 export function newGame(seed: number): GameState {
   const rand = mulberry32(seed)
