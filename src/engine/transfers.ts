@@ -6,6 +6,9 @@ export const LISTING_ROUNDS = 3
 
 export function transferPlayer(state: GameState, playerId: number, toTeamId: number, fee: number): GameState {
   const from = state.teams.find(t => t.playerIds.includes(playerId))!
+  // Seller's squad may have shrunk below MIN_SQUAD since the player was listed
+  // (e.g. via releases or other sales resolving first) — don't let this sale drop it further.
+  if (from.playerIds.length <= MIN_SQUAD) return state
   const player = state.players[playerId]
   let teams = state.teams.map(t => {
     if (t.id === from.id) {

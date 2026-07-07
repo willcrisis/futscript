@@ -26,6 +26,20 @@ describe('transferPlayer', () => {
     // user (team 0) bought — ledger entry written
     expect(s1.finances.some(e => e.amount === -400_000)).toBe(true)
   })
+
+  it('returns state unchanged when the seller is at MIN_SQUAD', () => {
+    const s0 = newGame(1)
+    const t1 = s0.teams[1]
+    const shrunkPlayerIds = t1.playerIds.slice(0, MIN_SQUAD)
+    const s: GameState = {
+      ...s0,
+      teams: s0.teams.map(t => (t.id === 1
+        ? { ...t, playerIds: shrunkPlayerIds, lineup: t.lineup.filter(id => shrunkPlayerIds.includes(id)) }
+        : t)),
+    }
+    const playerId = shrunkPlayerIds[0]
+    expect(transferPlayer(s, playerId, 0, 400_000)).toEqual(s)
+  })
 })
 
 describe('listPlayer / placeBid', () => {
@@ -78,6 +92,19 @@ describe('releasePlayer', () => {
     const s0 = newGame(1)
     const aiPlayer = s0.teams[3].playerIds[0]
     expect(releasePlayer(s0, aiPlayer)).toEqual(s0)
+  })
+
+  it('refuses when the user squad is at MIN_SQUAD', () => {
+    const s0 = newGame(1)
+    const t0 = s0.teams[0]
+    const shrunkPlayerIds = t0.playerIds.slice(0, MIN_SQUAD)
+    const s: GameState = {
+      ...s0,
+      teams: s0.teams.map(t => (t.id === 0
+        ? { ...t, playerIds: shrunkPlayerIds, lineup: t.lineup.filter(id => shrunkPlayerIds.includes(id)) }
+        : t)),
+    }
+    expect(releasePlayer(s, shrunkPlayerIds[0])).toEqual(s)
   })
 })
 
