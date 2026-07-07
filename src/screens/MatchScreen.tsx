@@ -35,7 +35,9 @@ function initialMinute(): number {
 
 function initialSpeedIndex(): number {
   if (typeof localStorage === 'undefined') return 2
-  const stored = Number(localStorage.getItem('futscript-speed'))
+  const raw = localStorage.getItem('futscript-speed')
+  if (raw === null || raw === '') return 2
+  const stored = Number(raw)
   return Number.isInteger(stored) && stored >= 0 && stored <= 4 ? stored : 2
 }
 
@@ -89,7 +91,7 @@ export default function MatchScreen({ fixture, state, onClose }: Props) {
                 className={speedIndex === idx ? 'border-accent! text-accent-strong!' : ''}
                 onClick={() => {
                   setSpeedIndex(idx)
-                  localStorage.setItem('futscript-speed', String(idx))
+                  if (typeof localStorage !== 'undefined') localStorage.setItem('futscript-speed', String(idx))
                 }}
               >
                 {t(speed.key)}
