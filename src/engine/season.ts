@@ -162,6 +162,21 @@ export function newSeason(state: GameState): GameState {
   // the season's story is written before anything moves
   const history = [...state.history, seasonRecord(state)]
 
+  // the record books remember every goal, even after retirement
+  const scorers = new Map(state.allTimeScorers.map(e => [e.playerId, { ...e }]))
+  for (const p of Object.values(state.players)) {
+    if (p.seasonGoals === 0) continue
+    const club = state.teams.find(t => t.playerIds.includes(p.id))
+    const entry = scorers.get(p.id)
+    if (entry) {
+      entry.goals += p.seasonGoals
+      entry.team = club?.name ?? entry.team
+    } else {
+      scorers.set(p.id, { playerId: p.id, player: p.name, team: club?.name ?? '—', goals: p.seasonGoals })
+    }
+  }
+  const allTimeScorers = [...scorers.values()].sort((a, b) => b.goals - a.goals).slice(0, 50)
+
   let teams = state.teams
   let finances = state.finances
   const addEntry = (label: string, amount: number) => {
@@ -243,6 +258,7 @@ export function newSeason(state: GameState): GameState {
     players,
     finances,
     history,
+    allTimeScorers,
     season: state.season + 1,
     round: 1,
     fixtures,

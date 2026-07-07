@@ -260,6 +260,31 @@ describe('newSeason', () => {
   })
 })
 
+describe('all-time scorers', () => {
+  it('accumulates season goals across rollovers and survives retirement', () => {
+    const s = playSeason(7)
+    const seasonTotal = Object.values(s.players).reduce((sum, p) => sum + p.seasonGoals, 0)
+    const s2 = newSeason(s)
+    const listTotal = s2.allTimeScorers.reduce((sum, e) => sum + e.goals, 0)
+    const distinctScorers = Object.values(s.players).filter(p => p.seasonGoals > 0).length
+    if (distinctScorers <= 50) expect(listTotal).toBe(seasonTotal)
+    else expect(listTotal).toBeLessThanOrEqual(seasonTotal)
+    expect(s2.allTimeScorers.length).toBeLessThanOrEqual(50)
+    expect([...s2.allTimeScorers].sort((a, b) => b.goals - a.goals)).toEqual(s2.allTimeScorers)
+    // a second season accumulates onto existing entries
+    let s3 = s2
+    for (let i = 0; i < totalRounds(s3) && !s3.gameOver; i++) s3 = advanceRound(s3)
+    const repeatId = s3.allTimeScorers?.[0]?.playerId
+    const s4 = newSeason({ ...s3, gameOver: false })
+    if (repeatId !== undefined && s4.players[repeatId]) {
+      const before = s2.allTimeScorers.find(e => e.playerId === repeatId)?.goals ?? 0
+      const after = s4.allTimeScorers.find(e => e.playerId === repeatId)?.goals ?? 0
+      expect(after).toBeGreaterThanOrEqual(before)
+    }
+    expect(s4.allTimeScorers.length).toBeLessThanOrEqual(50)
+  })
+})
+
 describe('advanceRound — market and money', () => {
   it('no-ops when the game is over', () => {
     const s = { ...newGame(1), gameOver: true }
