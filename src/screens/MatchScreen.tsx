@@ -33,7 +33,7 @@ export default function MatchScreen({ fixture, state, onClose }: Props) {
     if (done) return
     const id = setInterval(() => setMinute(m => (m >= 90 ? m : m + 1)), speed === 2 ? 32 : 65)
     return () => clearInterval(id)
-  }, [speed])
+  }, [speed, done])
 
   const name = (id: number) => state.teams.find(t => t.id === id)!.name
   const visibleEvents = (fixture.events ?? []).filter(e => e.minute <= minute)
@@ -66,7 +66,7 @@ export default function MatchScreen({ fixture, state, onClose }: Props) {
               variant="ghost"
               size="sm"
               aria-pressed={speed === 1}
-              className={speed === 1 ? 'border-accent text-accent-strong' : ''}
+              className={speed === 1 ? 'border-accent! text-accent-strong!' : ''}
               onClick={() => setSpeed(1)}
             >
               1×
@@ -75,7 +75,7 @@ export default function MatchScreen({ fixture, state, onClose }: Props) {
               variant="ghost"
               size="sm"
               aria-pressed={speed === 2}
-              className={speed === 2 ? 'border-accent text-accent-strong' : ''}
+              className={speed === 2 ? 'border-accent! text-accent-strong!' : ''}
               onClick={() => setSpeed(2)}
             >
               2×
@@ -91,6 +91,7 @@ export default function MatchScreen({ fixture, state, onClose }: Props) {
           events={visibleEvents.slice().reverse()}
           state={state}
           emphasisTeamId={userInvolved ? state.userTeamId : undefined}
+          emptyText="The match is under way…"
         />
       </div>
     </div>

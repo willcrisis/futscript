@@ -40,13 +40,16 @@ interface Props {
   events: MatchEvent[]
   state: GameState
   emphasisTeamId?: number
+  emptyText?: string
 }
 
-export default function EventFeed({ events, state, emphasisTeamId }: Props) {
+export default function EventFeed({
+  events, state, emphasisTeamId, emptyText = 'No report available for this match.',
+}: Props) {
   const name = (id: number) => state.teams.find(t => t.id === id)!.name
 
   if (events.length === 0) {
-    return <p className="py-1.5 text-sm text-ink-muted">No report available for this match.</p>
+    return <p className="py-1.5 text-sm text-ink-muted">{emptyText}</p>
   }
 
   return (
