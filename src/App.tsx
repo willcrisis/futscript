@@ -12,6 +12,7 @@ import MatchScreen from './screens/MatchScreen'
 import type { MatchLike } from './screens/MatchScreen'
 import TransfersScreen from './screens/TransfersScreen'
 import FinanceScreen from './screens/FinanceScreen'
+import CupScreen from './screens/CupScreen'
 
 type Screen = 'squad' | 'table' | 'fixtures' | 'cup' | 'transfers' | 'finance' | 'history'
 
@@ -93,7 +94,7 @@ export default function App() {
       {/* key: remount on rollover so the division select re-seeds after promotion/relegation */}
       {screen === 'table' && <TableScreen key={state.season} state={state} />}
       {screen === 'fixtures' && <FixturesScreen key={state.season} state={state} />}
-      {screen === 'cup' && <p>Cup screen coming next.</p>}
+      {screen === 'cup' && <CupScreen state={state} />}
       {screen === 'transfers' && <TransfersScreen state={state} setState={setState} />}
       {screen === 'finance' && <FinanceScreen state={state} setState={setState} />}
       {screen === 'history' && <p>History screen coming next.</p>}
