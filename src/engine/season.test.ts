@@ -5,7 +5,7 @@ import { advanceRound, applyMatchConsequences, newSeason, totalRounds } from './
 import { standings } from './standings'
 import { adjustCash, salaryFor } from './finance'
 import { cupWinner } from './cup'
-import type { MatchEvent, Player } from './types'
+import type { GameState, MatchEvent, Player } from './types'
 
 function makePlayer(id: number, over: Partial<Player> = {}): Player {
   return {
@@ -270,5 +270,46 @@ describe('newSeason — money and contracts', () => {
     expect(s2.transferList).toEqual([])
     expect(s2.incomingOffers).toEqual([])
     expect(s2.brokeRounds).toBe(0)
+  })
+})
+
+describe('friendlies', () => {
+  function toFreeWeek(seed: number, playFriendlies: boolean) {
+    let s: GameState = { ...newGame(seed), playFriendlies }
+    // eliminate the user from the cup so week 4 is a free week: resolve their round-1 tie against them
+    s = {
+      ...s,
+      cupFixtures: s.cupFixtures.map(f =>
+        f.homeId === s.userTeamId || f.awayId === s.userTeamId
+          ? { ...f, homeGoals: 0, awayGoals: 3, winnerId: f.homeId === s.userTeamId ? f.awayId : f.homeId, week: 0 }
+          : f,
+      ),
+    }
+    for (let week = 1; week < 4; week++) s = advanceRound(s)
+    return s // next advance simulates week 4 (cup week, user idle)
+  }
+
+  it('plays a friendly for income when enabled', () => {
+    const s = toFreeWeek(11, true)
+    const s2 = advanceRound(s)
+    expect(s2.finances.some(e => e.label === 'Friendly gate receipts' && e.amount > 0)).toBe(true)
+  })
+
+  it('does not play one when disabled', () => {
+    const s = toFreeWeek(11, false)
+    const s2 = advanceRound(s)
+    expect(s2.finances.some(e => e.label === 'Friendly gate receipts')).toBe(false)
+  })
+
+  it('friendly goals never reach season tallies', () => {
+    const s = toFreeWeek(11, true)
+    const before = Object.values(s.players).reduce((sum, p) => sum + p.seasonGoals, 0)
+    const s2 = advanceRound(s)
+    const storedGoalEvents = [...s2.fixtures, ...s2.cupFixtures]
+      .flatMap(f => f.events ?? []).filter(e => e.type === 'goal').length
+    const after = Object.values(s2.players).reduce((sum, p) => sum + p.seasonGoals, 0)
+    expect(after - before).toBeLessThanOrEqual(storedGoalEvents) // friendly events are not stored anywhere
+    // and specifically: tallies match stored events exactly (invariant from Task 4 holds)
+    expect(after).toBe(storedGoalEvents)
   })
 })

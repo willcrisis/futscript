@@ -1,5 +1,5 @@
 import { drawNextCupRound } from './cup'
-import { adjustCash, runWeeklyFinances } from './finance'
+import { adjustCash, DIVISION_FACTOR, runWeeklyFinances, TICKET_PRICE, userLedger } from './finance'
 import { generateDivisionFixtures } from './fixtures'
 import { autoPick, patchLineup } from './lineup'
 import { simulateMatch } from './match'
@@ -52,6 +52,17 @@ export function advanceRound(state: GameState): GameState {
   const cupToday = state.cupFixtures.filter(f => f.week === week)
   const playingIds = new Set([...leagueToday, ...cupToday].flatMap(f => [f.homeId, f.awayId]))
 
+  // an idle user on a cup week can host a friendly (user setting)
+  let friendly: { homeId: number; awayId: number } | null = null
+  if (state.playFriendlies && cupToday.length > 0 && !playingIds.has(state.userTeamId)) {
+    const idle = state.teams.filter(t => t.id !== state.userTeamId && !playingIds.has(t.id))
+    if (idle.length > 0) {
+      friendly = { homeId: state.userTeamId, awayId: idle[Math.floor(rand() * idle.length)].id }
+      playingIds.add(friendly.homeId)
+      playingIds.add(friendly.awayId)
+    }
+  }
+
   // refresh lineups only for clubs that play this week
   const teams = state.teams.map(t =>
     playingIds.has(t.id)
@@ -79,6 +90,17 @@ export function advanceRound(state: GameState): GameState {
     return { ...f, homeGoals: result.homeGoals, awayGoals: result.awayGoals, winnerId, events: result.events }
   })
 
+  let friendlyIncome = 0
+  if (friendly) {
+    const result = simulateMatch(byId.get(friendly.homeId)!, byId.get(friendly.awayId)!, state.players, rand)
+    // friendlies: knocks are real, bookings and goals are not
+    roundEvents.push(...result.events.filter(e => e.type === 'injury'))
+    const user = byId.get(state.userTeamId)!
+    friendlyIncome = Math.round(
+      (6000 + randInt(rand, -500, 500)) * TICKET_PRICE * (DIVISION_FACTOR[user.division] ?? 1),
+    )
+  }
+
   // existing bans/injuries tick down BEFORE this week's knocks land
   let players: Record<number, Player> = Object.fromEntries(
     Object.values(state.players).map(p => [p.id, {
@@ -94,6 +116,13 @@ export function advanceRound(state: GameState): GameState {
   players = applyWeeklyUpdates(players, teams, starters, rand)
 
   let s: GameState = { ...state, teams, players, fixtures, cupFixtures }
+  if (friendlyIncome > 0) {
+    s = {
+      ...s,
+      teams: adjustCash(s.teams, s.userTeamId, friendlyIncome),
+      finances: userLedger(s, 'Friendly gate receipts', friendlyIncome),
+    }
+  }
   s = runTransfers(s, rand)
   s = runWeeklyFinances(s, rand)
 
