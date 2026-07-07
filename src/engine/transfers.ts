@@ -125,7 +125,24 @@ export function runTransfers(state: GameState, rand: () => number): GameState {
       .filter(o => o.roundsLeft > 0),
   }
 
-  // [Task 5 inserts incoming-offer generation here]
+  // occasionally an AI club knocks on the user's door
+  if (rand() < 0.15) {
+    const user = s.teams.find(t => t.id === s.userTeamId)!
+    const suitors = s.teams.filter(t => t.id !== s.userTeamId && t.cash > 200_000)
+    if (suitors.length > 0 && user.playerIds.length > MIN_SQUAD) {
+      const suitor = suitors[Math.floor(rand() * suitors.length)]
+      const targetId = user.playerIds[Math.floor(rand() * user.playerIds.length)]
+      const amount = Math.round(marketValue(s.players[targetId]) * (0.85 + rand() * 0.45))
+      const alreadyWanted = s.incomingOffers.some(o => o.playerId === targetId)
+      const alreadyListed = s.transferList.some(l => l.playerId === targetId)
+      if (!alreadyWanted && !alreadyListed && amount <= suitor.cash) {
+        s = {
+          ...s,
+          incomingOffers: [...s.incomingOffers, { playerId: targetId, bidderTeamId: suitor.id, amount, roundsLeft: OFFER_ROUNDS }],
+        }
+      }
+    }
+  }
 
   // AI clubs list players: forced sale when broke, otherwise occasional squad trim
   for (const team of s.teams) {
@@ -174,4 +191,25 @@ export function runTransfers(state: GameState, rand: () => number): GameState {
     }
   }
   return s
+}
+
+export function acceptOffer(state: GameState, playerId: number, bidderTeamId: number): GameState {
+  const offer = state.incomingOffers.find(o => o.playerId === playerId && o.bidderTeamId === bidderTeamId)
+  const user = state.teams.find(t => t.id === state.userTeamId)!
+  if (!offer || user.playerIds.length <= MIN_SQUAD) return state
+  return transferPlayer(state, playerId, bidderTeamId, offer.amount) // clears every offer for the player
+}
+
+export function rejectOffer(state: GameState, playerId: number, bidderTeamId: number): GameState {
+  return {
+    ...state,
+    incomingOffers: state.incomingOffers.filter(o => !(o.playerId === playerId && o.bidderTeamId === bidderTeamId)),
+  }
+}
+
+// counter = put him on the market at a premium; the suitor can bid like anyone else
+export function counterOffer(state: GameState, playerId: number, bidderTeamId: number): GameState {
+  const offer = state.incomingOffers.find(o => o.playerId === playerId && o.bidderTeamId === bidderTeamId)
+  if (!offer) return state
+  return listPlayer(rejectOffer(state, playerId, bidderTeamId), playerId, Math.round(offer.amount * 1.2))
 }

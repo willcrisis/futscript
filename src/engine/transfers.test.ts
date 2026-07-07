@@ -3,7 +3,7 @@ import { marketValue, salaryFor, severanceFor } from './finance'
 import { mulberry32 } from './rng'
 import { newGame } from './newGame'
 import {
-  listPlayer, MIN_SQUAD, placeBid, releasePlayer, renewalSalary, renewContract,
+  acceptOffer, counterOffer, listPlayer, MIN_SQUAD, placeBid, rejectOffer, releasePlayer, renewalSalary, renewContract,
   requiredBid, runTransfers, transferPlayer,
 } from './transfers'
 import type { GameState } from './types'
@@ -204,5 +204,56 @@ describe('runTransfers', () => {
   it('is deterministic', () => {
     const s0 = newGame(11)
     expect(runTransfers(s0, mulberry32(4))).toEqual(runTransfers(s0, mulberry32(4)))
+  })
+})
+
+describe('incoming offers', () => {
+  function withOffer(s: GameState): GameState {
+    const playerId = s.teams[0].playerIds[0]
+    return { ...s, incomingOffers: [{ playerId, bidderTeamId: 3, amount: 500_000, roundsLeft: 2 }] }
+  }
+
+  it('offers arrive for user players over a season of market ticks', () => {
+    let s = newGame(21)
+    const rand = mulberry32(21)
+    let arrived = false
+    for (let i = 0; i < 30 && !arrived; i++) {
+      s = runTransfers(s, rand)
+      arrived = s.incomingOffers.length > 0
+    }
+    expect(arrived).toBe(true)
+  })
+
+  it('offers expire after their rounds run out', () => {
+    const s = withOffer(newGame(1))
+    const s1 = runTransfers(s, mulberry32(1))
+    const s2 = runTransfers(s1, mulberry32(1))
+    expect(s2.incomingOffers.find(o => o.bidderTeamId === 3)).toBeUndefined()
+  })
+
+  it('accepting sells the player at the offered price', () => {
+    const s = withOffer(newGame(1))
+    const { playerId } = s.incomingOffers[0]
+    const s1 = acceptOffer(s, playerId, 3)
+    expect(s1.teams[0].playerIds).not.toContain(playerId)
+    expect(s1.teams[3].playerIds).toContain(playerId)
+    expect(cashOf(s1, 0)).toBe(cashOf(s, 0) + 500_000)
+    expect(s1.incomingOffers).toHaveLength(0)
+  })
+
+  it('rejecting just removes the offer', () => {
+    const s = withOffer(newGame(1))
+    const { playerId } = s.incomingOffers[0]
+    const s1 = rejectOffer(s, playerId, 3)
+    expect(s1.incomingOffers).toHaveLength(0)
+    expect(s1.teams[0].playerIds).toContain(playerId)
+  })
+
+  it('countering lists the player at a 20% premium', () => {
+    const s = withOffer(newGame(1))
+    const { playerId } = s.incomingOffers[0]
+    const s1 = counterOffer(s, playerId, 3)
+    expect(s1.incomingOffers).toHaveLength(0)
+    expect(s1.transferList[0]).toMatchObject({ playerId, sellerTeamId: 0, minPrice: 600_000 })
   })
 })
