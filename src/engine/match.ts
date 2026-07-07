@@ -22,7 +22,7 @@ const INJURY_STYLE_MULT: Record<TrainingStyle, number> = {
   light: 0.7, normal: 1, intensive: 1.4, youth: 1,
 }
 
-// Tuned for ~2.7 goals per match between even sides. ponytail: constants
+// Tuned for ~1.3 goals per match between even sides. ponytail: constants
 // picked by feel; retune here if seasons come out goal-starved or goal-flooded.
 const HOME_ATTACK_BOOST = 1.1
 const CHANCE_RATE = 0.1
