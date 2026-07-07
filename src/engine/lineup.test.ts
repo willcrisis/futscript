@@ -60,6 +60,25 @@ describe('swapIn', () => {
     expect(next).not.toContain(1)
     expect(next).toHaveLength(11)
   })
+
+  it('replaces the weakest starter overall when the lineup has no player of the bench player position', () => {
+    const { team, players } = makeSquad()
+    // both GKs injured — autoPick back-fills the hole with an outfielder
+    players[1] = { ...players[1], injuredForRounds: 2 }
+    players[2] = { ...players[2], injuredForRounds: 2 }
+    const lineup = autoPick(team, players)
+    expect(lineup.some(id => players[id].position === 'GK')).toBe(false)
+    const t = { ...team, lineup }
+    // GK 2 recovers and the user clicks his Start button
+    const recovered: Record<number, Player> = { ...players, 2: { ...players[2], injuredForRounds: 0 } }
+    let next: number[] = []
+    expect(() => {
+      next = swapIn(t, recovered, 2)
+    }).not.toThrow()
+    expect(next).toHaveLength(11)
+    expect(next).toContain(2)
+    expect(new Set(next).size).toBe(11)
+  })
 })
 
 describe('availability', () => {
@@ -110,5 +129,50 @@ describe('availability', () => {
     const { team, players } = makeSquad()
     const original = autoPick(team, players)
     expect(patchLineup({ ...team, lineup: original }, players)).toEqual(original)
+  })
+
+  it('patchLineup restores formation shape once a back-filled hole recovers', () => {
+    const { team, players } = makeSquad()
+    // both GKs injured — autoPick fields 11 with no GK, an outfielder deputizes
+    players[1] = { ...players[1], injuredForRounds: 2 }
+    players[2] = { ...players[2], injuredForRounds: 2 }
+    const backfilled = autoPick(team, players)
+    expect(backfilled.some(id => players[id].position === 'GK')).toBe(false)
+    const t = { ...team, lineup: backfilled }
+    // both GKs recover
+    const recovered: Record<number, Player> = {
+      ...players,
+      1: { ...players[1], injuredForRounds: 0 },
+      2: { ...players[2], injuredForRounds: 0 },
+    }
+    const patched = patchLineup(t, recovered)
+    expect(patched).toHaveLength(11)
+    expect(patched.some(id => recovered[id].position === 'GK')).toBe(true)
+    const counts: Record<Position, number> = { GK: 0, DF: 0, MF: 0, FW: 0 }
+    for (const id of patched) counts[recovered[id].position]++
+    expect(counts).toEqual(FORMATIONS['4-4-2'])
+  })
+})
+
+describe('degraded squads (fewer than 11 available)', () => {
+  it('autoPick and patchLineup return all available players without crashing', () => {
+    const { team, players } = makeSquad()
+    const injured = { ...players }
+    for (const id of [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]) {
+      injured[id] = { ...injured[id], injuredForRounds: 3 }
+    }
+    const available = Object.values(injured).filter(isAvailable)
+    expect(available.length).toBeLessThan(11)
+
+    const picked = autoPick(team, injured)
+    expect(picked).toHaveLength(available.length)
+    expect(picked.every(id => isAvailable(injured[id]))).toBe(true)
+    expect(new Set(picked).size).toBe(picked.length)
+
+    const t = { ...team, lineup: picked }
+    const patched = patchLineup(t, injured)
+    expect(patched).toHaveLength(available.length)
+    expect(patched.every(id => isAvailable(injured[id]))).toBe(true)
+    expect(new Set(patched).size).toBe(patched.length)
   })
 })
