@@ -1,4 +1,5 @@
 import { salaryFor } from './finance'
+import { INITIAL_CAPACITY } from './stadium'
 import type { GameState } from './types'
 
 const KEY = 'futscript-save'
@@ -15,7 +16,8 @@ export function load(storage: Storage = localStorage): GameState | null {
     if (state?.version === 1) state = migrateV1(state)
     if (state?.version === 2) state = migrateV2(state)
     if (state?.version === 3) state = migrateV3(state)
-    return state?.version === 4 ? (state as GameState) : null
+    if (state?.version === 4) state = migrateV4(state)
+    return state?.version === 5 ? (state as GameState) : null
   } catch {
     return null
   }
@@ -54,7 +56,7 @@ function migrateV2(s: any): any {
 
 // Migrated worlds keep their 16 clubs as Division 1; the next season
 // rollover generates Divisions 2 and 3 (ensureThreeDivisions).
-function migrateV3(s: any): GameState {
+function migrateV3(s: any): any {
   return {
     ...s,
     version: 4,
@@ -65,5 +67,20 @@ function migrateV3(s: any): GameState {
     cupFixtures: [],
     history: [],
     playFriendlies: false,
+  }
+}
+
+function migrateV4(s: any): GameState {
+  return {
+    ...s,
+    version: 5,
+    teams: s.teams.map((t: any) => ({
+      ...t,
+      capacity: INITIAL_CAPACITY[t.division] ?? INITIAL_CAPACITY[3],
+      ticketPrice: 15,
+      fanMood: 50,
+    })),
+    construction: null,
+    allTimeScorers: [],
   }
 }

@@ -4,6 +4,7 @@ import { generateDivisionFixtures } from './fixtures'
 import { autoPick } from './lineup'
 import { randomName, TEAM_NAMES } from './names'
 import { mulberry32, randInt } from './rng'
+import { INITIAL_CAPACITY } from './stadium'
 import type { GameState, Player, Position, Team } from './types'
 
 // 2 GK, 6 DF, 6 MF, 4 FW — enough to fill every formation in FORMATIONS
@@ -47,13 +48,18 @@ export function newGame(seed: number): GameState {
       players[player.id] = player
       playerIds.push(player.id)
     }
-    teams.push({ id: t, name: TEAM_NAMES[t], playerIds, formation: '4-4-2', lineup: [], tactic: 'normal', trainingStyle: 'normal', cash: STARTING_CASH, division })
+    teams.push({
+      id: t, name: TEAM_NAMES[t], playerIds, formation: '4-4-2', lineup: [], tactic: 'normal', trainingStyle: 'normal', cash: STARTING_CASH, division,
+      capacity: INITIAL_CAPACITY[division],
+      ticketPrice: 15,
+      fanMood: 50,
+    })
   }
 
   for (const team of teams) team.lineup = autoPick(team, players)
 
   return {
-    version: 4,
+    version: 5,
     seed,
     rngState: randInt(rand, 1, 2 ** 31 - 1),
     season: 1,
@@ -73,5 +79,7 @@ export function newGame(seed: number): GameState {
     brokeRounds: 0,
     gameOver: false,
     finances: [],
+    construction: null,
+    allTimeScorers: [],
   }
 }

@@ -47,6 +47,9 @@ export interface Team {
   trainingStyle: TrainingStyle
   cash: number
   division: number // 1 (top) .. 3
+  capacity: number // stadium seats
+  ticketPrice: number // dollars, user-settable 5-60
+  fanMood: number // 0-100; drives attendance and sponsors
 }
 
 export interface TransferListing {
@@ -101,8 +104,15 @@ export interface SeasonRecord {
   userPosition: number
 }
 
+export interface ScorerRecord {
+  playerId: number
+  player: string
+  team: string // last club they scored for
+  goals: number
+}
+
 export interface GameState {
-  version: 4
+  version: 5
   seed: number
   rngState: number // seeds the RNG for the next advanceRound
   season: number
@@ -120,4 +130,6 @@ export interface GameState {
   brokeRounds: number // consecutive rounds the user's cash was negative
   gameOver: boolean // board ran out of patience
   finances: FinanceEntry[] // user club ledger, newest last
+  construction: { addedCapacity: number; weeksLeft: number } | null // user stadium expansion in progress
+  allTimeScorers: ScorerRecord[] // top 50, updated at each rollover
 }

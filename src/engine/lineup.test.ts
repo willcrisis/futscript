@@ -23,6 +23,7 @@ function makeSquad(): { team: Team; players: Record<number, Player> } {
   const team: Team = {
     id: 0, name: 'Test FC', playerIds, formation: '4-4-2', lineup: [],
     tactic: 'normal', trainingStyle: 'normal', cash: 1_000_000, division: 1,
+    capacity: 9_000, ticketPrice: 15, fanMood: 50,
   }
   return { team, players }
 }

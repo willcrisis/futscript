@@ -4,6 +4,7 @@ import { autoPick } from './lineup'
 import { randomName, TEAM_NAMES } from './names'
 import { LEVEL_RANGE, SQUAD_TEMPLATE } from './newGame'
 import { randInt } from './rng'
+import { INITIAL_CAPACITY } from './stadium'
 import { standings } from './standings'
 import type { GameState, Player, Position, SeasonRecord, Team } from './types'
 
@@ -141,6 +142,9 @@ export function ensureThreeDivisions(
         trainingStyle: 'normal',
         cash: STARTING_CASH,
         division,
+        capacity: INITIAL_CAPACITY[division],
+        ticketPrice: 15,
+        fanMood: 50,
       }
       team.lineup = autoPick(team, nextPlayers)
       nextTeams.push(team)

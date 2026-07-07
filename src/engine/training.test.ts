@@ -16,6 +16,7 @@ function makeTeam(playerIds: number[], trainingStyle: TrainingStyle): Team {
   return {
     id: 0, name: 'T', playerIds, formation: '4-4-2', lineup: [],
     tactic: 'normal', trainingStyle, cash: 1_000_000, division: 1,
+    capacity: 9_000, ticketPrice: 15, fanMood: 50,
   }
 }
 
