@@ -1,34 +1,41 @@
-import type { GameState } from '../engine/types'
+import type { GameState, SeasonRecord } from '../engine/types'
+import DataTable from '../ui/DataTable'
+import type { Column } from '../ui/DataTable'
+import EmptyState from '../ui/EmptyState'
+import ScreenHeader from '../ui/ScreenHeader'
+import StatChip from '../ui/StatChip'
+
+const columns: Column<SeasonRecord>[] = [
+  { key: 'season', label: 'Season', mono: true, render: h => h.season },
+  { key: 'champions', label: 'D1 champions', render: h => h.champions[0] ?? '—' },
+  { key: 'cup', label: 'Cup winners', render: h => h.cupWinner },
+  {
+    key: 'scorer',
+    label: 'Top scorer',
+    render: h => `${h.topScorer.player} (${h.topScorer.goals}) — ${h.topScorer.team}`,
+  },
+  { key: 'finish', label: 'Your finish', mono: true, render: h => `Div ${h.userDivision} · P${h.userPosition}` },
+]
 
 export default function HistoryScreen({ state }: { state: GameState }) {
   const userName = state.teams.find(t => t.id === state.userTeamId)!.name
   const titles = state.history.filter(h => h.champions[0] === userName).length
   const cups = state.history.filter(h => h.cupWinner === userName).length
-  if (state.history.length === 0) {
-    return <p>No completed seasons yet — history is written at each season's end.</p>
-  }
+
   return (
     <div>
-      <p>
-        Your honours: <strong>{titles}</strong> Division 1 title{titles === 1 ? '' : 's'} ·{' '}
-        <strong>{cups}</strong> cup{cups === 1 ? '' : 's'}
-      </p>
-      <table>
-        <thead>
-          <tr><th>Season</th><th>D1 champions</th><th>Cup winners</th><th>Top scorer</th><th>Your finish</th></tr>
-        </thead>
-        <tbody>
-          {state.history.slice().reverse().map(h => (
-            <tr key={h.season}>
-              <td>{h.season}</td>
-              <td>{h.champions[0] ?? '—'}</td>
-              <td>{h.cupWinner}</td>
-              <td>{h.topScorer.player} ({h.topScorer.goals}) — {h.topScorer.team}</td>
-              <td>Division {h.userDivision}, P{h.userPosition}</td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
+      <ScreenHeader label="THE LONG GAME" title="History" />
+      {state.history.length === 0 ? (
+        <EmptyState>No completed seasons yet — history is written at each season's end.</EmptyState>
+      ) : (
+        <>
+          <div className="mb-4 grid max-w-md grid-cols-2 gap-3">
+            <StatChip label="D1 titles" value={titles} />
+            <StatChip label="Cups" value={cups} />
+          </div>
+          <DataTable columns={columns} rows={state.history.slice().reverse()} rowKey={h => h.season} />
+        </>
+      )}
     </div>
   )
 }

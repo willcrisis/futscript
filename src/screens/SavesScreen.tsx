@@ -1,11 +1,18 @@
 import { useRef, useState } from 'react'
 import type { Dispatch, SetStateAction } from 'react'
-import { formatMoney } from '../engine/finance'
 import {
   activeSlot, deleteSlot, exportSave, importSave, listSlots, loadSlot,
   saveToSlot, setActiveSlot, SLOTS,
 } from '../engine/save'
 import type { GameState } from '../engine/types'
+import Badge from '../ui/Badge'
+import Button from '../ui/Button'
+import ConfirmButton from '../ui/ConfirmButton'
+import EmptyState from '../ui/EmptyState'
+import MoneyText from '../ui/MoneyText'
+import Panel from '../ui/Panel'
+import ScreenHeader from '../ui/ScreenHeader'
+import { useToasts } from '../ui/Toast'
 
 interface Props {
   state: GameState
@@ -14,9 +21,8 @@ interface Props {
 
 export default function SavesScreen({ state, setState }: Props) {
   const [, bump] = useState(0) // slots live in localStorage; re-render after writes
-  const [confirmDelete, setConfirmDelete] = useState<number | null>(null)
-  const [importError, setImportError] = useState(false)
   const fileInput = useRef<HTMLInputElement>(null)
+  const { push } = useToasts()
   const slots = listSlots()
   const active = activeSlot()
 
@@ -35,10 +41,9 @@ export default function SavesScreen({ state, setState }: Props) {
   const onImportFile = async (file: File) => {
     const imported = importSave(await file.text())
     if (!imported) {
-      setImportError(true)
+      push({ tone: 'danger', text: 'That file is not a valid futscript save.' })
       return
     }
-    setImportError(false)
     saveToSlot(imported, active)
     setState(imported)
     refresh()
@@ -46,68 +51,78 @@ export default function SavesScreen({ state, setState }: Props) {
 
   return (
     <div>
-      <h3>Save slots</h3>
-      <table>
-        <thead>
-          <tr><th>Slot</th><th>Career</th><th></th></tr>
-        </thead>
-        <tbody>
-          {SLOTS.map((slot, i) => {
-            const info = slots[i]
-            return (
-              <tr key={slot} className={slot === active ? 'user' : ''}>
-                <td>{slot}{slot === active ? ' (active)' : ''}</td>
-                <td>
-                  {info
-                    ? `${info.teamName} — Season ${info.season}, Division ${info.division}, ${formatMoney(info.cash)}`
-                    : 'empty'}
-                </td>
-                <td className="actions">
-                  <button onClick={() => { saveToSlot(state, slot); setActiveSlot(slot); refresh() }}>
+      <ScreenHeader label="CAREERS" title="Saves" />
+
+      <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
+        {SLOTS.map((slot, i) => {
+          const info = slots[i]
+          const isActive = slot === active
+          return (
+            <Panel key={slot} label={`SLOT ${slot}`} action={isActive && <Badge tone="accent">active</Badge>}>
+              <div className="flex flex-col gap-3">
+                {info ? (
+                  <p className="text-sm">
+                    {info.teamName} — Season {info.season}, Division {info.division}, <MoneyText amount={info.cash} />
+                  </p>
+                ) : (
+                  <EmptyState>empty</EmptyState>
+                )}
+                <div className="flex flex-wrap gap-1.5">
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => { saveToSlot(state, slot); setActiveSlot(slot); refresh() }}
+                  >
                     Save here
-                  </button>
-                  {info && slot !== active && (
-                    <button onClick={() => {
-                      const loaded = loadSlot(slot)
-                      if (loaded) { setActiveSlot(slot); setState(loaded); refresh() }
-                    }}>
+                  </Button>
+                  {info && !isActive && (
+                    <Button
+                      variant="primary"
+                      size="sm"
+                      onClick={() => {
+                        const loaded = loadSlot(slot)
+                        if (loaded) { setActiveSlot(slot); setState(loaded); refresh() }
+                      }}
+                    >
                       Load
-                    </button>
+                    </Button>
                   )}
-                  {info && (confirmDelete === slot ? (
-                    <>
-                      <button onClick={() => { deleteSlot(slot); setConfirmDelete(null); refresh() }}>
-                        Confirm delete
-                      </button>
-                      <button onClick={() => setConfirmDelete(null)}>✕</button>
-                    </>
-                  ) : (
-                    <button onClick={() => setConfirmDelete(slot)}>Delete</button>
-                  ))}
-                </td>
-              </tr>
-            )
-          })}
-        </tbody>
-      </table>
-      <h3>Backup</h3>
-      <div className="controls">
-        <button onClick={download}>Export current game</button>{' '}
-        <button onClick={() => fileInput.current?.click()}>Import from file…</button>
-        <input
-          ref={fileInput}
-          type="file"
-          accept="application/json"
-          style={{ display: 'none' }}
-          onChange={e => {
-            const file = e.target.files?.[0]
-            if (file) void onImportFile(file)
-            e.target.value = ''
-          }}
-        />
-        {importError && <p className="banner">⚠ That file is not a valid futscript save.</p>}
+                  {info && (
+                    <ConfirmButton
+                      label="Delete"
+                      confirmLabel="Confirm delete"
+                      onConfirm={() => { deleteSlot(slot); refresh() }}
+                      size="sm"
+                    />
+                  )}
+                </div>
+              </div>
+            </Panel>
+          )
+        })}
       </div>
-      <p>Importing replaces the active slot. Deleting slot {active} (the active one) keeps your in-memory game until the next autosave.</p>
+
+      <Panel label="Backup" className="mt-4">
+        <div className="flex flex-wrap items-center gap-2">
+          <Button variant="ghost" size="sm" onClick={download}>Export current game</Button>
+          <Button variant="ghost" size="sm" onClick={() => fileInput.current?.click()}>Import from file…</Button>
+          <input
+            ref={fileInput}
+            type="file"
+            accept="application/json"
+            style={{ display: 'none' }}
+            onChange={e => {
+              const file = e.target.files?.[0]
+              if (file) void onImportFile(file)
+              e.target.value = ''
+            }}
+          />
+        </div>
+        <p className="mt-3 text-xs text-ink-faint">
+          Importing replaces the active slot. Deleting slot {active} (the active one) keeps your in-memory game
+          until the next autosave.
+        </p>
+      </Panel>
     </div>
   )
 }
