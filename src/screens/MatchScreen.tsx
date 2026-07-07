@@ -21,21 +21,35 @@ interface Props {
   onClose: () => void
 }
 
+const SPEEDS = [
+  { key: 'speed.slow', ms: 500 },
+  { key: 'speed.medium', ms: 400 },
+  { key: 'speed.fast', ms: 300 },
+  { key: 'speed.superFast', ms: 150 },
+  { key: 'speed.ultraFast', ms: 50 },
+] as const
+
 function initialMinute(): number {
   return matchMedia('(prefers-reduced-motion: reduce)').matches ? 90 : 0
+}
+
+function initialSpeedIndex(): number {
+  if (typeof localStorage === 'undefined') return 2
+  const stored = Number(localStorage.getItem('futscript-speed'))
+  return Number.isInteger(stored) && stored >= 0 && stored <= 4 ? stored : 2
 }
 
 export default function MatchScreen({ fixture, state, onClose }: Props) {
   useLang()
   const [minute, setMinute] = useState(initialMinute)
-  const [speed, setSpeed] = useState<1 | 2>(1)
+  const [speedIndex, setSpeedIndex] = useState(initialSpeedIndex)
   const done = minute >= 90
 
   useEffect(() => {
     if (done) return
-    const id = setInterval(() => setMinute(m => (m >= 90 ? m : m + 1)), speed === 2 ? 32 : 65)
+    const id = setInterval(() => setMinute(m => (m >= 90 ? m : m + 1)), SPEEDS[speedIndex].ms)
     return () => clearInterval(id)
-  }, [speed, done])
+  }, [speedIndex, done])
 
   const name = (id: number) => state.teams.find(t => t.id === id)!.name
   const visibleEvents = (fixture.events ?? []).filter(e => e.minute <= minute)
@@ -63,27 +77,24 @@ export default function MatchScreen({ fixture, state, onClose }: Props) {
           {t('match.penaltyWin', { name: name(fixture.winnerId) })}
         </div>
       )}
-      <div className="mt-6 flex items-center gap-2">
+      <div className="mt-6 flex flex-wrap items-center gap-2">
         {!done ? (
           <>
-            <Button
-              variant="ghost"
-              size="sm"
-              aria-pressed={speed === 1}
-              className={speed === 1 ? 'border-accent! text-accent-strong!' : ''}
-              onClick={() => setSpeed(1)}
-            >
-              {t('match.speed1x')}
-            </Button>
-            <Button
-              variant="ghost"
-              size="sm"
-              aria-pressed={speed === 2}
-              className={speed === 2 ? 'border-accent! text-accent-strong!' : ''}
-              onClick={() => setSpeed(2)}
-            >
-              {t('match.speed2x')}
-            </Button>
+            {SPEEDS.map((speed, idx) => (
+              <Button
+                key={idx}
+                variant="ghost"
+                size="sm"
+                aria-pressed={speedIndex === idx}
+                className={speedIndex === idx ? 'border-accent! text-accent-strong!' : ''}
+                onClick={() => {
+                  setSpeedIndex(idx)
+                  localStorage.setItem('futscript-speed', String(idx))
+                }}
+              >
+                {t(speed.key)}
+              </Button>
+            ))}
             <Button variant="ghost" size="sm" onClick={() => setMinute(90)}>{t('match.skip')}</Button>
           </>
         ) : (

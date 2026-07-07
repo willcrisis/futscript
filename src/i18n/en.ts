@@ -200,8 +200,11 @@ export const en = {
   'saves.languagePortuguese': 'Português',
 
   // Match screen
-  'match.speed1x': '1×',
-  'match.speed2x': '2×',
+  'speed.slow': 'Slow',
+  'speed.medium': 'Medium',
+  'speed.fast': 'Fast',
+  'speed.superFast': 'Super fast',
+  'speed.ultraFast': 'Ultra fast',
   'match.skip': 'Skip',
   'match.continueButton': 'Continue',
   'match.penaltyWin': '({name} win on penalties)',

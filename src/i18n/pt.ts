@@ -202,8 +202,11 @@ export const pt: Record<TranslationKey, string> = {
   'saves.languagePortuguese': 'Português',
 
   // Match screen
-  'match.speed1x': '1×',
-  'match.speed2x': '2×',
+  'speed.slow': 'Lento',
+  'speed.medium': 'Médio',
+  'speed.fast': 'Rápido',
+  'speed.superFast': 'Muito rápido',
+  'speed.ultraFast': 'Ultrarrápido',
   'match.skip': 'Pular',
   'match.continueButton': 'Continuar',
   'match.penaltyWin': '({name} vence nos pênaltis)',
