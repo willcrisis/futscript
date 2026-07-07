@@ -96,10 +96,12 @@ export default function CupScreen({ state }: { state: GameState }) {
         ))}
       </div>
       {selected && (
-        <div className="report">
-          <h3>{name(selected.homeId)} {selected.homeGoals} – {selected.awayGoals} {name(selected.awayId)}</h3>
+        <Panel className="mt-4">
+          <h3 className="mb-2 font-semibold">
+            {name(selected.homeId)} {selected.homeGoals} – {selected.awayGoals} {name(selected.awayId)}
+          </h3>
           <EventFeed events={selected.events ?? []} state={state} />
-        </div>
+        </Panel>
       )}
     </div>
   )

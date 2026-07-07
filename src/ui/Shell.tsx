@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import type { FC, ReactNode } from 'react'
 import type { GameState } from '../engine/types'
 import { totalRounds } from '../engine/season'
@@ -46,12 +46,18 @@ function attentionFor(id: ScreenId, state: GameState): boolean {
 
 export default function Shell({ screen, onNavigate, state, advanceLabel, onAdvance, children }: Props) {
   const [moreOpen, setMoreOpen] = useState(false)
+  const moreButtonRef = useRef<HTMLButtonElement>(null)
   const user = state.teams.find(t => t.id === state.userTeamId)!
   const week = Math.min(state.round, totalRounds(state))
 
+  const closeMore = () => {
+    setMoreOpen(false)
+    moreButtonRef.current?.focus()
+  }
+
   useEffect(() => {
     if (!moreOpen) return
-    const onKey = (e: KeyboardEvent) => e.key === 'Escape' && setMoreOpen(false)
+    const onKey = (e: KeyboardEvent) => e.key === 'Escape' && closeMore()
     window.addEventListener('keydown', onKey)
     return () => window.removeEventListener('keydown', onKey)
   }, [moreOpen])
@@ -134,7 +140,9 @@ export default function Shell({ screen, onNavigate, state, advanceLabel, onAdvan
           )
         })}
         <button
+          ref={moreButtonRef}
           onClick={() => setMoreOpen(true)}
+          aria-expanded={moreOpen}
           className={`flex min-h-12 flex-1 flex-col items-center justify-center gap-0.5 text-[10px] ${
             MOBILE_PRIMARY.includes(screen) ? 'text-ink-muted' : 'text-ink'
           }`}
@@ -147,7 +155,7 @@ export default function Shell({ screen, onNavigate, state, advanceLabel, onAdvan
       {/* mobile more-sheet */}
       {moreOpen && (
         <div className="fixed inset-0 z-50 md:hidden" role="dialog" aria-modal="true" aria-label="More sections">
-          <div className="absolute inset-0 bg-ink/30" onClick={() => setMoreOpen(false)} />
+          <div className="absolute inset-0 bg-ink/30" onClick={closeMore} />
           <div className="absolute inset-x-0 bottom-0 rounded-t-xl border-t border-rule bg-surface p-4">
             <div className="grid grid-cols-3 gap-2">
               {NAV.filter(n => !MOBILE_PRIMARY.includes(n.id)).map(({ id, label, icon: NavIcon }) => (

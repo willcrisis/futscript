@@ -4,6 +4,7 @@ import type { Fixture, GameState } from '../engine/types'
 import Button from '../ui/Button'
 import EmptyState from '../ui/EmptyState'
 import EventFeed from '../ui/EventFeed'
+import Panel from '../ui/Panel'
 import ScreenHeader from '../ui/ScreenHeader'
 
 const ROW = 'grid w-full grid-cols-[1fr_auto_1fr] items-center gap-3 rounded-lg border border-rule bg-surface-raised px-3 py-2'
@@ -82,7 +83,7 @@ export default function FixturesScreen({ state }: { state: GameState }) {
               <button
                 key={i}
                 type="button"
-                className={`${rowClass} text-left transition-colors hover:opacity-90 focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 focus-visible:ring-offset-surface`}
+                className={`${rowClass} text-left transition-colors hover:opacity-90 focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 focus-visible:ring-offset-surface ${f === selected ? 'border-ink/40!' : ''}`}
                 onClick={() => setSelected(f === selected ? null : f)}
               >
                 {content}
@@ -94,10 +95,12 @@ export default function FixturesScreen({ state }: { state: GameState }) {
         </div>
       )}
       {selected && fixtures.includes(selected) && (
-        <div className="report">
-          <h3>{name(selected.homeId)} {selected.homeGoals} – {selected.awayGoals} {name(selected.awayId)}</h3>
+        <Panel className="mt-4">
+          <h3 className="mb-2 font-semibold">
+            {name(selected.homeId)} {selected.homeGoals} – {selected.awayGoals} {name(selected.awayId)}
+          </h3>
           <EventFeed events={selected.events ?? []} state={state} />
-        </div>
+        </Panel>
       )}
     </div>
   )

@@ -20,6 +20,13 @@ const columns: Column<ScorerRow>[] = [
   { key: 'goals', label: 'Goals', align: 'right', mono: true, render: r => <strong>{r.goals}</strong> },
 ]
 
+const allTimeColumns: Column<ScorerRow>[] = [
+  { key: 'rank', label: '#', mono: true, render: r => r.rank },
+  { key: 'player', label: 'Player', render: r => r.player },
+  { key: 'club', label: 'Last club', render: r => r.club },
+  { key: 'goals', label: 'Goals', align: 'right', mono: true, render: r => <strong>{r.goals}</strong> },
+]
+
 export default function StatsScreen({ state }: { state: GameState }) {
   const teamOf = (playerId: number) => state.teams.find(t => t.playerIds.includes(playerId))?.name ?? '—'
   const thisSeason: ScorerRow[] = Object.values(state.players)
@@ -45,7 +52,7 @@ export default function StatsScreen({ state }: { state: GameState }) {
         </Panel>
         <Panel label="All-time">
           <DataTable
-            columns={columns}
+            columns={allTimeColumns}
             rows={allTime}
             rowKey={r => r.key}
             empty={<EmptyState>The record books open at the end of the first season.</EmptyState>}
