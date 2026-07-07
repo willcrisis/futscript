@@ -1,4 +1,6 @@
-import type { Player } from './types'
+import { randInt } from './rng'
+import { standings } from './standings'
+import type { FinanceEntry, GameState, Player, Team } from './types'
 
 // ponytail: economy constants tuned by feel — if seasons come out too rich
 // or too poor, retune here and nowhere else
@@ -22,4 +24,94 @@ export function severanceFor(p: Player): number {
 export function formatMoney(n: number): string {
   const abs = Math.abs(Math.round(n)).toLocaleString('en-US')
   return n < 0 ? `-$${abs}` : `$${abs}`
+}
+
+export const TICKET_PRICE = 15
+const DEPOSIT_INTEREST = 0.005
+const LOAN_INTEREST = 0.02
+const OVERDRAFT_INTEREST = 0.02
+const BROKE_ROUNDS_LIMIT = 8
+const LEDGER_CAP = 300
+
+export function wageBill(teamId: number, state: GameState): number {
+  const team = state.teams.find(t => t.id === teamId)!
+  return team.playerIds.reduce((sum, id) => sum + state.players[id].salary, 0)
+}
+
+export function adjustCash(teams: Team[], teamId: number, delta: number): Team[] {
+  return teams.map(t => (t.id === teamId ? { ...t, cash: t.cash + delta } : t))
+}
+
+export function userLedger(state: GameState, label: string, amount: number): FinanceEntry[] {
+  return [...state.finances, { season: state.season, round: state.round, label, amount }].slice(-LEDGER_CAP)
+}
+
+// One code path for every club: wages out, gate receipts in on home weeks.
+// The user additionally gets interest, loan charges, and board patience.
+// Must run BEFORE advanceRound increments state.round.
+export function runWeeklyFinances(state: GameState, rand: () => number): GameState {
+  const position = new Map(standings(state).map((row, i) => [row.teamId, i + 1]))
+  const homeThisRound = new Set(state.fixtures.filter(f => f.round === state.round).map(f => f.homeId))
+
+  let finances = state.finances
+  const addEntry = (label: string, amount: number) => {
+    finances = [...finances, { season: state.season, round: state.round, label, amount }].slice(-LEDGER_CAP)
+  }
+
+  const teams = state.teams.map(team => {
+    const user = team.id === state.userTeamId
+    const wages = wageBill(team.id, state)
+    let cash = team.cash - wages
+    if (user) addEntry('Wages', -wages)
+
+    if (homeThisRound.has(team.id)) {
+      const attendance = 10_000 + 800 * (16 - position.get(team.id)!) + randInt(rand, -1000, 1000)
+      const gate = attendance * TICKET_PRICE
+      cash += gate
+      if (user) addEntry(`Gate receipts (${attendance} fans)`, gate)
+    }
+
+    if (user) {
+      if (state.loanBalance > 0) {
+        const interest = Math.round(state.loanBalance * LOAN_INTEREST)
+        cash -= interest
+        addEntry('Loan interest', -interest)
+      }
+      if (cash > 0) {
+        const earned = Math.round(cash * DEPOSIT_INTEREST)
+        cash += earned
+        addEntry('Deposit interest', earned)
+      } else if (cash < 0) {
+        const charge = Math.round(-cash * OVERDRAFT_INTEREST)
+        cash -= charge
+        addEntry('Overdraft charge', -charge)
+      }
+    }
+    return { ...team, cash }
+  })
+
+  const cashAfter = teams.find(t => t.id === state.userTeamId)!.cash
+  const brokeRounds = cashAfter < 0 ? state.brokeRounds + 1 : 0
+  return { ...state, teams, finances, brokeRounds, gameOver: state.gameOver || brokeRounds >= BROKE_ROUNDS_LIMIT }
+}
+
+export function borrow(state: GameState, amount: number): GameState {
+  if (state.gameOver || amount <= 0 || state.loanBalance + amount > LOAN_CAP) return state
+  return {
+    ...state,
+    loanBalance: state.loanBalance + amount,
+    teams: adjustCash(state.teams, state.userTeamId, amount),
+    finances: userLedger(state, 'Loan drawn', amount),
+  }
+}
+
+export function repayLoan(state: GameState, amount: number): GameState {
+  const repay = Math.min(amount, state.loanBalance)
+  if (state.gameOver || repay <= 0) return state
+  return {
+    ...state,
+    loanBalance: state.loanBalance - repay,
+    teams: adjustCash(state.teams, state.userTeamId, -repay),
+    finances: userLedger(state, 'Loan repayment', -repay),
+  }
 }

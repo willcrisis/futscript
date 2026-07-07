@@ -1,6 +1,11 @@
 import { describe, expect, it } from 'vitest'
-import { formatMoney, marketValue, salaryFor, severanceFor } from './finance'
-import type { Player } from './types'
+import { mulberry32 } from './rng'
+import { newGame } from './newGame'
+import {
+  adjustCash, borrow, formatMoney, marketValue, LOAN_CAP, repayLoan, runWeeklyFinances, salaryFor,
+  severanceFor, STARTING_CASH, wageBill,
+} from './finance'
+import type { GameState, Player } from './types'
 
 export function makePlayer(id: number, over: Partial<Player> = {}): Player {
   return {
@@ -9,6 +14,10 @@ export function makePlayer(id: number, over: Partial<Player> = {}): Player {
     salary: salaryFor(50), contractSeasons: 2,
     ...over,
   }
+}
+
+function userCash(s: GameState): number {
+  return s.teams.find(t => t.id === s.userTeamId)!.cash
 }
 
 describe('money formulas', () => {
@@ -36,5 +45,76 @@ describe('money formulas', () => {
   it('formats money', () => {
     expect(formatMoney(1_234_567)).toBe('$1,234,567')
     expect(formatMoney(-500)).toBe('-$500')
+  })
+})
+
+describe('runWeeklyFinances', () => {
+  it('charges every club its wage bill and pays home clubs gate receipts', () => {
+    const s0 = newGame(1)
+    const s1 = runWeeklyFinances(s0, mulberry32(2))
+    const homeIds = new Set(s0.fixtures.filter(f => f.round === 1).map(f => f.homeId))
+    for (const t of s1.teams) {
+      const before = STARTING_CASH - wageBill(t.id, s0)
+      if (homeIds.has(t.id)) expect(t.cash).toBeGreaterThan(before) // gate beat zero
+      else if (t.id !== s0.userTeamId) expect(t.cash).toBe(before)
+    }
+  })
+
+  it('writes user ledger entries', () => {
+    const s1 = runWeeklyFinances(newGame(1), mulberry32(2))
+    const labels = s1.finances.map(e => e.label)
+    expect(labels).toContain('Wages')
+    expect(s1.finances.every(e => e.season === 1 && e.round === 1)).toBe(true)
+  })
+
+  it('pays deposit interest on positive balances and charges overdraft on negative', () => {
+    const s0 = newGame(1)
+    const broke: GameState = { ...s0, teams: adjustCash(s0.teams, s0.userTeamId, -5_000_000) }
+    const s1 = runWeeklyFinances(broke, mulberry32(2))
+    expect(s1.finances.some(e => e.label === 'Overdraft charge' && e.amount < 0)).toBe(true)
+    const rich = runWeeklyFinances(s0, mulberry32(2))
+    expect(rich.finances.some(e => e.label === 'Deposit interest' && e.amount > 0)).toBe(true)
+  })
+
+  it('charges loan interest without touching the principal', () => {
+    const s0 = borrow(newGame(1), 1_000_000)
+    const s1 = runWeeklyFinances(s0, mulberry32(2))
+    expect(s1.loanBalance).toBe(1_000_000)
+    expect(s1.finances.some(e => e.label === 'Loan interest' && e.amount === -20_000)).toBe(true)
+  })
+
+  it('tracks board patience and fires you after 8 broke rounds', () => {
+    const s0 = newGame(1)
+    let s: GameState = { ...s0, teams: adjustCash(s0.teams, s0.userTeamId, -50_000_000) }
+    for (let i = 0; i < 7; i++) {
+      s = runWeeklyFinances(s, mulberry32(i))
+      expect(s.gameOver).toBe(false)
+    }
+    s = runWeeklyFinances(s, mulberry32(99))
+    expect(s.brokeRounds).toBe(8)
+    expect(s.gameOver).toBe(true)
+  })
+
+  it('resets board patience the week you are back in the black', () => {
+    const s0 = newGame(1)
+    const s1 = runWeeklyFinances({ ...s0, brokeRounds: 5 }, mulberry32(2))
+    expect(s1.brokeRounds).toBe(0) // starting cash keeps the user positive
+  })
+})
+
+describe('loans', () => {
+  it('borrowing adds cash and is capped', () => {
+    const s0 = newGame(1)
+    const s1 = borrow(s0, 500_000)
+    expect(s1.loanBalance).toBe(500_000)
+    expect(userCash(s1)).toBe(userCash(s0) + 500_000)
+    expect(borrow(s1, LOAN_CAP)).toEqual(s1) // would exceed cap → unchanged
+  })
+
+  it('repaying reduces the loan and never overpays', () => {
+    const s1 = borrow(newGame(1), 200_000)
+    const s2 = repayLoan(s1, 500_000)
+    expect(s2.loanBalance).toBe(0)
+    expect(userCash(s2)).toBe(userCash(s1) - 200_000)
   })
 })
