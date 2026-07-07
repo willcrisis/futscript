@@ -3,7 +3,7 @@ import { mulberry32 } from './rng'
 import { newGame } from './newGame'
 import { advanceRound, applyMatchConsequences, newSeason, totalRounds } from './season'
 import { standings } from './standings'
-import { salaryFor } from './finance'
+import { adjustCash, salaryFor } from './finance'
 import type { MatchEvent, Player } from './types'
 
 function makePlayer(id: number, over: Partial<Player> = {}): Player {
@@ -101,6 +101,8 @@ describe('advanceRound', () => {
 
   it('no-ops once the season is over', () => {
     let s = newGame(7)
+    // fund the club so a bankruptcy can't halt the season — this test is about the season-over no-op
+    s = { ...s, teams: adjustCash(s.teams, s.userTeamId, 50_000_000) }
     for (let i = 0; i < totalRounds(s); i++) s = advanceRound(s)
     expect(s.round).toBe(totalRounds(s) + 1)
     expect(s.fixtures.every(f => f.homeGoals !== null)).toBe(true)
