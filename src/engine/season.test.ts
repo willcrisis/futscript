@@ -2,6 +2,8 @@ import { describe, expect, it } from 'vitest'
 import { mulberry32 } from './rng'
 import { newGame } from './newGame'
 import { advanceRound, applyMatchConsequences, newSeason, totalRounds } from './season'
+import { standings } from './standings'
+import { salaryFor } from './finance'
 import type { MatchEvent, Player } from './types'
 
 function makePlayer(id: number, over: Partial<Player> = {}): Player {
@@ -109,7 +111,10 @@ describe('advanceRound', () => {
     let s = newGame(31)
     for (let i = 0; i < totalRounds(s); i++) s = advanceRound(s)
     const events = s.fixtures.flatMap(f => f.events ?? [])
-    expect(events.filter(e => e.type === 'goal').length).toBeGreaterThan(300) // ~2.7 * 240
+    // Since Task 6, the market/finance pipeline can end a season early (board patience runs
+    // out), so scale the goal floor to fixtures actually played rather than assuming all 240 ran.
+    const played = s.fixtures.filter(f => f.homeGoals !== null).length
+    expect(events.filter(e => e.type === 'goal').length).toBeGreaterThan(played * 1.25) // ~2.7/match, floored for variance
     expect(events.filter(e => e.type === 'yellow').length).toBeGreaterThan(100)
     expect(events.filter(e => e.type === 'injury').length).toBeGreaterThan(5)
     // training moved at least someone
@@ -133,5 +138,76 @@ describe('newSeason', () => {
       expect(p.fitness).toBe(100)
       expect(p.yellowCards).toBe(0)
     }
+  })
+})
+
+describe('advanceRound — market and money', () => {
+  it('no-ops when the game is over', () => {
+    const s = { ...newGame(1), gameOver: true }
+    expect(advanceRound(s)).toEqual(s)
+  })
+
+  it('moves money every round', () => {
+    const s1 = advanceRound(newGame(1))
+    expect(s1.finances.length).toBeGreaterThan(0)
+    expect(s1.teams.some(t => t.cash !== 1_000_000)).toBe(true)
+  })
+
+  it('keeps the economy alive over a full season', () => {
+    let s = newGame(31)
+    for (let i = 0; i < totalRounds(s); i++) s = advanceRound(s)
+    // the market moved players between clubs at least once
+    expect(s.teams.some(t => t.playerIds.length !== 18)).toBe(true)
+    // a mid-table club does not spiral into oblivion in one season
+    const userCash = s.teams.find(t => t.id === s.userTeamId)!.cash
+    expect(userCash).toBeGreaterThan(-2_000_000)
+  })
+})
+
+describe('newSeason — money and contracts', () => {
+  function playSeason(seed: number) {
+    let s = newGame(seed)
+    for (let i = 0; i < totalRounds(s); i++) s = advanceRound(s)
+    return s
+  }
+
+  it('pays prize money by final position', () => {
+    const s = playSeason(7)
+    const table = standings(s)
+    const s2 = newSeason(s)
+    const champion = table[0].teamId
+    const last = table[15].teamId
+    const cashDelta = (id: number) =>
+      s2.teams.find(t => t.id === id)!.cash - s.teams.find(t => t.id === id)!.cash
+    expect(cashDelta(champion)).toBe(1_500_000)
+    expect(cashDelta(last)).toBe(1_500_000 - 15 * 75_000)
+  })
+
+  it('settles contracts: AI renews, unrenewed user players leave', () => {
+    const s = playSeason(7)
+    const userTeam = s.teams.find(t => t.id === s.userTeamId)!
+    const leaving = userTeam.playerIds.find(id => s.players[id].contractSeasons === 1)
+    const aiTeam = s.teams.find(t => t.id !== s.userTeamId)!
+    const aiExpiring = aiTeam.playerIds.find(id => s.players[id].contractSeasons === 1)
+    const s2 = newSeason(s)
+    if (leaving) {
+      expect(s2.players[leaving]).toBeUndefined()
+      expect(s2.teams.find(t => t.id === s.userTeamId)!.playerIds).not.toContain(leaving)
+    }
+    if (aiExpiring) {
+      expect(s2.players[aiExpiring].contractSeasons).toBeGreaterThanOrEqual(1)
+      expect(s2.players[aiExpiring].salary).toBeGreaterThanOrEqual(salaryFor(s.players[aiExpiring].level))
+    }
+    // everyone else is one season shorter
+    const survivor = userTeam.playerIds.find(id => s.players[id].contractSeasons === 3)
+    if (survivor) expect(s2.players[survivor].contractSeasons).toBe(2)
+  })
+
+  it('clears the market at season end', () => {
+    const s = playSeason(7)
+    const s2 = newSeason(s)
+    expect(s2.transferList).toEqual([])
+    expect(s2.incomingOffers).toEqual([])
+    expect(s2.brokeRounds).toBe(0)
   })
 })

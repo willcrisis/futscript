@@ -1,8 +1,11 @@
+import { adjustCash, runWeeklyFinances } from './finance'
 import { generateFixtures } from './fixtures'
 import { autoPick, patchLineup } from './lineup'
 import { simulateMatch } from './match'
 import { mulberry32, randInt } from './rng'
+import { standings } from './standings'
 import { ageSquads, applyWeeklyUpdates } from './training'
+import { renewalSalary, runTransfers } from './transfers'
 import type { GameState, MatchEvent, Player } from './types'
 
 export function totalRounds(state: GameState): number {
@@ -34,7 +37,7 @@ export function applyMatchConsequences(
 }
 
 export function advanceRound(state: GameState): GameState {
-  if (state.round > totalRounds(state)) return state
+  if (state.gameOver || state.round > totalRounds(state)) return state
   const rand = mulberry32(state.rngState)
 
   // fresh lineups: AI re-picks its best XI, the user's picks are kept but repaired
@@ -66,17 +69,62 @@ export function advanceRound(state: GameState): GameState {
   const starters = new Set(teams.flatMap(t => t.lineup))
   players = applyWeeklyUpdates(players, teams, starters, rand)
 
-  return { ...state, teams, players, fixtures, round: state.round + 1, rngState: randInt(rand, 1, 2 ** 31 - 1) }
+  let s: GameState = { ...state, teams, players, fixtures }
+  s = runTransfers(s, rand)
+  s = runWeeklyFinances(s, rand)
+
+  return { ...s, round: s.round + 1, rngState: randInt(rand, 1, 2 ** 31 - 1) }
 }
 
 export function newSeason(state: GameState): GameState {
   const rand = mulberry32(state.rngState)
+
+  // prize money by final position
+  let teams = state.teams
+  let finances = state.finances
+  standings(state).forEach((row, i) => {
+    const prize = 1_500_000 - i * 75_000
+    teams = adjustCash(teams, row.teamId, prize)
+    if (row.teamId === state.userTeamId) {
+      finances = [
+        ...finances,
+        { season: state.season, round: totalRounds(state), label: `Prize money (finished ${i + 1})`, amount: prize },
+      ].slice(-300)
+    }
+  })
+
+  // contracts: one season shorter; AI auto-renews, unrenewed user players walk
+  const players = { ...state.players }
+  for (const team of state.teams) {
+    for (const id of team.playerIds) {
+      const p = players[id]
+      const remaining = p.contractSeasons - 1
+      if (remaining > 0) {
+        players[id] = { ...p, contractSeasons: remaining }
+      } else if (team.id !== state.userTeamId) {
+        players[id] = { ...p, contractSeasons: randInt(rand, 1, 3), salary: renewalSalary(p) }
+      } else {
+        delete players[id]
+        teams = teams.map(t =>
+          t.id === team.id
+            ? { ...t, playerIds: t.playerIds.filter(x => x !== id), lineup: t.lineup.filter(x => x !== id) }
+            : t,
+        )
+      }
+    }
+  }
+
   return {
     ...state,
+    teams,
+    finances,
+    players: ageSquads(players, rand),
     season: state.season + 1,
     round: 1,
-    players: ageSquads(state.players, rand),
-    fixtures: generateFixtures(state.teams.map(t => t.id), rand),
+    fixtures: generateFixtures(teams.map(t => t.id), rand),
+    transferList: [],
+    incomingOffers: [],
+    brokeRounds: 0,
     rngState: randInt(rand, 1, 2 ** 31 - 1),
   }
 }
