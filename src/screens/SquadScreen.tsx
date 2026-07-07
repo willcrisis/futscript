@@ -1,5 +1,8 @@
+import { useState } from 'react'
 import type { Dispatch, SetStateAction } from 'react'
+import { formatMoney, marketValue, severanceFor } from '../engine/finance'
 import { autoPick, isAvailable, swapIn, updateTeam } from '../engine/lineup'
+import { listPlayer, releasePlayer, renewalSalary, renewContract } from '../engine/transfers'
 import {
   FORMATIONS,
   type FormationName,
@@ -33,6 +36,9 @@ interface Props {
 }
 
 export default function SquadScreen({ state, setState }: Props) {
+  const [selling, setSelling] = useState<number | null>(null)
+  const [askingPrice, setAskingPrice] = useState(0)
+  const [confirmRelease, setConfirmRelease] = useState<number | null>(null)
   const team = state.teams.find(t => t.id === state.userTeamId)!
   const squad = team.playerIds
     .map(id => state.players[id])
@@ -89,7 +95,10 @@ export default function SquadScreen({ state, setState }: Props) {
       </div>
       <table>
         <thead>
-          <tr><th>Pos</th><th>Name</th><th>Age</th><th>Level</th><th>Form</th><th>Fit</th><th>Status</th><th></th></tr>
+          <tr>
+            <th>Pos</th><th>Name</th><th>Age</th><th>Level</th><th>Form</th><th>Fit</th>
+            <th>Status</th><th>Salary</th><th>Contract</th><th>Value</th><th></th>
+          </tr>
         </thead>
         <tbody>
           {squad.map(p => {
@@ -103,15 +112,49 @@ export default function SquadScreen({ state, setState }: Props) {
                 <td>{formArrow(p.form)}</td>
                 <td>{p.fitness}%</td>
                 <td>{status(p)}</td>
-                <td>
-                  {starting
-                    ? 'Starting'
-                    : <button
-                        disabled={!isAvailable(p)}
-                        onClick={() => withUserTeam((s, t) => updateTeam(s, t.id, { lineup: swapIn(t, s.players, p.id) }))}
-                      >
-                        Start
-                      </button>}
+                <td>{formatMoney(p.salary)}/wk</td>
+                <td>{p.contractSeasons}y</td>
+                <td>{formatMoney(marketValue(p))}</td>
+                <td className="actions">
+                  {selling === p.id ? (
+                    <>
+                      <input
+                        type="number"
+                        value={askingPrice}
+                        onChange={e => setAskingPrice(Number(e.target.value))}
+                        style={{ width: '7rem' }}
+                      />
+                      <button onClick={() => { setState(s => listPlayer(s, p.id, askingPrice)); setSelling(null) }}>List</button>
+                      <button onClick={() => setSelling(null)}>✕</button>
+                    </>
+                  ) : confirmRelease === p.id ? (
+                    <>
+                      <button onClick={() => { setState(s => releasePlayer(s, p.id)); setConfirmRelease(null) }}>
+                        Confirm release ({formatMoney(-severanceFor(p))})
+                      </button>
+                      <button onClick={() => setConfirmRelease(null)}>✕</button>
+                    </>
+                  ) : (
+                    <>
+                      {starting
+                        ? 'Starting'
+                        : <button
+                            disabled={!isAvailable(p)}
+                            onClick={() => withUserTeam((s, t) => updateTeam(s, t.id, { lineup: swapIn(t, s.players, p.id) }))}
+                          >
+                            Start
+                          </button>}
+                      {state.transferList.some(l => l.playerId === p.id)
+                        ? ' · listed'
+                        : <button onClick={() => { setSelling(p.id); setAskingPrice(marketValue(p)) }}>Sell</button>}
+                      <button onClick={() => setConfirmRelease(p.id)}>Release</button>
+                      {p.contractSeasons <= 1 && (
+                        <button onClick={() => setState(s => renewContract(s, p.id))}>
+                          Renew ({formatMoney(renewalSalary(p))}/wk)
+                        </button>
+                      )}
+                    </>
+                  )}
                 </td>
               </tr>
             )

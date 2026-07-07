@@ -25,6 +25,7 @@ tr.user { outline: 2px solid seagreen; }
 tr.starting { background: rgba(46, 139, 87, 0.25) !important; }
 tr.selected { outline: 2px solid steelblue; }
 .report { margin-top: 1rem; }
+td.actions button { margin-left: 0.25rem; }
 
 .round-nav { display: flex; gap: 1rem; align-items: center; margin-bottom: 0.5rem; }
 td.home { text-align: right; }
