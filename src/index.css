@@ -60,6 +60,11 @@
 }
 
 /* ── LEGACY (Task 12 deletes everything below this line) ─────────────── */
+/* Wrapped in @layer base (Task 4) so it always loses to Tailwind's utilities
+   layer — CSS Cascade Layers give unlayered rules unconditional priority over
+   layered ones, which was clobbering Shell's responsive nav classes. */
+
+@layer base {
 
 .app { max-width: 720px; margin: 0 auto; padding: 1rem; }
 
@@ -94,3 +99,5 @@ td.home { text-align: right; }
 
 td.neg { color: crimson; }
 td.pos { color: seagreen; }
+
+}
