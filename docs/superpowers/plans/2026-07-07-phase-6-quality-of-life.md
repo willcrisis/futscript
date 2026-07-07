@@ -14,7 +14,7 @@ The `ui-redesign` branch merged (all screens on the Quiet Heritage kit). This pl
 
 ## Global Constraints
 
-- `src/engine/` untouched EXCEPT Task 7's `newGame` user-club selection (one line + comment). No save-schema change (`futscript-lang` and `futscript-speed` are separate localStorage keys, like `futscript-theme`).
+- `src/engine/` untouched EXCEPT two named touches: Task 7's `newGame` user-club selection (one line + comment) and Task 8's `TransferListing.userBid?: number` optional field + `placeBid` writing it (two lines + type field). No save-schema version bump either way (`userBid` is optional; `futscript-lang` and `futscript-speed` are separate localStorage keys, like `futscript-theme`).
 - Suite must stay green after every task (`npm test`; count grows with the new i18n tests). Typecheck `npx tsc -b --force`; `npm run build` clean.
 - Player names, club names, and competition data are NEVER translated — they are data. Only UI chrome translates.
 - Every user-visible UI string goes through `t()` by the end of Task 3 — grep-verifiable: screens/`src/ui` contain no hardcoded English sentence literals (single words used as data, class names, and aria patterns built from keys are fine).
@@ -32,7 +32,9 @@ The `ui-redesign` branch merged (all screens on the Quiet Heritage kit). This pl
 - `src/i18n/i18n.test.ts`, `src/i18n/ledger.test.ts` — pure-function tests (fit the `src/**/*.test.ts` vitest include)
 - `src/ui/icons.tsx` — + `PlayIcon`, `TagIcon`, `ExitIcon`, `RenewIcon`
 - `src/screens/*`, `src/ui/*` — string extraction; Squad actions; Finance summary; Saves settings panel + New career
-- `src/engine/newGame.ts` — random Division 3 club (Task 7 only)
+- `src/screens/WelcomeScreen.tsx` — NEW: first-run takeover on new careers (Task 8)
+- `src/engine/newGame.ts` — random Division 3 club (Task 7)
+- `src/engine/transfers.ts` — `TransferListing.userBid?` + `placeBid` writes it (Task 8)
 
 ---
 
