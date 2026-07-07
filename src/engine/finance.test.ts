@@ -3,9 +3,11 @@ import { mulberry32 } from './rng'
 import { newGame } from './newGame'
 import {
   adjustCash, borrow, formatMoney, marketValue, LOAN_CAP, repayLoan, runWeeklyFinances, salaryFor,
-  severanceFor, STARTING_CASH, wageBill,
+  severanceFor, STARTING_CASH, wageBill, DIVISION_FACTOR,
 } from './finance'
 import type { GameState, Player } from './types'
+import { CUP_WEEKS } from './fixtures'
+import { advanceRound } from './season'
 
 export function makePlayer(id: number, over: Partial<Player> = {}): Player {
   return {
@@ -116,5 +118,41 @@ describe('loans', () => {
     const s2 = repayLoan(s1, 500_000)
     expect(s2.loanBalance).toBe(0)
     expect(userCash(s2)).toBe(userCash(s1) - 200_000)
+  })
+})
+
+describe('division-aware gates', () => {
+  it('scales gate receipts by division', () => {
+    expect(DIVISION_FACTOR).toEqual({ 1: 1, 2: 0.7, 3: 0.5 })
+    const s0 = newGame(1)
+    const s1 = runWeeklyFinances(s0, mulberry32(2))
+    // a division-1 home club earns at least (10_000 - 1_000 + 800*0) * 15 = 135k;
+    // a division-3 home club (factor 0.5) can earn at most ((10_000 + 800*15 + 1_000) * 15) / 2 = 172.5k
+    const homeIds = new Set(s0.fixtures.filter(f => f.round === 1).map(f => f.homeId))
+    for (const t of s1.teams) {
+      if (!homeIds.has(t.id)) continue
+      const before = s0.teams.find(x => x.id === t.id)!.cash
+      const gate = t.cash - (before - wageBill(t.id, s0)) - (t.id === s0.userTeamId ? interestAdjustments(s1) : 0)
+      if (t.division === 1) expect(gate).toBeGreaterThanOrEqual(Math.round(135_000))
+      if (t.division === 3 && t.id !== s0.userTeamId) expect(gate).toBeLessThanOrEqual(172_500)
+    }
+    function interestAdjustments(s: GameState): number {
+      return s.finances.filter(e => e.round === 1 && (e.label === 'Deposit interest' || e.label === 'Overdraft charge' || e.label === 'Loan interest')).reduce((sum, e) => sum + e.amount, 0)
+    }
+  })
+
+  it('pays a gate for a home cup tie', () => {
+    let s = newGame(9)
+    for (let week = 1; week < CUP_WEEKS[0]; week++) s = advanceRound(s)
+    // week 4: only cup ties are scheduled
+    const cupHomes = new Set(s.cupFixtures.filter(f => f.week === CUP_WEEKS[0]).map(f => f.homeId))
+    expect(cupHomes.size).toBeGreaterThan(0)
+    const before = new Map(s.teams.map(t => [t.id, t.cash]))
+    const s2 = advanceRound(s)
+    for (const id of cupHomes) {
+      const t = s2.teams.find(x => x.id === id)!
+      // gate income exceeds the wage bill hit for at least the cup hosts as a group
+      expect(t.cash).toBeGreaterThan(before.get(id)! - wageBill(id, s))
+    }
   })
 })
