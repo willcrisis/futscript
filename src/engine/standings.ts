@@ -11,9 +11,10 @@ export interface Standing {
   points: number
 }
 
-export function standings(state: GameState): Standing[] {
+export function standings(state: GameState, division = 1): Standing[] {
   const rows = new Map<number, Standing>()
   for (const t of state.teams) {
+    if (t.division !== division) continue
     rows.set(t.id, {
       teamId: t.id, played: 0, won: 0, drawn: 0, lost: 0,
       goalsFor: 0, goalsAgainst: 0, points: 0,
@@ -21,8 +22,9 @@ export function standings(state: GameState): Standing[] {
   }
   for (const f of state.fixtures) {
     if (f.homeGoals === null || f.awayGoals === null) continue
-    const h = rows.get(f.homeId)!
-    const a = rows.get(f.awayId)!
+    const h = rows.get(f.homeId)
+    const a = rows.get(f.awayId)
+    if (!h || !a) continue // other division's fixture
     h.played++; a.played++
     h.goalsFor += f.homeGoals; h.goalsAgainst += f.awayGoals
     a.goalsFor += f.awayGoals; a.goalsAgainst += f.homeGoals

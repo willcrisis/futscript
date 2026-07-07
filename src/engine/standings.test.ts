@@ -38,4 +38,19 @@ describe('standings', () => {
     expect(rows).toHaveLength(3)
     expect(rows.every(r => r.played === 0 && r.points === 0)).toBe(true)
   })
+
+  it('scopes the table to one division', () => {
+    const base = makeState([
+      { round: 1, homeId: 0, awayId: 1, homeGoals: 2, awayGoals: 0 },
+    ])
+    const state = {
+      ...base,
+      teams: base.teams.map(t => (t.id === 2 ? { ...t, division: 2 } : t)),
+    }
+    const div1 = standings(state, 1)
+    expect(div1.map(r => r.teamId).sort()).toEqual([0, 1])
+    const div2 = standings(state, 2)
+    expect(div2.map(r => r.teamId)).toEqual([2])
+    expect(standings(state)).toEqual(div1) // default division 1
+  })
 })

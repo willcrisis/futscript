@@ -1,5 +1,11 @@
 import type { Fixture } from './types'
 
+// 30 league rounds + 6 cup weeks = a 36-week season
+export const CUP_WEEKS = [4, 9, 14, 19, 24, 29]
+export const TOTAL_WEEKS = 36
+export const LEAGUE_WEEKS = Array.from({ length: TOTAL_WEEKS }, (_, i) => i + 1)
+  .filter(w => !CUP_WEEKS.includes(w))
+
 // Circle method: one team fixed, the rest rotate one seat per round.
 export function generateFixtures(teamIds: number[], rand: () => number): Fixture[] {
   const ids = [...teamIds]
@@ -26,4 +32,8 @@ export function generateFixtures(teamIds: number[], rand: () => number): Fixture
     rot = [rot[rot.length - 1], ...rot.slice(0, -1)]
   }
   return fixtures.sort((a, b) => a.round - b.round)
+}
+
+export function generateDivisionFixtures(teamIds: number[], rand: () => number): Fixture[] {
+  return generateFixtures(teamIds, rand).map(f => ({ ...f, round: LEAGUE_WEEKS[f.round - 1] }))
 }

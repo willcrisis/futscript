@@ -9,7 +9,10 @@ import { renewalSalary, runTransfers } from './transfers'
 import type { GameState, MatchEvent, Player } from './types'
 
 export function totalRounds(state: GameState): number {
-  return (state.teams.length - 1) * 2
+  return Math.max(
+    ...state.fixtures.map(f => f.round),
+    ...state.cupFixtures.map(f => f.week),
+  )
 }
 
 export function applyMatchConsequences(

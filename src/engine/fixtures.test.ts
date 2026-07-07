@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { generateFixtures } from './fixtures'
+import { CUP_WEEKS, generateDivisionFixtures, generateFixtures, LEAGUE_WEEKS } from './fixtures'
 import { mulberry32 } from './rng'
 
 const ids = Array.from({ length: 16 }, (_, i) => i)
@@ -27,5 +27,25 @@ describe('generateFixtures', () => {
 
   it('is deterministic for the same rand', () => {
     expect(generateFixtures(ids, mulberry32(5))).toEqual(generateFixtures(ids, mulberry32(5)))
+  })
+})
+
+describe('calendar', () => {
+  it('league weeks skip the six cup weeks', () => {
+    expect(CUP_WEEKS).toEqual([4, 9, 14, 19, 24, 29])
+    expect(LEAGUE_WEEKS).toHaveLength(30)
+    expect(LEAGUE_WEEKS.some(w => CUP_WEEKS.includes(w))).toBe(false)
+    expect(Math.max(...LEAGUE_WEEKS)).toBe(36)
+  })
+
+  it('generateDivisionFixtures schedules rounds onto league weeks', () => {
+    const fixtures = generateDivisionFixtures(ids, mulberry32(1))
+    expect(fixtures).toHaveLength(240)
+    const weeks = new Set(fixtures.map(f => f.round))
+    expect(weeks.size).toBe(30)
+    for (const w of weeks) expect(CUP_WEEKS.includes(w)).toBe(false)
+    // still one match per team per scheduled week
+    const week5 = fixtures.filter(f => f.round === 5)
+    expect(new Set(week5.flatMap(f => [f.homeId, f.awayId])).size).toBe(16)
   })
 })
