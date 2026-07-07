@@ -1,0 +1,94 @@
+<h2>Which visual direction should futscript wear?</h2>
+<p class="subtitle">Same content in all three — a sidebar, the league table, your club's vitals. All are minimalist; they differ in mood. Click one (or tell me in the terminal).</p>
+
+<div class="cards">
+  <div class="card" data-choice="ledger" onclick="toggleSelect(this)">
+    <div class="card-image" style="padding:0;background:#fafaf9">
+      <div style="display:flex;height:230px;font-family:ui-sans-serif,system-ui;font-size:11px;color:#1c1917">
+        <div style="width:74px;background:#f5f5f4;border-right:1px solid #e7e5e4;padding:10px 8px;display:flex;flex-direction:column;gap:8px">
+          <div style="font-weight:700;font-size:12px;letter-spacing:-.02em">FUTSCRIPT</div>
+          <div style="color:#57534e">Home</div>
+          <div style="background:#e7e5e4;border-radius:5px;padding:2px 6px;margin:0 -6px;font-weight:600">Table</div>
+          <div style="color:#57534e">Squad</div>
+          <div style="color:#57534e">Transfers</div>
+          <div style="margin-top:auto;color:#57534e;font-size:10px">União FC<br><span style="color:#16a34a;font-weight:600">$1.89M</span> · W2</div>
+        </div>
+        <div style="flex:1;padding:12px 14px">
+          <div style="font-size:15px;font-weight:650;letter-spacing:-.02em;margin-bottom:8px">Division 1</div>
+          <div style="display:grid;grid-template-columns:18px 1fr 30px 30px;gap:4px;font-variant-numeric:tabular-nums">
+            <div style="color:#a8a29e">1</div><div>Guarani do Norte</div><div style="color:#a8a29e">+3</div><div style="font-weight:650">3</div>
+            <div style="color:#a8a29e">2</div><div>Operário FC</div><div style="color:#a8a29e">+2</div><div style="font-weight:650">3</div>
+            <div style="grid-column:1/-1;height:1px;background:#e7e5e4"></div>
+            <div style="color:#16a34a;font-weight:700">3</div><div style="font-weight:650;color:#16a34a">União FC</div><div style="color:#a8a29e">+1</div><div style="font-weight:650">3</div>
+            <div style="grid-column:1/-1;height:1px;background:#e7e5e4"></div>
+            <div style="color:#a8a29e">4</div><div>Comercial FC</div><div style="color:#a8a29e">+1</div><div style="font-weight:650">3</div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="card-body">
+      <h3>A — Ledger</h3>
+      <p>Light-first paper minimalism: warm off-white, near-black ink, hairline rules, one pitch-green accent, tabular numerals. Linear/Notion calm for a sports ledger.</p>
+    </div>
+  </div>
+
+  <div class="card" data-choice="floodlight" onclick="toggleSelect(this)">
+    <div class="card-image" style="padding:0;background:#09090b">
+      <div style="display:flex;height:230px;font-family:ui-sans-serif,system-ui;font-size:11px;color:#fafafa">
+        <div style="width:74px;background:#111113;border-right:1px solid #27272a;padding:10px 8px;display:flex;flex-direction:column;gap:8px">
+          <div style="font-weight:700;font-size:12px;letter-spacing:-.02em">FUTSCRIPT</div>
+          <div style="color:#71717a">Home</div>
+          <div style="background:#27272a;border-radius:5px;padding:2px 6px;margin:0 -6px;font-weight:600;color:#4ade80">Table</div>
+          <div style="color:#71717a">Squad</div>
+          <div style="color:#71717a">Transfers</div>
+          <div style="margin-top:auto;color:#71717a;font-size:10px">União FC<br><span style="color:#4ade80;font-weight:600">$1.89M</span> · W2</div>
+        </div>
+        <div style="flex:1;padding:12px 14px">
+          <div style="font-size:15px;font-weight:650;letter-spacing:-.02em;margin-bottom:8px">Division 1</div>
+          <div style="display:grid;grid-template-columns:18px 1fr 30px 30px;gap:4px;font-variant-numeric:tabular-nums">
+            <div style="color:#52525b">1</div><div>Guarani do Norte</div><div style="color:#52525b">+3</div><div style="font-weight:650">3</div>
+            <div style="color:#52525b">2</div><div>Operário FC</div><div style="color:#52525b">+2</div><div style="font-weight:650">3</div>
+            <div style="grid-column:1/-1;height:1px;background:#27272a"></div>
+            <div style="color:#4ade80;font-weight:700">3</div><div style="font-weight:650;color:#4ade80">União FC</div><div style="color:#52525b">+1</div><div style="font-weight:650">3</div>
+            <div style="grid-column:1/-1;height:1px;background:#27272a"></div>
+            <div style="color:#52525b">4</div><div>Comercial FC</div><div style="color:#52525b">+1</div><div style="font-weight:650">3</div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="card-body">
+      <h3>B — Floodlight</h3>
+      <p>Dark-first night match: deep zinc, crisp white type, electric-green accent reserved for what matters (you, money, live). FotMob/Linear-dark energy.</p>
+    </div>
+  </div>
+
+  <div class="card" data-choice="teletext" onclick="toggleSelect(this)">
+    <div class="card-image" style="padding:0;background:#f4f1ea">
+      <div style="display:flex;height:230px;font-size:11px;color:#161412;font-family:ui-sans-serif,system-ui">
+        <div style="width:74px;background:#161412;color:#f4f1ea;padding:10px 8px;display:flex;flex-direction:column;gap:8px">
+          <div style="font-weight:800;font-size:12px;font-family:ui-monospace,monospace">FUT_</div>
+          <div style="color:#a8a29e">Home</div>
+          <div style="background:#facc15;color:#161412;padding:2px 6px;margin:0 -6px;font-weight:700">Table</div>
+          <div style="color:#a8a29e">Squad</div>
+          <div style="color:#a8a29e">Transfers</div>
+          <div style="margin-top:auto;color:#a8a29e;font-size:10px;font-family:ui-monospace,monospace">União FC<br><span style="color:#facc15;font-weight:700">$1.89M</span> W2</div>
+        </div>
+        <div style="flex:1;padding:12px 14px">
+          <div style="font-size:15px;font-weight:800;margin-bottom:8px;font-family:ui-monospace,monospace;text-transform:uppercase">Division 1</div>
+          <div style="display:grid;grid-template-columns:18px 1fr 30px 30px;gap:4px;font-family:ui-monospace,monospace">
+            <div style="color:#78716c">1</div><div>Guarani d Norte</div><div style="color:#78716c">+3</div><div style="font-weight:700">3</div>
+            <div style="color:#78716c">2</div><div>Operário FC</div><div style="color:#78716c">+2</div><div style="font-weight:700">3</div>
+            <div style="grid-column:1/-1;height:2px;background:#161412"></div>
+            <div style="font-weight:800;background:#facc15">3</div><div style="font-weight:800;background:#facc15">União FC</div><div style="background:#facc15">+1</div><div style="font-weight:800;background:#facc15">3</div>
+            <div style="grid-column:1/-1;height:2px;background:#161412"></div>
+            <div style="color:#78716c">4</div><div>Comercial FC</div><div style="color:#78716c">+1</div><div style="font-weight:700">3</div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="card-body">
+      <h3>C — Teletext Heritage</h3>
+      <p>Minimalist with a retro spine: monospace numerals, blocky uppercase headers, bold yellow highlight bars on warm paper — a modern nod to Elifoot-era scoreboards.</p>
+    </div>
+  </div>
+</div>
