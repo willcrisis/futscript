@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { totalRounds } from '../engine/season'
 import type { Fixture, GameState } from '../engine/types'
+import { t, useLang } from '../i18n'
 import Button from '../ui/Button'
 import EmptyState from '../ui/EmptyState'
 import EventFeed from '../ui/EventFeed'
@@ -11,6 +12,7 @@ const ROW = 'grid w-full grid-cols-[1fr_auto_1fr] items-center gap-3 rounded-lg 
 const SPINE = 'shadow-[inset_3px_0_0_0_var(--accent)]'
 
 export default function FixturesScreen({ state }: { state: GameState }) {
+  useLang()
   const total = totalRounds(state)
   const [round, setRound] = useState(() => Math.min(Math.max(state.round - 1, 1), total))
   const [selected, setSelected] = useState<Fixture | null>(null)
@@ -24,8 +26,8 @@ export default function FixturesScreen({ state }: { state: GameState }) {
   return (
     <div>
       <ScreenHeader
-        label="CALENDAR"
-        title="Fixtures"
+        label={t('fixtures.header')}
+        title={t('fixtures.title')}
         actions={
           <>
             {divisions.length > 1 && (
@@ -33,7 +35,7 @@ export default function FixturesScreen({ state }: { state: GameState }) {
                 value={division}
                 onChange={e => setDivision(Number(e.target.value))}
                 className="rounded-md border border-rule bg-surface-raised px-2 py-1.5 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 focus-visible:ring-offset-surface"
-                aria-label="Division"
+                aria-label={t('common.division')}
               >
                 {divisions.map(d => <option key={d} value={d}>{d}</option>)}
               </select>
@@ -44,17 +46,17 @@ export default function FixturesScreen({ state }: { state: GameState }) {
                 size="sm"
                 disabled={round <= 1}
                 onClick={() => { setRound(round - 1); setSelected(null) }}
-                aria-label="Previous week"
+                aria-label={t('fixtures.previousWeek')}
               >
                 ‹
               </Button>
-              <span className="w-16 text-center font-mono text-sm tabular-nums">Week {round}</span>
+              <span className="w-16 text-center font-mono text-sm tabular-nums">{t('fixtures.weekLabel', { n: round })}</span>
               <Button
                 variant="ghost"
                 size="sm"
                 disabled={round >= total}
                 onClick={() => { setRound(round + 1); setSelected(null) }}
-                aria-label="Next week"
+                aria-label={t('fixtures.nextWeek')}
               >
                 ›
               </Button>
@@ -63,7 +65,7 @@ export default function FixturesScreen({ state }: { state: GameState }) {
         }
       />
       {fixtures.length === 0 ? (
-        <EmptyState>Cup week — see the Cup tab.</EmptyState>
+        <EmptyState>{t('fixtures.cupWeekEmpty')}</EmptyState>
       ) : (
         <div className="flex flex-col gap-2">
           {fixtures.map((f, i) => {
@@ -74,7 +76,7 @@ export default function FixturesScreen({ state }: { state: GameState }) {
               <>
                 <div className="text-right">{name(f.homeId)}</div>
                 <div className="text-center font-mono text-sm tabular-nums">
-                  {played ? `${f.homeGoals} – ${f.awayGoals}` : <span className="text-ink-muted">vs</span>}
+                  {played ? `${f.homeGoals} – ${f.awayGoals}` : <span className="text-ink-muted">{t('common.vs')}</span>}
                 </div>
                 <div className="text-left">{name(f.awayId)}</div>
               </>

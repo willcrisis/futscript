@@ -1,4 +1,5 @@
 import type { GameState } from '../engine/types'
+import { t, useLang } from '../i18n'
 import DataTable from '../ui/DataTable'
 import type { Column } from '../ui/DataTable'
 import EmptyState from '../ui/EmptyState'
@@ -13,21 +14,19 @@ interface ScorerRow {
   goals: number
 }
 
-const columns: Column<ScorerRow>[] = [
-  { key: 'rank', label: '#', mono: true, render: r => r.rank },
-  { key: 'player', label: 'Player', render: r => r.player },
-  { key: 'club', label: 'Club', render: r => r.club },
-  { key: 'goals', label: 'Goals', align: 'right', mono: true, render: r => <strong>{r.goals}</strong> },
-]
-
-const allTimeColumns: Column<ScorerRow>[] = [
-  { key: 'rank', label: '#', mono: true, render: r => r.rank },
-  { key: 'player', label: 'Player', render: r => r.player },
-  { key: 'club', label: 'Last club', render: r => r.club },
-  { key: 'goals', label: 'Goals', align: 'right', mono: true, render: r => <strong>{r.goals}</strong> },
-]
+function columnsFor(lastClub: boolean): Column<ScorerRow>[] {
+  return [
+    { key: 'rank', label: t('common.pos'), mono: true, render: r => r.rank },
+    { key: 'player', label: t('common.player'), render: r => r.player },
+    { key: 'club', label: lastClub ? t('stats.lastClub') : t('common.club'), render: r => r.club },
+    { key: 'goals', label: t('stats.goals'), align: 'right', mono: true, render: r => <strong>{r.goals}</strong> },
+  ]
+}
 
 export default function StatsScreen({ state }: { state: GameState }) {
+  useLang()
+  const columns = columnsFor(false)
+  const allTimeColumns = columnsFor(true)
   const teamOf = (playerId: number) => state.teams.find(t => t.playerIds.includes(playerId))?.name ?? '—'
   const thisSeason: ScorerRow[] = Object.values(state.players)
     .filter(p => p.seasonGoals > 0)
@@ -40,22 +39,22 @@ export default function StatsScreen({ state }: { state: GameState }) {
 
   return (
     <div>
-      <ScreenHeader label="SCORERS" title="Stats" />
+      <ScreenHeader label={t('stats.header')} title={t('stats.title')} />
       <div className="flex flex-col gap-4">
-        <Panel label="This season">
+        <Panel label={t('stats.thisSeason')}>
           <DataTable
             columns={columns}
             rows={thisSeason}
             rowKey={r => r.key}
-            empty={<EmptyState>No goals yet.</EmptyState>}
+            empty={<EmptyState>{t('stats.noGoalsYet')}</EmptyState>}
           />
         </Panel>
-        <Panel label="All-time">
+        <Panel label={t('stats.allTime')}>
           <DataTable
             columns={allTimeColumns}
             rows={allTime}
             rowKey={r => r.key}
-            empty={<EmptyState>The record books open at the end of the first season.</EmptyState>}
+            empty={<EmptyState>{t('stats.recordBooksEmpty')}</EmptyState>}
           />
         </Panel>
       </div>

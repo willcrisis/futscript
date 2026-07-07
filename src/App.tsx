@@ -78,14 +78,13 @@ function Game() {
   if (state.gameOver) {
     return (
       <div className="flex min-h-dvh flex-col items-center justify-center gap-3 p-6 text-center">
-        <SectionLabel>THE BOARD HAS DECIDED</SectionLabel>
-        <h1 className="font-mono text-4xl font-bold">Sacked!</h1>
+        <SectionLabel>{t('app.sackedHeader')}</SectionLabel>
+        <h1 className="font-mono text-4xl font-bold">{t('app.sackedTitle')}</h1>
         <p className="max-w-md text-ink-muted">
-          {userTeam.name} spent too long in the red. The board has shown you the door
-          after {state.season} season{state.season > 1 ? 's' : ''}.
+          {t('app.sackedMessage', { team: userTeam.name, n: state.season })}
         </p>
         <Button variant="primary" onClick={() => setState(newGame(Date.now() % 2147483647))}>
-          Start a new career
+          {t('app.newCareerButton')}
         </Button>
       </div>
     )
@@ -110,16 +109,13 @@ function Game() {
       {champion && (
         <Panel className="mb-4 border-accent/40!">
           <p className="text-lg font-semibold">
-            🏆 {champion.name} are the Division {userTeam.division} champions!
+            {t('app.championMessage', { name: champion.name, division: userTeam.division })}
           </p>
           {(cupChampId !== null || expiringCount > 0) && (
             <p className="mt-1 text-sm text-ink-muted">
-              {cupChampId !== null && <>🏆 {state.teams.find(t => t.id === cupChampId)!.name} win the Cup!</>}
+              {cupChampId !== null && t('cup.championMessage', { name: state.teams.find(t => t.id === cupChampId)!.name })}
               {cupChampId !== null && expiringCount > 0 && ' · '}
-              {expiringCount > 0 && (
-                <>⚠ {expiringCount} contract{expiringCount > 1 ? 's' : ''} expire — unrenewed players leave
-                (cheapest are kept automatically if the squad would drop below 14)</>
-              )}
+              {expiringCount > 0 && t('app.contractsExpireWarning', { n: expiringCount })}
             </p>
           )}
         </Panel>

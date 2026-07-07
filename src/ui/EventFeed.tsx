@@ -1,4 +1,5 @@
 import type { GameState, MatchEvent } from '../engine/types'
+import { t } from '../i18n'
 
 export function eventText(e: MatchEvent, state: GameState): string {
   const player = state.players[e.playerId]?.name ?? '?'
@@ -44,7 +45,7 @@ interface Props {
 }
 
 export default function EventFeed({
-  events, state, emphasisTeamId, emptyText = 'No report available for this match.',
+  events, state, emphasisTeamId, emptyText = t('common.noMatchReport'),
 }: Props) {
   const name = (id: number) => state.teams.find(t => t.id === id)!.name
 

@@ -1,4 +1,5 @@
 import { useSyncExternalStore } from 'react'
+import { t, useLang } from '../i18n'
 
 // Module-level store: the html.dark class is the single source of truth, so
 // every mounted instance (sidebar + more-sheet) reads the same snapshot and
@@ -20,6 +21,7 @@ function getSnapshot(): boolean {
 }
 
 export default function ThemeToggle() {
+  useLang()
   const dark = useSyncExternalStore(subscribe, getSnapshot)
 
   const toggle = () => {
@@ -30,7 +32,7 @@ export default function ThemeToggle() {
 
   return (
     <button
-      aria-label={dark ? 'Switch to light theme' : 'Switch to dark theme'}
+      aria-label={dark ? t('common.switchToLight') : t('common.switchToDark')}
       onClick={toggle}
       className="rounded-md p-2 text-ink-muted hover:text-ink focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 focus-visible:ring-offset-surface"
     >

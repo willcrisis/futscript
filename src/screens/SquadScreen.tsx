@@ -11,6 +11,8 @@ import {
   type Tactic,
   type TrainingStyle,
 } from '../engine/types'
+import { t, useLang } from '../i18n'
+import type { TranslationKey } from '../i18n'
 import Badge from '../ui/Badge'
 import Button from '../ui/Button'
 import ConfirmButton from '../ui/ConfirmButton'
@@ -23,12 +25,24 @@ const ORDER = ['GK', 'DF', 'MF', 'FW']
 const TACTICS: Tactic[] = ['defensive', 'normal', 'attacking']
 const TRAINING_STYLES: TrainingStyle[] = ['light', 'normal', 'intensive', 'youth']
 
+const TACTIC_LABEL_KEYS: Record<Tactic, TranslationKey> = {
+  defensive: 'squad.tacticDefensive',
+  normal: 'squad.tacticNormal',
+  attacking: 'squad.tacticAttacking',
+}
+const TRAINING_LABEL_KEYS: Record<TrainingStyle, TranslationKey> = {
+  light: 'squad.trainingLight',
+  normal: 'squad.trainingNormal',
+  intensive: 'squad.trainingIntensive',
+  youth: 'squad.trainingYouth',
+}
+
 const SELECT_CLASS = 'rounded-md border border-rule bg-surface-raised px-2 py-1.5 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 focus-visible:ring-offset-surface'
 
 function statusBadge(p: Player) {
-  if (p.injuredForRounds > 0) return <Badge tone="danger">Injured · {p.injuredForRounds}w</Badge>
-  if (p.suspendedForRounds > 0) return <Badge tone="warn">Banned · {p.suspendedForRounds}w</Badge>
-  if (p.yellowCards > 0) return <Badge tone="muted">Cards · {p.yellowCards}</Badge>
+  if (p.injuredForRounds > 0) return <Badge tone="danger">{t('squad.injured', { n: p.injuredForRounds })}</Badge>
+  if (p.suspendedForRounds > 0) return <Badge tone="warn">{t('squad.banned', { n: p.suspendedForRounds })}</Badge>
+  if (p.yellowCards > 0) return <Badge tone="muted">{t('squad.cards', { n: p.yellowCards })}</Badge>
   return null
 }
 
@@ -44,6 +58,7 @@ interface Props {
 }
 
 export default function SquadScreen({ state, setState }: Props) {
+  useLang()
   const [selling, setSelling] = useState<number | null>(null)
   const [askingPrice, setAskingPrice] = useState(0)
   const team = state.teams.find(t => t.id === state.userTeamId)!
@@ -57,47 +72,47 @@ export default function SquadScreen({ state, setState }: Props) {
   const columns: Column<Player>[] = [
     {
       key: 'name',
-      label: 'Name',
+      label: t('squad.nameColumn'),
       render: p => (
         <span className="inline-flex items-center gap-2">
           {p.name}
-          {team.lineup.includes(p.id) && <Badge tone="accent">XI</Badge>}
+          {team.lineup.includes(p.id) && <Badge tone="accent">{t('squad.xiBadge')}</Badge>}
         </span>
       ),
     },
-    { key: 'age', label: 'Age', mono: true, hideOnMobile: true, render: p => p.age },
-    { key: 'level', label: 'Lvl', mono: true, render: p => <strong>{p.level}</strong> },
-    { key: 'form', label: 'Form', mono: true, hideOnMobile: true, render: p => formCell(p.form) },
+    { key: 'age', label: t('common.age'), mono: true, hideOnMobile: true, render: p => p.age },
+    { key: 'level', label: t('common.level'), mono: true, render: p => <strong>{p.level}</strong> },
+    { key: 'form', label: t('squad.formColumn'), mono: true, hideOnMobile: true, render: p => formCell(p.form) },
     {
       key: 'fit',
-      label: 'Fit',
+      label: t('squad.fitColumn'),
       mono: true,
       hideOnMobile: true,
       render: p => <span className={p.fitness < 70 ? 'text-warn' : ''}>{p.fitness}%</span>,
     },
-    { key: 'status', label: 'Status', render: p => statusBadge(p) },
+    { key: 'status', label: t('squad.statusColumn'), render: p => statusBadge(p) },
     {
       key: 'salary',
-      label: 'Salary',
+      label: t('squad.salaryColumn'),
       mono: true,
       hideOnMobile: true,
       render: p => (
         <span className="inline-flex items-baseline gap-1">
           <MoneyText amount={p.salary} size="sm" />
-          <span className="text-ink-faint">/wk</span>
+          <span className="text-ink-faint">{t('squad.perWeekSuffix')}</span>
         </span>
       ),
     },
     {
       key: 'contract',
-      label: 'Contract',
+      label: t('squad.contractColumn'),
       mono: true,
       hideOnMobile: true,
-      render: p => <span className={p.contractSeasons <= 1 ? 'text-warn' : ''}>{p.contractSeasons}y</span>,
+      render: p => <span className={p.contractSeasons <= 1 ? 'text-warn' : ''}>{t('common.yearsShort', { n: p.contractSeasons })}</span>,
     },
     {
       key: 'value',
-      label: 'Value',
+      label: t('squad.valueColumn'),
       mono: true,
       hideOnMobile: true,
       render: p => <MoneyText amount={marketValue(p)} size="sm" />,
@@ -123,9 +138,9 @@ export default function SquadScreen({ state, setState }: Props) {
                 size="sm"
                 onClick={() => { setState(s => listPlayer(s, p.id, askingPrice)); setSelling(null) }}
               >
-                List
+                {t('squad.listButton')}
               </Button>
-              <Button variant="ghost" size="sm" aria-label="Cancel" onClick={() => setSelling(null)}>
+              <Button variant="ghost" size="sm" aria-label={t('squad.cancelButton')} onClick={() => setSelling(null)}>
                 ✕
               </Button>
             </div>
@@ -134,7 +149,7 @@ export default function SquadScreen({ state, setState }: Props) {
         return (
           <div className="flex flex-wrap items-center gap-1.5">
             {starting ? (
-              <span className="text-xs text-ink-faint">Starting</span>
+              <span className="text-xs text-ink-faint">{t('squad.startingTag')}</span>
             ) : (
               <Button
                 variant="ghost"
@@ -142,25 +157,25 @@ export default function SquadScreen({ state, setState }: Props) {
                 disabled={!isAvailable(p)}
                 onClick={() => withUserTeam((s, t) => updateTeam(s, t.id, { lineup: swapIn(t, s.players, p.id) }))}
               >
-                Start
+                {t('squad.startButton')}
               </Button>
             )}
             {listed ? (
-              <Badge tone="muted">Listed</Badge>
+              <Badge tone="muted">{t('squad.listedBadge')}</Badge>
             ) : (
               <Button variant="ghost" size="sm" onClick={() => { setSelling(p.id); setAskingPrice(marketValue(p)) }}>
-                Sell
+                {t('squad.sellButton')}
               </Button>
             )}
             <ConfirmButton
-              label="Release"
-              confirmLabel={`Confirm ${formatMoney(-severanceFor(p))}`}
+              label={t('squad.releaseButton')}
+              confirmLabel={t('squad.confirmRelease', { amount: formatMoney(-severanceFor(p)) })}
               onConfirm={() => setState(s => releasePlayer(s, p.id))}
               size="sm"
             />
             {p.contractSeasons <= 1 && (
               <Button variant="ghost" size="sm" onClick={() => setState(s => renewContract(s, p.id))}>
-                Renew ({formatMoney(renewalSalary(p))}/wk)
+                {t('squad.renewButton', { amount: formatMoney(renewalSalary(p)) })}
               </Button>
             )}
           </div>
@@ -172,12 +187,12 @@ export default function SquadScreen({ state, setState }: Props) {
   return (
     <div>
       <ScreenHeader
-        label="SQUAD"
+        label={t('squad.header')}
         title={team.name}
         actions={
           <>
             <select
-              aria-label="Formation"
+              aria-label={t('squad.formationLabel')}
               value={team.formation}
               onChange={e => {
                 const formation = e.target.value as FormationName
@@ -191,7 +206,7 @@ export default function SquadScreen({ state, setState }: Props) {
               {Object.keys(FORMATIONS).map(f => <option key={f}>{f}</option>)}
             </select>
             <select
-              aria-label="Tactic"
+              aria-label={t('squad.tacticLabel')}
               value={team.tactic}
               onChange={e => {
                 const tactic = e.target.value as Tactic
@@ -199,10 +214,10 @@ export default function SquadScreen({ state, setState }: Props) {
               }}
               className={SELECT_CLASS}
             >
-              {TACTICS.map(t => <option key={t}>{t}</option>)}
+              {TACTICS.map(tactic => <option key={tactic} value={tactic}>{t(TACTIC_LABEL_KEYS[tactic])}</option>)}
             </select>
             <select
-              aria-label="Training"
+              aria-label={t('squad.trainingLabel')}
               value={team.trainingStyle}
               onChange={e => {
                 const trainingStyle = e.target.value as TrainingStyle
@@ -210,14 +225,14 @@ export default function SquadScreen({ state, setState }: Props) {
               }}
               className={SELECT_CLASS}
             >
-              {TRAINING_STYLES.map(t => <option key={t}>{t}</option>)}
+              {TRAINING_STYLES.map(style => <option key={style} value={style}>{t(TRAINING_LABEL_KEYS[style])}</option>)}
             </select>
             <Button
               variant="ghost"
               size="sm"
               onClick={() => withUserTeam((s, t) => updateTeam(s, t.id, { lineup: autoPick(t, s.players) }))}
             >
-              Auto-pick
+              {t('squad.autoPick')}
             </Button>
             <label className="flex items-center gap-1.5 text-sm">
               <input
@@ -229,7 +244,7 @@ export default function SquadScreen({ state, setState }: Props) {
                 }}
                 className="accent-accent size-4"
               />
-              Friendlies
+              {t('squad.friendlies')}
             </label>
           </>
         }

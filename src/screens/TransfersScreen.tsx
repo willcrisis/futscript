@@ -3,6 +3,7 @@ import type { Dispatch, SetStateAction } from 'react'
 import { formatMoney } from '../engine/finance'
 import { acceptOffer, counterOffer, placeBid, rejectOffer, requiredBid } from '../engine/transfers'
 import type { GameState, TransferListing } from '../engine/types'
+import { t, useLang } from '../i18n'
 import Badge from '../ui/Badge'
 import Button from '../ui/Button'
 import DataTable from '../ui/DataTable'
@@ -18,26 +19,27 @@ interface Props {
 }
 
 export default function TransfersScreen({ state, setState }: Props) {
+  useLang()
   const [drafts, setDrafts] = useState<Record<number, string>>({})
   const name = (id: number) => state.teams.find(t => t.id === id)!.name
   const user = state.teams.find(t => t.id === state.userTeamId)!
 
   const columns: Column<TransferListing>[] = [
-    { key: 'player', label: 'Player', render: l => state.players[l.playerId].name },
-    { key: 'pos', label: 'Pos', hideOnMobile: true, render: l => state.players[l.playerId].position },
-    { key: 'lvl', label: 'Lvl', mono: true, render: l => state.players[l.playerId].level },
-    { key: 'age', label: 'Age', mono: true, hideOnMobile: true, render: l => state.players[l.playerId].age },
-    { key: 'seller', label: 'Seller', hideOnMobile: true, render: l => name(l.sellerTeamId) },
+    { key: 'player', label: t('common.player'), render: l => state.players[l.playerId].name },
+    { key: 'pos', label: t('transfers.posColumn'), hideOnMobile: true, render: l => state.players[l.playerId].position },
+    { key: 'lvl', label: t('common.level'), mono: true, render: l => state.players[l.playerId].level },
+    { key: 'age', label: t('common.age'), mono: true, hideOnMobile: true, render: l => state.players[l.playerId].age },
+    { key: 'seller', label: t('transfers.sellerColumn'), hideOnMobile: true, render: l => name(l.sellerTeamId) },
     {
       key: 'min',
-      label: 'Min',
+      label: t('transfers.minColumn'),
       mono: true,
       hideOnMobile: true,
       render: l => <MoneyText amount={l.minPrice} size="sm" />,
     },
     {
       key: 'bid',
-      label: 'Top bid',
+      label: t('transfers.topBidColumn'),
       mono: true,
       render: l =>
         l.currentBid === null ? (
@@ -49,7 +51,7 @@ export default function TransfersScreen({ state, setState }: Props) {
           </span>
         ),
     },
-    { key: 'ends', label: 'Ends', mono: true, render: l => `${l.roundsLeft}w` },
+    { key: 'ends', label: t('transfers.endsColumn'), mono: true, render: l => t('common.weeksShort', { n: l.roundsLeft }) },
     {
       key: 'action',
       label: '',
@@ -57,8 +59,8 @@ export default function TransfersScreen({ state, setState }: Props) {
       render: l => {
         const mine = l.sellerTeamId === state.userTeamId
         const leading = l.currentBidderId === state.userTeamId
-        if (mine) return <Badge tone="muted">your listing</Badge>
-        if (leading) return <Badge tone="accent">you lead</Badge>
+        if (mine) return <Badge tone="muted">{t('transfers.yourListing')}</Badge>
+        if (leading) return <Badge tone="accent">{t('transfers.youLead')}</Badge>
         const floor = requiredBid(l)
         return (
           <div className="flex items-center gap-1.5">
@@ -74,7 +76,7 @@ export default function TransfersScreen({ state, setState }: Props) {
               disabled={floor > user.cash}
               onClick={() => setState(s => placeBid(s, l.playerId, Number(drafts[l.playerId] ?? floor)))}
             >
-              Bid
+              {t('transfers.bidButton')}
             </Button>
           </div>
         )
@@ -85,19 +87,19 @@ export default function TransfersScreen({ state, setState }: Props) {
   return (
     <div>
       <ScreenHeader
-        label="MARKET"
-        title="Transfers"
+        label={t('transfers.header')}
+        title={t('transfers.title')}
         actions={
           <span className="inline-flex items-baseline gap-1.5 text-xs text-ink-faint">
-            Your cash <MoneyText amount={user.cash} />
+            {t('transfers.yourCash')} <MoneyText amount={user.cash} />
           </span>
         }
       />
 
       <div className="flex flex-col gap-4">
-        <Panel label="Offers for your players">
+        <Panel label={t('transfers.offersPanel')}>
           {state.incomingOffers.length === 0 ? (
-            <EmptyState>No offers on the table.</EmptyState>
+            <EmptyState>{t('transfers.noOffers')}</EmptyState>
           ) : (
             <div className="flex flex-col gap-2">
               {state.incomingOffers.map(o => {
@@ -108,12 +110,12 @@ export default function TransfersScreen({ state, setState }: Props) {
                     className="flex flex-wrap items-center justify-between gap-3 rounded-lg border border-rule bg-surface px-3 py-2 text-sm"
                   >
                     <div className="flex flex-wrap items-center gap-2">
-                      <Badge tone="accent">Offer</Badge>
+                      <Badge tone="accent">{t('transfers.offerBadge')}</Badge>
                       <span>
-                        {name(o.bidderTeamId)} offer <MoneyText amount={o.amount} size="sm" /> for {p.name} (
+                        {name(o.bidderTeamId)} {t('transfers.offerVerb')} <MoneyText amount={o.amount} size="sm" /> {t('transfers.forWord')} {p.name} (
                         {p.position} {p.level})
                       </span>
-                      <span className="text-xs text-ink-faint">expires in {o.roundsLeft}w</span>
+                      <span className="text-xs text-ink-faint">{t('transfers.expiresIn', { n: o.roundsLeft })}</span>
                     </div>
                     <div className="flex flex-wrap items-center gap-1.5">
                       <Button
@@ -121,14 +123,14 @@ export default function TransfersScreen({ state, setState }: Props) {
                         size="sm"
                         onClick={() => setState(s => acceptOffer(s, o.playerId, o.bidderTeamId))}
                       >
-                        Accept
+                        {t('transfers.acceptButton')}
                       </Button>
                       <Button
                         variant="ghost"
                         size="sm"
                         onClick={() => setState(s => counterOffer(s, o.playerId, o.bidderTeamId))}
                       >
-                        Counter (list at {formatMoney(Math.round(o.amount * 1.2))})
+                        {t('transfers.counterButton', { amount: formatMoney(Math.round(o.amount * 1.2)) })}
                       </Button>
                       <Button
                         variant="ghost"
@@ -136,7 +138,7 @@ export default function TransfersScreen({ state, setState }: Props) {
                         className="text-danger!"
                         onClick={() => setState(s => rejectOffer(s, o.playerId, o.bidderTeamId))}
                       >
-                        Reject
+                        {t('transfers.rejectButton')}
                       </Button>
                     </div>
                   </div>
@@ -146,13 +148,13 @@ export default function TransfersScreen({ state, setState }: Props) {
           )}
         </Panel>
 
-        <Panel label="Transfer list">
+        <Panel label={t('transfers.transferListPanel')}>
           <DataTable
             columns={columns}
             rows={state.transferList}
             rowKey={l => l.playerId}
             rowAccent={l => (l.sellerTeamId === state.userTeamId ? 'user' : null)}
-            empty={<EmptyState>Nobody is for sale this week.</EmptyState>}
+            empty={<EmptyState>{t('transfers.noListings')}</EmptyState>}
           />
         </Panel>
       </div>

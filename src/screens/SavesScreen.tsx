@@ -44,7 +44,7 @@ export default function SavesScreen({ state, setState }: Props) {
   const onImportFile = async (file: File) => {
     const imported = importSave(await file.text())
     if (!imported) {
-      push({ tone: 'danger', text: 'That file is not a valid futscript save.' })
+      push({ tone: 'danger', text: t('saves.invalidFile') })
       return
     }
     saveToSlot(imported, active)
@@ -54,21 +54,21 @@ export default function SavesScreen({ state, setState }: Props) {
 
   return (
     <div>
-      <ScreenHeader label="CAREERS" title="Saves" />
+      <ScreenHeader label={t('saves.header')} title={t('saves.title')} />
 
       <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
         {SLOTS.map((slot, i) => {
           const info = slots[i]
           const isActive = slot === active
           return (
-            <Panel key={slot} label={`SLOT ${slot}`} action={isActive && <Badge tone="accent">active</Badge>}>
+            <Panel key={slot} label={t('saves.slotLabel', { slot })} action={isActive && <Badge tone="accent">{t('saves.activeBadge')}</Badge>}>
               <div className="flex flex-col gap-3">
                 {info ? (
                   <p className="text-sm">
-                    {info.teamName} — Season {info.season}, Division {info.division}, <MoneyText amount={info.cash} />
+                    {info.teamName} — {t('saves.slotSummary', { season: info.season, division: info.division })}, <MoneyText amount={info.cash} />
                   </p>
                 ) : (
-                  <EmptyState>empty</EmptyState>
+                  <EmptyState>{t('saves.emptySlot')}</EmptyState>
                 )}
                 <div className="flex flex-wrap gap-1.5">
                   <Button
@@ -76,7 +76,7 @@ export default function SavesScreen({ state, setState }: Props) {
                     size="sm"
                     onClick={() => { saveToSlot(state, slot); setActiveSlot(slot); refresh() }}
                   >
-                    Save here
+                    {t('saves.saveHereButton')}
                   </Button>
                   {info && !isActive && (
                     <Button
@@ -87,13 +87,13 @@ export default function SavesScreen({ state, setState }: Props) {
                         if (loaded) { setActiveSlot(slot); setState(loaded); refresh() }
                       }}
                     >
-                      Load
+                      {t('saves.loadButton')}
                     </Button>
                   )}
                   {info && (
                     <ConfirmButton
-                      label="Delete"
-                      confirmLabel="Confirm delete"
+                      label={t('saves.deleteButton')}
+                      confirmLabel={t('saves.confirmDelete')}
                       onConfirm={() => { deleteSlot(slot); refresh() }}
                       size="sm"
                     />
@@ -105,10 +105,10 @@ export default function SavesScreen({ state, setState }: Props) {
         })}
       </div>
 
-      <Panel label="Backup" className="mt-4">
+      <Panel label={t('saves.backupPanel')} className="mt-4">
         <div className="flex flex-wrap items-center gap-2">
-          <Button variant="ghost" size="sm" onClick={download}>Export current game</Button>
-          <Button variant="ghost" size="sm" onClick={() => fileInput.current?.click()}>Import from file…</Button>
+          <Button variant="ghost" size="sm" onClick={download}>{t('saves.exportButton')}</Button>
+          <Button variant="ghost" size="sm" onClick={() => fileInput.current?.click()}>{t('saves.importButton')}</Button>
           <input
             ref={fileInput}
             type="file"
@@ -122,8 +122,7 @@ export default function SavesScreen({ state, setState }: Props) {
           />
         </div>
         <p className="mt-3 text-xs text-ink-faint">
-          Importing replaces the active slot. Deleting slot {active} (the active one) keeps your in-memory game
-          until the next autosave.
+          {t('saves.importNote', { slot: active })}
         </p>
       </Panel>
 

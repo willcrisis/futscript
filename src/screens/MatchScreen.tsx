@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 import type { GameState, MatchEvent } from '../engine/types'
+import { t, useLang } from '../i18n'
 import Button from '../ui/Button'
 import EventFeed from '../ui/EventFeed'
 
@@ -25,6 +26,7 @@ function initialMinute(): number {
 }
 
 export default function MatchScreen({ fixture, state, onClose }: Props) {
+  useLang()
   const [minute, setMinute] = useState(initialMinute)
   const [speed, setSpeed] = useState<1 | 2>(1)
   const done = minute >= 90
@@ -58,7 +60,7 @@ export default function MatchScreen({ fixture, state, onClose }: Props) {
       <div className="mt-1 font-mono text-sm tabular-nums text-ink-muted">{Math.min(minute, 90)}'</div>
       {done && fixture.winnerId != null && homeGoals === awayGoals && (
         <div className="mt-1 text-sm text-ink-muted">
-          ({name(fixture.winnerId)} win on penalties)
+          {t('match.penaltyWin', { name: name(fixture.winnerId) })}
         </div>
       )}
       <div className="mt-6 flex items-center gap-2">
@@ -71,7 +73,7 @@ export default function MatchScreen({ fixture, state, onClose }: Props) {
               className={speed === 1 ? 'border-accent! text-accent-strong!' : ''}
               onClick={() => setSpeed(1)}
             >
-              1×
+              {t('match.speed1x')}
             </Button>
             <Button
               variant="ghost"
@@ -80,12 +82,12 @@ export default function MatchScreen({ fixture, state, onClose }: Props) {
               className={speed === 2 ? 'border-accent! text-accent-strong!' : ''}
               onClick={() => setSpeed(2)}
             >
-              2×
+              {t('match.speed2x')}
             </Button>
-            <Button variant="ghost" size="sm" onClick={() => setMinute(90)}>Skip</Button>
+            <Button variant="ghost" size="sm" onClick={() => setMinute(90)}>{t('match.skip')}</Button>
           </>
         ) : (
-          <Button variant="primary" size="sm" onClick={onClose}>Continue</Button>
+          <Button variant="primary" size="sm" onClick={onClose}>{t('match.continueButton')}</Button>
         )}
       </div>
       <div className="mt-6 w-full max-w-lg flex-1 overflow-y-auto">
@@ -93,7 +95,7 @@ export default function MatchScreen({ fixture, state, onClose }: Props) {
           events={visibleEvents.slice().reverse()}
           state={state}
           emphasisTeamId={userInvolved ? state.userTeamId : undefined}
-          emptyText="The match is under way…"
+          emptyText={t('match.inProgress')}
         />
       </div>
     </div>

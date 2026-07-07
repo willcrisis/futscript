@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { standings } from '../engine/standings'
 import type { GameState } from '../engine/types'
+import { t, useLang } from '../i18n'
 import DataTable from '../ui/DataTable'
 import type { Column } from '../ui/DataTable'
 import ScreenHeader from '../ui/ScreenHeader'
@@ -19,6 +20,7 @@ interface Row {
 }
 
 export default function TableScreen({ state }: { state: GameState }) {
+  useLang()
   const userDivision = state.teams.find(t => t.id === state.userTeamId)!.division
   const [division, setDivision] = useState(userDivision)
   const divisions = [...new Set(state.teams.map(t => t.division))].sort()
@@ -26,17 +28,17 @@ export default function TableScreen({ state }: { state: GameState }) {
   const rows: Row[] = standings(state, division).map((r, i) => ({ pos: i + 1, ...r, name: name(r.teamId) }))
 
   const columns: Column<Row>[] = [
-    { key: 'pos', label: '#', mono: true, render: r => r.pos },
-    { key: 'team', label: 'Team', render: r => r.name },
-    { key: 'p', label: 'P', align: 'right', mono: true, hideOnMobile: true, render: r => r.played },
-    { key: 'w', label: 'W', align: 'right', mono: true, hideOnMobile: true, render: r => r.won },
-    { key: 'd', label: 'D', align: 'right', mono: true, hideOnMobile: true, render: r => r.drawn },
-    { key: 'l', label: 'L', align: 'right', mono: true, hideOnMobile: true, render: r => r.lost },
-    { key: 'gf', label: 'GF', align: 'right', mono: true, hideOnMobile: true, render: r => r.goalsFor },
-    { key: 'ga', label: 'GA', align: 'right', mono: true, hideOnMobile: true, render: r => r.goalsAgainst },
+    { key: 'pos', label: t('common.pos'), mono: true, render: r => r.pos },
+    { key: 'team', label: t('common.team'), render: r => r.name },
+    { key: 'p', label: t('table.played'), align: 'right', mono: true, hideOnMobile: true, render: r => r.played },
+    { key: 'w', label: t('table.won'), align: 'right', mono: true, hideOnMobile: true, render: r => r.won },
+    { key: 'd', label: t('table.drawn'), align: 'right', mono: true, hideOnMobile: true, render: r => r.drawn },
+    { key: 'l', label: t('table.lost'), align: 'right', mono: true, hideOnMobile: true, render: r => r.lost },
+    { key: 'gf', label: t('table.goalsFor'), align: 'right', mono: true, hideOnMobile: true, render: r => r.goalsFor },
+    { key: 'ga', label: t('table.goalsAgainst'), align: 'right', mono: true, hideOnMobile: true, render: r => r.goalsAgainst },
     {
       key: 'gd',
-      label: 'GD',
+      label: t('common.gd'),
       align: 'right',
       mono: true,
       render: r => {
@@ -44,7 +46,7 @@ export default function TableScreen({ state }: { state: GameState }) {
         return gd > 0 ? `+${gd}` : gd
       },
     },
-    { key: 'pts', label: 'Pts', align: 'right', mono: true, render: r => <strong>{r.points}</strong> },
+    { key: 'pts', label: t('common.pts'), align: 'right', mono: true, render: r => <strong>{r.points}</strong> },
   ]
 
   // promotion spine for top 3 in divisions 2-3; relegation spine for bottom 3 in divisions 1-2; user wins any overlap
@@ -58,15 +60,15 @@ export default function TableScreen({ state }: { state: GameState }) {
   return (
     <div>
       <ScreenHeader
-        label={`DIVISION ${division}`}
-        title="League Table"
+        label={t('table.header', { division })}
+        title={t('table.title')}
         actions={
           divisions.length > 1 && (
             <select
               value={division}
               onChange={e => setDivision(Number(e.target.value))}
               className="rounded-md border border-rule bg-surface-raised px-2 py-1.5 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 focus-visible:ring-offset-surface"
-              aria-label="Division"
+              aria-label={t('common.division')}
             >
               {divisions.map(d => <option key={d} value={d}>{d}</option>)}
             </select>

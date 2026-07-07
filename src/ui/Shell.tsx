@@ -94,7 +94,7 @@ export default function Shell({ screen, onNavigate, state, advanceLabel, onAdvan
       {/* desktop sidebar */}
       <aside className="fixed inset-y-0 left-0 hidden w-52 flex-col border-r border-rule bg-surface-raised p-3 md:flex">
         <div className="px-2 py-1 font-mono text-sm font-bold tracking-tight">FUT_</div>
-        <nav className="mt-4 flex flex-1 flex-col gap-0.5" aria-label="Sections">
+        <nav className="mt-4 flex flex-1 flex-col gap-0.5" aria-label={t('nav.sections')}>
           {NAV.map(({ id, labelKey, icon: NavIcon }) => (
             <button
               key={id}
@@ -142,7 +142,7 @@ export default function Shell({ screen, onNavigate, state, advanceLabel, onAdvan
       <div className="fixed bottom-16 right-4 z-40 mb-[env(safe-area-inset-bottom)] md:hidden">
         <Button variant="primary" onClick={onAdvance}>{advanceLabel}</Button>
       </div>
-      <nav aria-label="Sections" className="fixed inset-x-0 bottom-0 z-40 flex border-t border-rule bg-surface-raised pb-[env(safe-area-inset-bottom)] md:hidden">
+      <nav aria-label={t('nav.sections')} className="fixed inset-x-0 bottom-0 z-40 flex border-t border-rule bg-surface-raised pb-[env(safe-area-inset-bottom)] md:hidden">
         {MOBILE_PRIMARY.map(id => {
           const item = NAV.find(n => n.id === id)!
           const NavIcon = item.icon
