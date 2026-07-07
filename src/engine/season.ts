@@ -4,7 +4,8 @@ import { adjustCash, DIVISION_FACTOR, runWeeklyFinances, TICKET_PRICE, userLedge
 import { autoPick, patchLineup } from './lineup'
 import { simulateMatch } from './match'
 import { mulberry32, randInt } from './rng'
-import { applyPromotionRelegation, ensureThreeDivisions, retirePlayers, seasonRecord, youthIntake } from './rollover'
+import { applyPromotionRelegation, ensureThreeDivisions, retirePlayers, rolloverMood, seasonRecord, youthIntake } from './rollover'
+import { clampMood } from './stadium'
 import { standings } from './standings'
 import { ageSquads, applyWeeklyUpdates } from './training'
 import { MIN_SQUAD, renewalSalary, runTransfers } from './transfers'
@@ -102,6 +103,19 @@ export function advanceRound(state: GameState): GameState {
     )
   }
 
+  // fans react to results (friendlies don't count; shootout wins still feel like draws)
+  const moodDelta = new Map<number, number>()
+  const bump = (id: number, d: number) => moodDelta.set(id, (moodDelta.get(id) ?? 0) + d)
+  for (const f of [...fixtures.filter(f => f.round === week), ...cupFixtures.filter(f => f.week === week)]) {
+    if (f.homeGoals === null || f.awayGoals === null) continue
+    if (f.homeGoals > f.awayGoals) { bump(f.homeId, 6); bump(f.awayId, -5) }
+    else if (f.homeGoals < f.awayGoals) { bump(f.awayId, 6); bump(f.homeId, -5) }
+    else { bump(f.homeId, 1); bump(f.awayId, 1) }
+  }
+  const teamsWithMood = teams.map(t =>
+    moodDelta.has(t.id) ? { ...t, fanMood: clampMood(t.fanMood + moodDelta.get(t.id)!) } : t,
+  )
+
   // existing bans/injuries tick down BEFORE this week's knocks land
   // injuries heal by the week (physio time); bans only burn on matchdays the club plays
   const playingPlayerIds = new Set(
@@ -120,7 +134,7 @@ export function advanceRound(state: GameState): GameState {
   const starters = new Set(teams.filter(t => playingIds.has(t.id)).flatMap(t => t.lineup))
   players = applyWeeklyUpdates(players, teams, starters, rand)
 
-  let s: GameState = { ...state, teams, players, fixtures, cupFixtures }
+  let s: GameState = { ...state, teams: teamsWithMood, players, fixtures, cupFixtures }
   if (friendlyIncome > 0) {
     s = {
       ...s,
@@ -176,6 +190,7 @@ export function newSeason(state: GameState): GameState {
 
   // up and down the pyramid, judged on the final tables
   teams = applyPromotionRelegation(state, teams)
+  teams = rolloverMood(state, teams)
 
   // retirements
   let players: Record<number, Player> = { ...state.players }

@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import { newGame } from './newGame'
 import {
-  applyPromotionRelegation, ensureThreeDivisions, retirePlayers, seasonRecord, youthIntake,
+  applyPromotionRelegation, ensureThreeDivisions, retirePlayers, rolloverMood, seasonRecord, youthIntake,
 } from './rollover'
 import { mulberry32 } from './rng'
 import { advanceRound, totalRounds } from './season'
@@ -137,5 +137,20 @@ describe('seasonRecord', () => {
     expect(record.userDivision).toBe(3)
     expect(record.userPosition).toBeGreaterThanOrEqual(1)
     expect(record.userPosition).toBeLessThanOrEqual(16)
+  })
+})
+
+describe('rolloverMood', () => {
+  it('cheers champions, promotions, and cups; sours relegation', () => {
+    const s = playSeason(13)
+    const d1Champ = standings(s, 1)[0].teamId
+    const d1Bottom = standings(s, 1).slice(-3).map(r => r.teamId)
+    const d2Top = standings(s, 2).slice(0, 3).map(r => r.teamId)
+    const teams = rolloverMood(s, s.teams)
+    const moodOf = (id: number) => teams.find(t => t.id === id)!.fanMood
+    const before = (id: number) => s.teams.find(t => t.id === id)!.fanMood
+    expect(moodOf(d1Champ)).toBe(Math.min(100, before(d1Champ) + 20))
+    for (const id of d2Top) expect(moodOf(id)).toBeGreaterThanOrEqual(Math.min(100, before(id) + 30)) // +30 promoted (+20 more if d2 champion)
+    for (const id of d1Bottom) expect(moodOf(id)).toBe(Math.max(0, before(id) - 20))
   })
 })

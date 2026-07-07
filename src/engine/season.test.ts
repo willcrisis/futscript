@@ -403,3 +403,34 @@ describe('friendlies', () => {
     expect(after).toBe(storedGoalEvents)
   })
 })
+
+describe('fan mood', () => {
+  it('moves with results and stays clamped', () => {
+    const s0 = newGame(9)
+    const s1 = advanceRound(s0)
+    const week1 = s1.fixtures.filter(f => f.round === 1)
+    for (const f of week1) {
+      const home = s1.teams.find(t => t.id === f.homeId)!
+      const away = s1.teams.find(t => t.id === f.awayId)!
+      if (f.homeGoals! > f.awayGoals!) {
+        expect(home.fanMood).toBe(56)
+        expect(away.fanMood).toBe(45)
+      } else if (f.homeGoals! < f.awayGoals!) {
+        expect(home.fanMood).toBe(45)
+        expect(away.fanMood).toBe(56)
+      } else {
+        expect(home.fanMood).toBe(51)
+        expect(away.fanMood).toBe(51)
+      }
+    }
+  })
+
+  it('never escapes 0..100', () => {
+    let s = newGame(9)
+    for (let i = 0; i < totalRounds(s); i++) s = advanceRound(s)
+    for (const t of s.teams) {
+      expect(t.fanMood).toBeGreaterThanOrEqual(0)
+      expect(t.fanMood).toBeLessThanOrEqual(100)
+    }
+  })
+})

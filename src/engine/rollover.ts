@@ -4,7 +4,7 @@ import { autoPick } from './lineup'
 import { randomName, TEAM_NAMES } from './names'
 import { LEVEL_RANGE, SQUAD_TEMPLATE } from './newGame'
 import { randInt } from './rng'
-import { INITIAL_CAPACITY } from './stadium'
+import { clampMood, INITIAL_CAPACITY } from './stadium'
 import { standings } from './standings'
 import { MIN_SQUAD } from './transfers'
 import type { GameState, Player, Position, SeasonRecord, Team } from './types'
@@ -176,4 +176,25 @@ export function seasonRecord(state: GameState): SeasonRecord {
     userDivision,
     userPosition: standings(state, userDivision).findIndex(r => r.teamId === state.userTeamId) + 1,
   }
+}
+
+// season-end emotions: silverware and promotion lift the town, the drop empties it
+export function rolloverMood(state: GameState, teams: Team[]): Team[] {
+  const delta = new Map<number, number>()
+  const bump = (id: number, d: number) => delta.set(id, (delta.get(id) ?? 0) + d)
+  const divisions = [...new Set(state.teams.map(t => t.division))].sort()
+  for (const division of divisions) {
+    const table = standings(state, division)
+    if (table.length === 0) continue
+    bump(table[0].teamId, 20)
+    if (division <= 2 && divisions.includes(division + 1)) {
+      for (const row of table.slice(-3)) bump(row.teamId, -20) // relegated
+    }
+    if (division >= 2) {
+      for (const row of table.slice(0, 3)) bump(row.teamId, 30) // promoted
+    }
+  }
+  const champ = cupWinner(state)
+  if (champ !== null) bump(champ, 25)
+  return teams.map(t => (delta.has(t.id) ? { ...t, fanMood: clampMood(t.fanMood + delta.get(t.id)!) } : t))
 }
