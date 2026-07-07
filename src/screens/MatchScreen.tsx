@@ -37,8 +37,10 @@ export default function MatchScreen({ fixture, state, onClose }: Props) {
 
   const name = (id: number) => state.teams.find(t => t.id === id)!.name
   const visibleEvents = (fixture.events ?? []).filter(e => e.minute <= minute)
-  const homeGoals = visibleEvents.filter(e => e.type === 'goal' && e.teamId === fixture.homeId).length
-  const awayGoals = visibleEvents.filter(e => e.type === 'goal' && e.teamId === fixture.awayId).length
+  const derivedHome = visibleEvents.filter(e => e.type === 'goal' && e.teamId === fixture.homeId).length
+  const derivedAway = visibleEvents.filter(e => e.type === 'goal' && e.teamId === fixture.awayId).length
+  const homeGoals = done ? fixture.homeGoals ?? derivedHome : derivedHome
+  const awayGoals = done ? fixture.awayGoals ?? derivedAway : derivedAway
   const userInvolved = fixture.homeId === state.userTeamId || fixture.awayId === state.userTeamId
 
   return (

@@ -53,6 +53,7 @@ export default function TransfersScreen({ state, setState }: Props) {
     {
       key: 'action',
       label: '',
+      fullWidthOnMobile: true,
       render: l => {
         const mine = l.sellerTeamId === state.userTeamId
         const leading = l.currentBidderId === state.userTeamId
@@ -65,7 +66,7 @@ export default function TransfersScreen({ state, setState }: Props) {
               type="number"
               value={drafts[l.playerId] ?? floor}
               onChange={e => setDrafts({ ...drafts, [l.playerId]: e.target.value })}
-              className="w-24 rounded-md border border-rule bg-surface px-2 py-1 text-xs font-mono"
+              className="w-24 rounded-md border border-rule bg-surface px-2 py-1 text-xs font-mono focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 focus-visible:ring-offset-surface"
             />
             <Button
               variant="primary"

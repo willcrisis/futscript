@@ -32,7 +32,7 @@ export default function FixturesScreen({ state }: { state: GameState }) {
               <select
                 value={division}
                 onChange={e => setDivision(Number(e.target.value))}
-                className="rounded-md border border-rule bg-surface-raised px-2 py-1.5 text-sm"
+                className="rounded-md border border-rule bg-surface-raised px-2 py-1.5 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 focus-visible:ring-offset-surface"
                 aria-label="Division"
               >
                 {divisions.map(d => <option key={d} value={d}>{d}</option>)}

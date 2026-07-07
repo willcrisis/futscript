@@ -12,6 +12,7 @@ interface Props {
 export default function ConfirmButton({ label, confirmLabel, onConfirm, size = 'sm' }: Props) {
   const [armed, setArmed] = useState(false)
   const timer = useRef<ReturnType<typeof setTimeout>>(undefined)
+  const armedRef = useRef<HTMLSpanElement>(null)
 
   useEffect(() => {
     if (!armed) return
@@ -19,10 +20,21 @@ export default function ConfirmButton({ label, confirmLabel, onConfirm, size = '
     return () => clearTimeout(timer.current)
   }, [armed])
 
+  useEffect(() => {
+    if (!armed) return
+    const onOutsideClick = (e: MouseEvent) => {
+      if (!armedRef.current?.contains(e.target as Node)) setArmed(false)
+    }
+    document.addEventListener('mousedown', onOutsideClick)
+    return () => document.removeEventListener('mousedown', onOutsideClick)
+  }, [armed])
+
   return armed ? (
-    <Button variant="danger" size={size} onClick={() => { setArmed(false); onConfirm() }}>
-      {confirmLabel}
-    </Button>
+    <span ref={armedRef}>
+      <Button variant="danger" size={size} onClick={() => { setArmed(false); onConfirm() }}>
+        {confirmLabel}
+      </Button>
+    </span>
   ) : (
     <Button variant="ghost" size={size} onClick={() => setArmed(true)}>
       {label}

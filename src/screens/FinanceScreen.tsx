@@ -3,6 +3,7 @@ import { borrow, formatMoney, LOAN_CAP, MAINTENANCE_PER_SEAT, repayLoan, wageBil
 import { EXPANSION, expandStadium, setTicketPrice } from '../engine/stadium'
 import type { GameState } from '../engine/types'
 import Button from '../ui/Button'
+import ConfirmButton from '../ui/ConfirmButton'
 import DataTable from '../ui/DataTable'
 import type { Column } from '../ui/DataTable'
 import EmptyState from '../ui/EmptyState'
@@ -101,7 +102,7 @@ export default function FinanceScreen({ state, setState }: Props) {
                 max={60}
                 value={user.ticketPrice}
                 onChange={e => setState(s => setTicketPrice(s, Number(e.target.value)))}
-                className="w-24 rounded-md border border-rule bg-surface px-2 py-1 text-xs font-mono"
+                className="w-24 rounded-md border border-rule bg-surface px-2 py-1 text-xs font-mono focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 focus-visible:ring-offset-surface"
               />
             </div>
             <div className="flex items-center justify-between gap-3 border-t border-rule pt-3">
@@ -111,14 +112,16 @@ export default function FinanceScreen({ state, setState }: Props) {
                   {state.construction.weeksLeft} week{state.construction.weeksLeft > 1 ? 's' : ''}
                 </span>
               ) : (
-                <Button
-                  variant="primary"
-                  disabled={user.cash < EXPANSION.cost}
-                  onClick={() => setState(s => expandStadium(s))}
-                >
-                  Expand +{EXPANSION.seats.toLocaleString('en-US')} seats ({formatMoney(EXPANSION.cost)},{' '}
-                  {EXPANSION.weeks} wks)
-                </Button>
+                <ConfirmButton
+                  label={
+                    <>
+                      Expand +{EXPANSION.seats.toLocaleString('en-US')} seats ({formatMoney(EXPANSION.cost)},{' '}
+                      {EXPANSION.weeks} wks)
+                    </>
+                  }
+                  confirmLabel={`Confirm ${formatMoney(EXPANSION.cost)}`}
+                  onConfirm={() => setState(s => expandStadium(s))}
+                />
               )}
             </div>
           </div>

@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { cupWinner } from './engine/cup'
 import { newGame } from './engine/newGame'
 import { load, save } from './engine/save'
@@ -38,6 +38,7 @@ function Game() {
   const [state, setState] = useState<GameState>(() => load() ?? newGame(Date.now() % 2147483647))
   const [screen, setScreen] = useState<ScreenId>('home')
   const [replay, setReplay] = useState<MatchLike | null>(null)
+  const advancingRef = useRef(false)
   useEffect(() => { save(state) }, [state])
 
   const userTeam = state.teams.find(t => t.id === state.userTeamId)!
@@ -45,20 +46,26 @@ function Game() {
   const seasonOver = state.round > total
 
   const advance = () => {
-    if (seasonOver) {
-      setState(newSeason)
-      return
+    if (advancingRef.current) return
+    advancingRef.current = true
+    try {
+      if (seasonOver) {
+        setState(newSeason)
+        return
+      }
+      const next = advanceRound(state)
+      for (const t of detectToasts(state, next)) push(t)
+      const mine = (f: { homeId: number; awayId: number }) =>
+        f.homeId === state.userTeamId || f.awayId === state.userTeamId
+      const played =
+        next.fixtures.find(f => f.round === state.round && mine(f)) ??
+        next.cupFixtures.find(f => f.week === state.round && mine(f)) ??
+        null
+      setState(next)
+      setReplay(played)
+    } finally {
+      advancingRef.current = false
     }
-    const next = advanceRound(state)
-    for (const t of detectToasts(state, next)) push(t)
-    const mine = (f: { homeId: number; awayId: number }) =>
-      f.homeId === state.userTeamId || f.awayId === state.userTeamId
-    const played =
-      next.fixtures.find(f => f.round === state.round && mine(f)) ??
-      next.cupFixtures.find(f => f.week === state.round && mine(f)) ??
-      null
-    setState(next)
-    setReplay(played)
   }
 
   if (replay) {

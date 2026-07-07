@@ -6,6 +6,8 @@ export interface Column<T> {
   align?: 'left' | 'right'
   mono?: boolean
   hideOnMobile?: boolean
+  /** Render as a full-width block below the mobile card's dl, instead of a dt/dd row. */
+  fullWidthOnMobile?: boolean
   render: (row: T) => ReactNode
 }
 
@@ -38,7 +40,7 @@ export default function DataTable<T>({ columns, rows, rowKey, rowAccent, onRowCl
       {/* desktop: hairline table */}
       <table className="hidden w-full border-collapse text-sm md:table">
         <thead>
-          <tr className="border-b border-rule">
+          <tr className="sticky top-0 border-b border-rule bg-surface">
             {columns.map(c => (
               <th key={c.key} className={`px-2 py-2 text-xs font-semibold uppercase tracking-wider text-ink-muted ${cellClass(c)}`}>
                 {c.label}
@@ -80,7 +82,9 @@ export default function DataTable<T>({ columns, rows, rowKey, rowAccent, onRowCl
           const group = groupLabel?.(row)
           const prevGroup = i > 0 ? groupLabel?.(rows[i - 1]) : undefined
           const visible = columns.filter(c => !c.hideOnMobile)
-          const [first, ...rest] = visible
+          const [first, ...others] = visible
+          const rest = others.filter(c => !c.fullWidthOnMobile)
+          const fullWidth = others.filter(c => c.fullWidthOnMobile)
           return [
             groupLabel && group !== prevGroup ? (
               <div key={`g-${group}`} className="pt-2 text-xs font-semibold uppercase tracking-wider text-ink-faint">
@@ -103,6 +107,9 @@ export default function DataTable<T>({ columns, rows, rowKey, rowAccent, onRowCl
                   ))}
                 </dl>
               )}
+              {fullWidth.map(c => (
+                <div key={c.key} className="mt-2 flex flex-wrap gap-1.5">{c.render(row)}</div>
+              ))}
             </div>,
           ]
         })}

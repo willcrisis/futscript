@@ -1,22 +1,38 @@
-import { useEffect, useState } from 'react'
+import { useSyncExternalStore } from 'react'
 
-function currentlyDark(): boolean {
+// Module-level store: the html.dark class is the single source of truth, so
+// every mounted instance (sidebar + more-sheet) reads the same snapshot and
+// stays in sync via a shared MutationObserver instead of local state.
+const listeners = new Set<() => void>()
+let observer: MutationObserver | null = null
+
+function subscribe(onChange: () => void) {
+  if (!observer) {
+    observer = new MutationObserver(() => listeners.forEach(l => l()))
+    observer.observe(document.documentElement, { attributes: true, attributeFilter: ['class'] })
+  }
+  listeners.add(onChange)
+  return () => listeners.delete(onChange)
+}
+
+function getSnapshot(): boolean {
   return document.documentElement.classList.contains('dark')
 }
 
 export default function ThemeToggle() {
-  const [dark, setDark] = useState(currentlyDark)
+  const dark = useSyncExternalStore(subscribe, getSnapshot)
 
-  useEffect(() => {
-    document.documentElement.classList.toggle('dark', dark)
-    localStorage.setItem('futscript-theme', dark ? 'dark' : 'light')
-  }, [dark])
+  const toggle = () => {
+    const next = !document.documentElement.classList.contains('dark')
+    document.documentElement.classList.toggle('dark', next)
+    localStorage.setItem('futscript-theme', next ? 'dark' : 'light')
+  }
 
   return (
     <button
       aria-label={dark ? 'Switch to light theme' : 'Switch to dark theme'}
-      onClick={() => setDark(d => !d)}
-      className="rounded-md p-2 text-ink-muted hover:text-ink focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 focus-visible:ring-offset-surface"
+      onClick={toggle}
+      className="rounded-md p-2 text-ink-muted hover:text-ink focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 focus-visible:ring-offset-surface"
     >
       {dark ? (
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">

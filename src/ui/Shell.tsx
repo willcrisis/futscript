@@ -47,6 +47,7 @@ function attentionFor(id: ScreenId, state: GameState): boolean {
 export default function Shell({ screen, onNavigate, state, advanceLabel, onAdvance, children }: Props) {
   const [moreOpen, setMoreOpen] = useState(false)
   const moreButtonRef = useRef<HTMLButtonElement>(null)
+  const sheetRef = useRef<HTMLDivElement>(null)
   const user = state.teams.find(t => t.id === state.userTeamId)!
   const week = Math.min(state.round, totalRounds(state))
 
@@ -57,7 +58,25 @@ export default function Shell({ screen, onNavigate, state, advanceLabel, onAdvan
 
   useEffect(() => {
     if (!moreOpen) return
-    const onKey = (e: KeyboardEvent) => e.key === 'Escape' && closeMore()
+    const focusables = Array.from(sheetRef.current?.querySelectorAll<HTMLButtonElement>('button') ?? [])
+    focusables[0]?.focus()
+
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        closeMore()
+        return
+      }
+      if (e.key !== 'Tab' || focusables.length === 0) return
+      const first = focusables[0]
+      const last = focusables[focusables.length - 1]
+      if (e.shiftKey && document.activeElement === first) {
+        e.preventDefault()
+        last.focus()
+      } else if (!e.shiftKey && document.activeElement === last) {
+        e.preventDefault()
+        first.focus()
+      }
+    }
     window.addEventListener('keydown', onKey)
     return () => window.removeEventListener('keydown', onKey)
   }, [moreOpen])
@@ -117,10 +136,10 @@ export default function Shell({ screen, onNavigate, state, advanceLabel, onAdvan
       </main>
 
       {/* mobile: floating advance + bottom bar */}
-      <div className="fixed bottom-16 right-4 z-40 md:hidden">
+      <div className="fixed bottom-16 right-4 z-40 mb-[env(safe-area-inset-bottom)] md:hidden">
         <Button variant="primary" onClick={onAdvance}>{advanceLabel}</Button>
       </div>
-      <nav aria-label="Sections" className="fixed inset-x-0 bottom-0 z-40 flex border-t border-rule bg-surface-raised md:hidden">
+      <nav aria-label="Sections" className="fixed inset-x-0 bottom-0 z-40 flex border-t border-rule bg-surface-raised pb-[env(safe-area-inset-bottom)] md:hidden">
         {MOBILE_PRIMARY.map(id => {
           const item = NAV.find(n => n.id === id)!
           const NavIcon = item.icon
@@ -129,7 +148,7 @@ export default function Shell({ screen, onNavigate, state, advanceLabel, onAdvan
               key={id}
               onClick={() => navigate(id)}
               aria-current={screen === id ? 'page' : undefined}
-              className={`relative flex min-h-12 flex-1 flex-col items-center justify-center gap-0.5 text-[10px] ${
+              className={`relative flex min-h-12 flex-1 flex-col items-center justify-center gap-0.5 text-[10px] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 focus-visible:ring-offset-surface ${
                 screen === id ? 'text-ink' : 'text-ink-muted'
               }`}
             >
@@ -143,7 +162,7 @@ export default function Shell({ screen, onNavigate, state, advanceLabel, onAdvan
           ref={moreButtonRef}
           onClick={() => setMoreOpen(true)}
           aria-expanded={moreOpen}
-          className={`flex min-h-12 flex-1 flex-col items-center justify-center gap-0.5 text-[10px] ${
+          className={`flex min-h-12 flex-1 flex-col items-center justify-center gap-0.5 text-[10px] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 focus-visible:ring-offset-surface ${
             MOBILE_PRIMARY.includes(screen) ? 'text-ink-muted' : 'text-ink'
           }`}
         >
@@ -156,13 +175,13 @@ export default function Shell({ screen, onNavigate, state, advanceLabel, onAdvan
       {moreOpen && (
         <div className="fixed inset-0 z-50 md:hidden" role="dialog" aria-modal="true" aria-label="More sections">
           <div className="absolute inset-0 bg-ink/30" onClick={closeMore} />
-          <div className="absolute inset-x-0 bottom-0 rounded-t-xl border-t border-rule bg-surface p-4">
+          <div ref={sheetRef} className="absolute inset-x-0 bottom-0 rounded-t-xl border-t border-rule bg-surface p-4">
             <div className="grid grid-cols-3 gap-2">
               {NAV.filter(n => !MOBILE_PRIMARY.includes(n.id)).map(({ id, label, icon: NavIcon }) => (
                 <button
                   key={id}
                   onClick={() => navigate(id)}
-                  className="flex min-h-16 flex-col items-center justify-center gap-1 rounded-lg border border-rule bg-surface-raised text-xs"
+                  className="flex min-h-16 flex-col items-center justify-center gap-1 rounded-lg border border-rule bg-surface-raised text-xs focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 focus-visible:ring-offset-surface"
                 >
                   <NavIcon />
                   {label}

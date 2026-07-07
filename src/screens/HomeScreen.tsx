@@ -98,7 +98,7 @@ export default function HomeScreen({ state, onAdvance, onNavigate }: Props) {
           )}
         </Panel>
 
-        <Panel label="Money" action={<button className="text-xs text-ink-muted hover:text-ink" onClick={() => onNavigate('finance')}>Finance →</button>}>
+        <Panel label="Money" action={<button className="rounded-sm text-xs text-ink-muted hover:text-ink focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 focus-visible:ring-offset-surface" onClick={() => onNavigate('finance')}>Finance →</button>}>
           <div className="flex items-end justify-between gap-3">
             <div>
               <MoneyText amount={user.cash} size="lg" />
@@ -110,7 +110,7 @@ export default function HomeScreen({ state, onAdvance, onNavigate }: Props) {
           </div>
         </Panel>
 
-        <Panel label={`Division ${user.division}`} action={<button className="text-xs text-ink-muted hover:text-ink" onClick={() => onNavigate('table')}>Full table →</button>}>
+        <Panel label={`Division ${user.division}`} action={<button className="rounded-sm text-xs text-ink-muted hover:text-ink focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 focus-visible:ring-offset-surface" onClick={() => onNavigate('table')}>Full table →</button>}>
           <DataTable
             columns={excerptColumns}
             rows={excerpt}
@@ -140,7 +140,7 @@ export default function HomeScreen({ state, onAdvance, onNavigate }: Props) {
                   <li key={i}>
                     <button
                       onClick={() => onNavigate(a.screen)}
-                      className={`text-left text-sm underline-offset-2 hover:underline ${
+                      className={`rounded-sm text-left text-sm underline-offset-2 hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 focus-visible:ring-offset-surface ${
                         a.tone === 'danger' ? 'text-danger' : a.tone === 'warn' ? 'text-warn' : 'text-ink'
                       }`}
                     >

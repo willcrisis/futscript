@@ -19,7 +19,7 @@ const SIZES = {
 export default function Button({ variant = 'ghost', size = 'md', className = '', ...rest }: Props) {
   return (
     <button
-      className={`inline-flex min-h-10 items-center justify-center gap-1.5 rounded-md font-medium transition-colors focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 focus-visible:ring-offset-surface md:min-h-0 ${VARIANTS[variant]} ${SIZES[size]} ${className}`}
+      className={`inline-flex min-h-10 items-center justify-center gap-1.5 rounded-md font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 focus-visible:ring-offset-surface md:min-h-0 ${VARIANTS[variant]} ${SIZES[size]} ${className}`}
       {...rest}
     />
   )

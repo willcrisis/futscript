@@ -23,7 +23,7 @@ const ORDER = ['GK', 'DF', 'MF', 'FW']
 const TACTICS: Tactic[] = ['defensive', 'normal', 'attacking']
 const TRAINING_STYLES: TrainingStyle[] = ['light', 'normal', 'intensive', 'youth']
 
-const SELECT_CLASS = 'rounded-md border border-rule bg-surface-raised px-2 py-1.5 text-sm'
+const SELECT_CLASS = 'rounded-md border border-rule bg-surface-raised px-2 py-1.5 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 focus-visible:ring-offset-surface'
 
 function statusBadge(p: Player) {
   if (p.injuredForRounds > 0) return <Badge tone="danger">Injured · {p.injuredForRounds}w</Badge>
@@ -105,6 +105,7 @@ export default function SquadScreen({ state, setState }: Props) {
     {
       key: 'actions',
       label: '',
+      fullWidthOnMobile: true,
       render: p => {
         const starting = team.lineup.includes(p.id)
         const listed = state.transferList.some(l => l.playerId === p.id)
@@ -115,7 +116,7 @@ export default function SquadScreen({ state, setState }: Props) {
                 type="number"
                 value={askingPrice}
                 onChange={e => setAskingPrice(Number(e.target.value))}
-                className="w-24 rounded-md border border-rule bg-surface px-2 py-1 text-xs font-mono"
+                className="w-24 rounded-md border border-rule bg-surface px-2 py-1 text-xs font-mono focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 focus-visible:ring-offset-surface"
               />
               <Button
                 variant="primary"
