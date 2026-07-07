@@ -54,6 +54,11 @@
   }
 }
 
+@keyframes fadein {
+  from { opacity: 0; transform: translateY(4px); }
+  to { opacity: 1; transform: none; }
+}
+
 /* ── LEGACY (Task 12 deletes everything below this line) ─────────────── */
 
 .app { max-width: 720px; margin: 0 auto; padding: 1rem; }
