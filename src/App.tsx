@@ -13,9 +13,10 @@ import type { MatchLike } from './screens/MatchScreen'
 import TransfersScreen from './screens/TransfersScreen'
 import FinanceScreen from './screens/FinanceScreen'
 import CupScreen from './screens/CupScreen'
+import StatsScreen from './screens/StatsScreen'
 import HistoryScreen from './screens/HistoryScreen'
 
-type Screen = 'squad' | 'table' | 'fixtures' | 'cup' | 'transfers' | 'finance' | 'history'
+type Screen = 'squad' | 'table' | 'fixtures' | 'cup' | 'stats' | 'transfers' | 'finance' | 'history'
 
 export default function App() {
   const [state, setState] = useState<GameState>(() => load() ?? newGame(Date.now() % 2147483647))
@@ -85,7 +86,7 @@ export default function App() {
         </div>
       )}
       <nav>
-        {(['squad', 'table', 'fixtures', 'cup', 'transfers', 'finance', 'history'] as Screen[]).map(s => (
+        {(['squad', 'table', 'fixtures', 'cup', 'stats', 'transfers', 'finance', 'history'] as Screen[]).map(s => (
           <button key={s} className={screen === s ? 'active' : ''} onClick={() => setScreen(s)}>
             {s}
           </button>
@@ -96,6 +97,7 @@ export default function App() {
       {screen === 'table' && <TableScreen key={state.season} state={state} />}
       {screen === 'fixtures' && <FixturesScreen key={state.season} state={state} />}
       {screen === 'cup' && <CupScreen key={state.season} state={state} />}
+      {screen === 'stats' && <StatsScreen state={state} />}
       {screen === 'transfers' && <TransfersScreen state={state} setState={setState} />}
       {screen === 'finance' && <FinanceScreen state={state} setState={setState} />}
       {screen === 'history' && <HistoryScreen state={state} />}
