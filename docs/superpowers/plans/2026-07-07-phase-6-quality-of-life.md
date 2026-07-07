@@ -497,12 +497,48 @@ git commit -m "feat: random division 3 starting club and new-career reset"
 
 ---
 
-### Task 8: Phase 6 acceptance
+### Task 8: UX pack — cup divisions, outbid badge, table search/focus, H/A clarity, welcome screen
+
+**Files:**
+- Modify: `src/screens/CupScreen.tsx`, `src/screens/TransfersScreen.tsx`, `src/engine/transfers.ts`, `src/engine/transfers.test.ts`, `src/screens/TableScreen.tsx`, `src/screens/HomeScreen.tsx`, `src/screens/FixturesScreen.tsx`, `src/screens/FinanceScreen.tsx`, `src/ui/toastEvents.ts`, `src/App.tsx`
+- Create: `src/screens/WelcomeScreen.tsx`
+
+**Interfaces:**
+- Produces:
+  - `TransferListing` gains `userBid?: number` (optional — NO save-version bump; absent in old saves is fine). `placeBid` sets it alongside `currentBid`. This is the phase's second and last engine touch (two lines + type field).
+  - `TableScreen({ state, focusTeamId? })` — optional prop: when set, the screen initializes to that club's division and highlights the row (a `ring-1 ring-accent` treatment on top of any spine, cleared on user interaction).
+  - App-level nav focus: `Game` keeps `const [tableFocus, setTableFocus] = useState<number | null>(null)`; a `goToTeam(teamId)` helper sets it and navigates to `'table'`; TableScreen receives `focusTeamId={tableFocus ?? undefined}` and App clears it via an `onFocusConsumed` callback — simpler alternative allowed: pass `key={tableFocus}` and let the prop drive initial state only; pick one and note it in the report.
+  - `WelcomeScreen({ onDismiss })` — full-bleed takeover; App shows it when the session created a brand-new career (a `useState` flag set where `newGame` is called — on first-load-with-no-save AND on New-career reset; never on loading an existing save). Not persisted in `GameState`.
+
+**Item specs (all strings via `t()` with en+pt entries):**
+
+1. **Cup divisions** (`CupScreen`): each tie row renders the club's division after the name — `Sereno FC <span className="text-ink-faint">· D2</span>` — via a `divisionOf(teamId)` lookup. Both sides, both the list rows and the expanded report heading.
+2. **Outbid badge** (`transfers.ts` + `TransfersScreen` + `toastEvents.ts`):
+   - `placeBid` also writes `userBid: amount` on the listing (keep everything else byte-identical). Add a test in `transfers.test.ts`: after `placeBid`, the listing carries `userBid`; after an AI covers it (craft `currentBidderId` change via `runTransfers` or direct state), `userBid` persists while `currentBidderId` differs.
+   - UI: in the listings action column, when `l.userBid !== undefined && l.currentBidderId !== state.userTeamId && l.currentBidderId !== null` render `Badge tone="warn"` with `t('transfers.outbid', { amount })` ("Outbid — you bid {amount}") above the bid input (which stays usable to re-bid).
+   - Toast: `detectToasts` gains a rule — for listings present in both states where prev had `currentBidderId === user` and next doesn't (and the listing still exists), push a warn toast `t('toast.outbid', { player })`. Max-3 cap unchanged.
+3. **Table search + focus** (`TableScreen`): a search `<input>` in the header actions (recipe styling, `aria-label`, placeholder `t('table.searchPlaceholder')`). Typing ≥2 chars matches club names across ALL divisions (case/diacritic-insensitive — normalize with `.normalize('NFD').replace(/\p{Diacritic}/gu, '')`); on match, switch the division select to the club's division and apply the highlight ring to its row; empty state under the input when nothing matches. The `focusTeamId` prop reuses exactly this highlight path.
+4. **Next Match link** (`HomeScreen`): the opponent name in the Next Match card becomes a button (`hover:underline`, focus ring) calling `goToTeam(opponentId)` — plumbed via a new optional `onShowTeam?: (teamId: number) => void` prop from App.
+5. **H/A clarity** (`FixturesScreen` + `FinanceScreen`): on the user's fixture rows, append a mono marker `H`/`A` (`text-ink-faint`, `title={t('fixtures.homeMatch')/t('fixtures.awayMatch')}`) after the score cell. In the Finance weekly summary (Task 6's panel), the gate category row gains a faint hint suffix `t('finance.gateHint')` ("earned at home matches") — only when the gate category is present or the week had no home match (then show `t('finance.awayWeek')` "away week — no gate receipts" as the gate row).
+6. **Welcome screen** (`WelcomeScreen.tsx` + App): full-bleed, Quiet Heritage voice — `FUT_` wordmark, `t('welcome.title')` ("Welcome to the dugout"), a short feature list (manage the squad, trade in the market, balance the books, climb three divisions, win the cup — 5 lines, each icon + sentence, all keys), your assigned club named (`t('welcome.yourClub', { club, division })`), and a primary Button `t('welcome.start')`. Shown once per new career (session flag as specified above); Escape also dismisses.
+
+- [ ] **Step 1: Engine bit first (TDD)** — the `userBid` field + test, run focused test, then the rest of the items screen by screen
+- [ ] **Step 2: Verify** — `npm test`, `npx tsc -b --force`, `npm run build`; dev pass over all six items in both languages at both widths
+- [ ] **Step 3: Commit**
+
+```bash
+git add -A
+git commit -m "feat(ui): ux pack — cup divisions, outbid badge, table search, welcome"
+```
+
+---
+
+### Task 9: Phase 6 acceptance
 
 **Files:** none new.
 
 - [ ] **Step 1: Full checks** — `npm test`, `npx tsc -b --force`, `npm run build`.
-- [ ] **Step 2: Play** — in Portuguese end-to-end: fresh career (random club), a match at each speed extreme (Slow ≈45s, Ultra ≈4.5s, persisted), squad icon actions with tooltips at 390px, finance summary vs expanded ledger arithmetic, toasts and match feed in pt, switch back to English mid-session (everything flips live), New career reset.
+- [ ] **Step 2: Play** — in Portuguese end-to-end: fresh career (random club + welcome screen), a match at each speed extreme (Slow ≈45s, Ultra ≈4.5s, persisted), squad icon actions with tooltips at 390px, finance summary vs expanded ledger arithmetic (incl. the away-week gate hint), toasts and match feed in pt, bid on a listing and get outbid (badge + toast), search the table for a Division 1 club, click the Next Match opponent, switch back to English mid-session (everything flips live), New career reset (welcome shows again).
 - [ ] **Step 3: Tag**
 
 ```bash

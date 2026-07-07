@@ -90,7 +90,20 @@ Full stadium management (capacity tiers, construction time, ticket pricing, main
 - **Simplified finance screen**: leads with "This week: Income · Expenses · Net" and a category breakdown (gates, sponsors, prizes / wages, maintenance, interest); the raw ledger collapses behind a details toggle.
 - **New career (reset)**: a "New career" action with two-click confirm on the Saves screen — today a fresh start is only reachable by getting sacked.
 - **Random starting club**: `newGame` assigns a random Division 3 club (seed-driven) instead of always the first team, so every career starts somewhere new.
+- **UX pack** *(playtest feedback, 2026-07-07)*:
+  - Cup ties show each club's division (`Sereno FC · D2`) so upsets are legible.
+  - Transfers: the engine remembers your last bid per listing (optional field, no migration); the UI shows an "Outbid — you bid $X" badge when covered, plus a toast the week it happens.
+  - Table: search across all divisions — typing a club name jumps to its division and highlights the row.
+  - Home's Next Match opponent is clickable → Table at that club's division, row highlighted (shares the search mechanic's "focus team" pathway).
+  - Home/away clarity (mechanics unchanged — gates are home-only and home advantage exists): H/A markers on the user's fixtures, and the finance summary's gate line hints "earned at home matches".
+  - **Welcome screen** on new careers: a dismissible takeover describing the game's features (localized), shown once per new save; not shown when loading existing careers.
 **Done when:** the game plays comfortably in either language at any speed, and a new career takes one click.
+
+### Phase 6.5 — The News *(playtest feedback, 2026-07-07)*
+A persistent, translated news feed living in the save (structured `{key, params}` entries, capped ~60, so language switches retroactively).
+- **Right sidebar rail** on wide screens (~1280px+): compact entries — icon per type, one line, week stamp, newest first. On narrower screens the rail hides and News becomes a Home panel (top five, rest behind it).
+- **Sources**: the user's club (signings, sales, renewals, injuries to starters, board warnings, construction, outbid notices); division rivals (completed transfers, heavy wins, cup runs); season structure (promotion/relegation verdicts, champions, cup winner). Career mode (Phase 7) later adds sackings and manager moves to the same feed.
+**Done when:** a season tells its story in the rail without opening other screens.
 
 ### Phase 7 — Career Mode *(added 2026-07-07)*
 Being a manager, not a club.
