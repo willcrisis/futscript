@@ -24,8 +24,8 @@ function userCash(s: GameState): number {
 
 describe('money formulas', () => {
   it('salary scales with the square of level', () => {
-    expect(salaryFor(50)).toBe(6250)
-    expect(salaryFor(70)).toBe(12250)
+    expect(salaryFor(50)).toBe(5000)
+    expect(salaryFor(70)).toBe(9800)
     expect(salaryFor(70)).toBeGreaterThan(salaryFor(50) * 1.5)
   })
 
@@ -123,18 +123,18 @@ describe('loans', () => {
 
 describe('division-aware gates', () => {
   it('scales gate receipts by division', () => {
-    expect(DIVISION_FACTOR).toEqual({ 1: 1, 2: 0.7, 3: 0.5 })
+    expect(DIVISION_FACTOR).toEqual({ 1: 1, 2: 0.8, 3: 0.6 })
     const s0 = newGame(1)
     const s1 = runWeeklyFinances(s0, mulberry32(2))
     // a division-1 home club earns at least (10_000 - 1_000 + 800*0) * 15 = 135k;
-    // a division-3 home club (factor 0.5) can earn at most ((10_000 + 800*15 + 1_000) * 15) / 2 = 172.5k
+    // a division-3 home club (factor 0.6) can earn at most ((10_000 + 800*15 + 1_000) * 15) * 0.6 = 207k
     const homeIds = new Set(s0.fixtures.filter(f => f.round === 1).map(f => f.homeId))
     for (const t of s1.teams) {
       if (!homeIds.has(t.id)) continue
       const before = s0.teams.find(x => x.id === t.id)!.cash
       const gate = t.cash - (before - wageBill(t.id, s0)) - (t.id === s0.userTeamId ? interestAdjustments(s1) : 0)
       if (t.division === 1) expect(gate).toBeGreaterThanOrEqual(Math.round(135_000))
-      if (t.division === 3 && t.id !== s0.userTeamId) expect(gate).toBeLessThanOrEqual(172_500)
+      if (t.division === 3 && t.id !== s0.userTeamId) expect(gate).toBeLessThanOrEqual(207_000)
     }
     function interestAdjustments(s: GameState): number {
       return s.finances.filter(e => e.round === 1 && (e.label === 'Deposit interest' || e.label === 'Overdraft charge' || e.label === 'Loan interest')).reduce((sum, e) => sum + e.amount, 0)

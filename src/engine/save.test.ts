@@ -90,7 +90,7 @@ describe('save/load', () => {
       players: { 1: {
         id: 1, name: 'P1', age: 25, position: 'GK', level: 50,
         form: 1, fitness: 80, injuredForRounds: 0, suspendedForRounds: 0, yellowCards: 1,
-        salary: 6250, contractSeasons: 2,
+        salary: 5000, contractSeasons: 2,
       } },
       teams: [{ id: 0, name: 'T0', playerIds: [1], formation: '4-4-2', lineup: [1], tactic: 'normal', trainingStyle: 'normal', cash: 500_000 }],
       fixtures: [],

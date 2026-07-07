@@ -8,10 +8,10 @@ export const STARTING_CASH = 1_000_000
 export const LOAN_CAP = 2_000_000
 
 // gates and league prizes scale down the pyramid
-export const DIVISION_FACTOR: Record<number, number> = { 1: 1, 2: 0.7, 3: 0.5 }
+export const DIVISION_FACTOR: Record<number, number> = { 1: 1, 2: 0.8, 3: 0.6 }
 
 export function salaryFor(level: number): number {
-  return Math.round(level * level * 2.5)
+  return Math.round(level * level * 2)
 }
 
 export function marketValue(p: Player): number {
