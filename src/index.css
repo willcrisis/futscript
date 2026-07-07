@@ -10,11 +10,11 @@
   --rule: #e7e5e4;
   --ink: #1c1917;
   --ink-muted: #57534e;
-  --ink-faint: #a8a29e;
+  --ink-faint: #756e69;
   --accent: #16a34a;
   --accent-strong: #15803d;
-  --danger: #dc2626;
-  --warn: #d97706;
+  --danger: #b91c1c;
+  --warn: #b45309;
 }
 
 .dark {
@@ -23,7 +23,7 @@
   --rule: #292524;
   --ink: #fafaf9;
   --ink-muted: #a8a29e;
-  --ink-faint: #57534e;
+  --ink-faint: #8f8a85;
   --accent: #4ade80;
   --accent-strong: #86efac;
   --danger: #f87171;

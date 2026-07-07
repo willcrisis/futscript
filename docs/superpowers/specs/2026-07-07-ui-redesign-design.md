@@ -26,13 +26,13 @@ A full UI/UX overhaul of futscript's ten screens onto a modern, minimalist desig
 | `--rule` | `#e7e5e4` (stone-200) | hairline borders/dividers |
 | `--ink` | `#1c1917` (stone-900) | primary text |
 | `--ink-muted` | `#57534e` (stone-600) | secondary text, inactive nav |
-| `--ink-faint` | `#a8a29e` (stone-400) | tertiary: row numbers, units |
-| `--accent` | `#16a34a` (green-600) | THE accent: user's club, money, positive deltas, primary buttons |
-| `--accent-strong` | `#15803d` (green-700) | accent text on light surfaces (AA) |
-| `--danger` | `#dc2626` (red-600) | negative money, injuries, destructive confirm |
-| `--warn` | `#d97706` (amber-600) | warnings (board patience, expiring contracts) |
+| `--ink-faint` | `#756e69` (stone-500/600 blend) | tertiary: row numbers, units (AA-corrected at implementation: 4.80:1 on `--surface`, 4.59:1 on `--surface-raised`; stone-400 `#a8a29e` measured ≈2.3–2.6:1 and failed) |
+| `--accent` | `#16a34a` (green-600) | THE accent: user's club, money, positive deltas — decorative fills/spines/dots only |
+| `--accent-strong` | `#15803d` (green-700) | accent text on light surfaces (AA); also the primary-button fill (white text ≈5.02:1) |
+| `--danger` | `#b91c1c` (red-700) | negative money, injuries, destructive confirm (AA-corrected at implementation: 6.19:1 on `--surface`, 5.93:1 on `--surface-raised`; red-600 `#dc2626` measured ≈4.43:1 on `--surface-raised` and fell just short) |
+| `--warn` | `#b45309` (amber-700) | warnings (board patience, expiring contracts) (AA-corrected at implementation: 4.81:1 on `--surface`, 4.60:1 on `--surface-raised`; amber-600 `#d97706` measured ≈3:1 and failed) |
 
-**Dark tokens** — the same design at night, warm not blue: `--surface #0c0a09` (stone-950), `--surface-raised #1c1917`, `--rule #292524`, `--ink #fafaf9`, `--ink-muted #a8a29e`, `--ink-faint #57534e`, `--accent #4ade80` (green-400), `--accent-strong #86efac` where contrast demands, `--danger #f87171`, `--warn #fbbf24`. All pairings meet WCAG AA (4.5:1 body, 3:1 large text) — verify at implementation.
+**Dark tokens** — the same design at night, warm not blue: `--surface #0c0a09` (stone-950), `--surface-raised #1c1917`, `--rule #292524`, `--ink #fafaf9`, `--ink-muted #a8a29e`, `--ink-faint #8f8a85` (AA-corrected at implementation: 5.78:1 on `--surface`, 5.11:1 on `--surface-raised`; `#57534e` measured ≈2:1 and failed), `--accent #4ade80` (green-400), `--accent-strong #86efac` where contrast demands, `--danger #f87171`, `--warn #fbbf24`. All pairings meet WCAG AA (4.5:1 body, 3:1 large text) — verified at implementation (see contrast figures above; filled buttons use `--accent-strong`/`--danger` per the Task 2 `Button` recipe, not the raw `--accent` fill, since white on light `--accent` #16a34a was only ≈3.3:1).
 
 **Typography.** Inter (self-hosted via `@fontsource-variable/inter`) for prose, labels, names. JetBrains Mono (`@fontsource-variable/jetbrains-mono`) for every number: scores, money, dates, ages, levels, week counters — always `font-variant-numeric: tabular-nums`. Scale: 12px labels (uppercase, `tracking-wider`, `--ink-muted`), 14px body, 16px emphasized, 20px screen titles, 32px+ scoreline. No CDN fonts — bundles must work offline.
 

@@ -267,7 +267,7 @@ interface Props extends ButtonHTMLAttributes<HTMLButtonElement> {
 }
 
 const VARIANTS = {
-  primary: 'bg-accent text-white hover:opacity-90 disabled:opacity-40 dark:text-stone-950',
+  primary: 'bg-accent-strong text-white hover:opacity-90 disabled:opacity-40 dark:text-stone-950',
   ghost: 'border border-rule text-ink hover:bg-surface-raised disabled:opacity-40',
   danger: 'bg-danger text-white hover:opacity-90 disabled:opacity-40 dark:text-stone-950',
 }
@@ -287,7 +287,7 @@ export default function Button({ variant = 'ghost', size = 'md', className = '',
 }
 ```
 
-(Note `dark:text-stone-950` is the ONE sanctioned raw-palette exception: filled buttons need dark text on the bright dark-mode green/red; it is confined to this file.)
+(Note `dark:text-stone-950` is the ONE sanctioned raw-palette exception: filled buttons need dark text on the bright dark-mode green/red; it is confined to this file. `primary` fills with `bg-accent-strong` rather than `bg-accent` — white on light `--accent-strong` #15803d is ≈5.0:1, AA; white on light `--accent` #16a34a was only ≈3.3:1 and failed. White on `bg-danger` clears AA on both themes with the AA-corrected `--danger` token (light #b91c1c ≈6.5:1, dark #f87171 with the `dark:text-stone-950` override ≈7.6:1) — no fill-color change needed for `danger`.)
 
 `src/ui/MoneyText.tsx`:
 
