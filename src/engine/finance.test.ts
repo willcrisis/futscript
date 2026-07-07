@@ -3,7 +3,7 @@ import { mulberry32 } from './rng'
 import { newGame } from './newGame'
 import {
   adjustCash, borrow, formatMoney, marketValue, LOAN_CAP, repayLoan, runWeeklyFinances, salaryFor,
-  severanceFor, STARTING_CASH, wageBill, DIVISION_FACTOR,
+  severanceFor, STARTING_CASH, wageBill, SPONSOR_BASE,
 } from './finance'
 import type { GameState, Player } from './types'
 import { CUP_WEEKS } from './fixtures'
@@ -56,7 +56,10 @@ describe('runWeeklyFinances', () => {
     const s1 = runWeeklyFinances(s0, mulberry32(2))
     const homeIds = new Set(s0.fixtures.filter(f => f.round === 1).map(f => f.homeId))
     for (const t of s1.teams) {
-      const before = STARTING_CASH - wageBill(t.id, s0)
+      const team0 = s0.teams.find(x => x.id === t.id)!
+      const maintenance = Math.round(team0.capacity * 1.5)
+      const sponsors = Math.round((SPONSOR_BASE[team0.division] ?? SPONSOR_BASE[3]) * (0.5 + team0.fanMood / 100))
+      const before = STARTING_CASH - wageBill(t.id, s0) - maintenance + sponsors
       if (homeIds.has(t.id)) expect(t.cash).toBeGreaterThan(before) // gate beat zero
       else if (t.id !== s0.userTeamId) expect(t.cash).toBe(before)
     }
@@ -122,25 +125,6 @@ describe('loans', () => {
 })
 
 describe('division-aware gates', () => {
-  it('scales gate receipts by division', () => {
-    expect(DIVISION_FACTOR).toEqual({ 1: 1, 2: 0.8, 3: 0.6 })
-    const s0 = newGame(1)
-    const s1 = runWeeklyFinances(s0, mulberry32(2))
-    // a division-1 home club earns at least (10_000 - 1_000 + 800*0) * 15 = 135k;
-    // a division-3 home club (factor 0.6) can earn at most ((10_000 + 800*15 + 1_000) * 15) * 0.6 = 207k
-    const homeIds = new Set(s0.fixtures.filter(f => f.round === 1).map(f => f.homeId))
-    for (const t of s1.teams) {
-      if (!homeIds.has(t.id)) continue
-      const before = s0.teams.find(x => x.id === t.id)!.cash
-      const gate = t.cash - (before - wageBill(t.id, s0)) - (t.id === s0.userTeamId ? interestAdjustments(s1) : 0)
-      if (t.division === 1) expect(gate).toBeGreaterThanOrEqual(Math.round(135_000))
-      if (t.division === 3 && t.id !== s0.userTeamId) expect(gate).toBeLessThanOrEqual(207_000)
-    }
-    function interestAdjustments(s: GameState): number {
-      return s.finances.filter(e => e.round === 1 && (e.label === 'Deposit interest' || e.label === 'Overdraft charge' || e.label === 'Loan interest')).reduce((sum, e) => sum + e.amount, 0)
-    }
-  })
-
   it('pays a gate for a home cup tie', () => {
     let s = newGame(9)
     for (let week = 1; week < CUP_WEEKS[0]; week++) s = advanceRound(s)
@@ -154,5 +138,63 @@ describe('division-aware gates', () => {
       // gate income exceeds the wage bill hit for at least the cup hosts as a group
       expect(t.cash).toBeGreaterThan(before.get(id)! - wageBill(id, s))
     }
+  })
+})
+
+describe('stadium finances', () => {
+  it('every club pays maintenance and earns mood-scaled sponsors weekly', () => {
+    const s0 = newGame(1)
+    const s1 = runWeeklyFinances(s0, mulberry32(2))
+    const awayDiv1 = s1.teams.find(t =>
+      t.division === 1 &&
+      !s0.fixtures.some(f => f.round === 1 && f.homeId === t.id) &&
+      t.id !== s0.userTeamId,
+    )!
+    const before = s0.teams.find(t => t.id === awayDiv1.id)!
+    // away week: wages out, maintenance out, sponsors in — nothing else
+    const expected = before.cash - wageBill(awayDiv1.id, s0) - Math.round(before.capacity * 1.5)
+      + Math.round(SPONSOR_BASE[1] * (0.5 + before.fanMood / 100))
+    expect(awayDiv1.cash).toBe(expected)
+  })
+
+  it('attendance is capped by capacity and scales with price and mood', () => {
+    const s0 = newGame(1)
+    // pump the user's mood and drop the price: the division-3 ground sells out
+    const cheap = {
+      ...s0,
+      teams: s0.teams.map(t => (t.id === s0.userTeamId ? { ...t, ticketPrice: 5, fanMood: 100 } : t)),
+    }
+    // make the user play at home in week 1 by swapping their fixture if needed
+    const userHome = cheap.fixtures.some(f => f.round === 1 && f.homeId === cheap.userTeamId)
+    const withHome = userHome ? cheap : {
+      ...cheap,
+      fixtures: cheap.fixtures.map(f =>
+        f.round === 1 && f.awayId === cheap.userTeamId ? { ...f, homeId: f.awayId, awayId: f.homeId } : f,
+      ),
+    }
+    const s1 = runWeeklyFinances(withHome, mulberry32(3))
+    const gate = s1.finances.find(e => e.label.startsWith('Gate receipts'))!
+    const fans = Number(gate.label.match(/\((\d+) fans\)/)![1])
+    expect(fans).toBe(9_000) // capacity-capped sellout
+    expect(gate.amount).toBe(9_000 * 5)
+
+    // same week at price 60 and mood 0: a sliver of the ground
+    const dear = {
+      ...withHome,
+      teams: withHome.teams.map(t => (t.id === s0.userTeamId ? { ...t, ticketPrice: 60, fanMood: 0 } : t)),
+    }
+    const s2 = runWeeklyFinances(dear, mulberry32(3))
+    const gate2 = s2.finances.find(e => e.label.startsWith('Gate receipts'))!
+    const fans2 = Number(gate2.label.match(/\((\d+) fans\)/)![1])
+    expect(fans2).toBeLessThan(1_500) // (15/60)^1.5 = 0.125, mood factor 0.6
+    expect(fans2).toBeGreaterThanOrEqual(0)
+  })
+
+  it('user ledger carries the new lines', () => {
+    const s1 = runWeeklyFinances(newGame(1), mulberry32(2))
+    const labels = s1.finances.map(e => e.label)
+    expect(labels).toContain('Wages')
+    expect(labels).toContain('Stadium maintenance')
+    expect(labels).toContain('Sponsors')
   })
 })

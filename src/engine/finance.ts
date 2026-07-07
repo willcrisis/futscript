@@ -7,8 +7,12 @@ import type { FinanceEntry, GameState, Player, Team } from './types'
 export const STARTING_CASH = 1_000_000
 export const LOAN_CAP = 2_000_000
 
-// gates and league prizes scale down the pyramid
+// scales fan interest and league prizes down the pyramid
 export const DIVISION_FACTOR: Record<number, number> = { 1: 1, 2: 0.8, 3: 0.6 }
+
+const MAINTENANCE_PER_SEAT = 1.5
+// ponytail: sponsor money — retune here and nowhere else
+export const SPONSOR_BASE: Record<number, number> = { 1: 40_000, 2: 22_000, 3: 12_000 }
 
 export function salaryFor(level: number): number {
   return Math.round(level * level * 2)
@@ -73,9 +77,25 @@ export function runWeeklyFinances(state: GameState, rand: () => number): GameSta
     let cash = team.cash - wages
     if (user) addEntry('Wages', -wages)
 
+    const maintenance = Math.round(team.capacity * MAINTENANCE_PER_SEAT)
+    cash -= maintenance
+    if (user) addEntry('Stadium maintenance', -maintenance)
+
+    const sponsors = Math.round((SPONSOR_BASE[team.division] ?? SPONSOR_BASE[3]) * (0.5 + team.fanMood / 100))
+    cash += sponsors
+    if (user) addEntry('Sponsors', sponsors)
+
     if (homeThisRound.has(team.id)) {
-      const attendance = 10_000 + 800 * (16 - position.get(team.id)!) + randInt(rand, -1000, 1000)
-      const gate = Math.round(attendance * TICKET_PRICE * (DIVISION_FACTOR[team.division] ?? 1))
+      const interest = Math.round(
+        (9_000 + 900 * (16 - position.get(team.id)!)) * (DIVISION_FACTOR[team.division] ?? 1),
+      )
+      const priceFactor = (15 / team.ticketPrice) ** 1.5
+      const moodFactor = 0.6 + (team.fanMood / 100) * 0.6
+      const attendance = Math.max(
+        0,
+        Math.min(team.capacity, Math.round(interest * priceFactor * moodFactor) + randInt(rand, -500, 500)),
+      )
+      const gate = attendance * team.ticketPrice
       cash += gate
       if (user) addEntry(`Gate receipts (${attendance} fans)`, gate)
     }
