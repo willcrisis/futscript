@@ -1,9 +1,10 @@
 import { describe, expect, it } from 'vitest'
-import { salaryFor, severanceFor } from './finance'
+import { marketValue, salaryFor, severanceFor } from './finance'
+import { mulberry32 } from './rng'
 import { newGame } from './newGame'
 import {
   listPlayer, MIN_SQUAD, placeBid, releasePlayer, renewalSalary, renewContract,
-  requiredBid, transferPlayer,
+  requiredBid, runTransfers, transferPlayer,
 } from './transfers'
 import type { GameState } from './types'
 
@@ -130,5 +131,75 @@ describe('renewContract', () => {
       players: { ...s0.players, [id]: { ...s0.players[id], contractSeasons: 3 } },
     }
     expect(renewContract(long, id)).toEqual(long)
+  })
+})
+
+describe('runTransfers', () => {
+  it('resolves a due listing to the highest bidder', () => {
+    const s0 = newGame(1)
+    const playerId = s0.teams[2].lineup[0]
+    let s = listPlayer(s0, playerId, 100_000)
+    s = {
+      ...s,
+      transferList: s.transferList.map(l => ({ ...l, roundsLeft: 1, currentBid: 150_000, currentBidderId: 4 })),
+    }
+    const s1 = runTransfers(s, mulberry32(9))
+    expect(s1.transferList.find(l => l.playerId === playerId)).toBeUndefined()
+    expect(s1.teams[4].playerIds).toContain(playerId)
+    expect(s1.teams[2].playerIds).not.toContain(playerId)
+  })
+
+  it('delists an unsold player at the deadline', () => {
+    const s0 = newGame(1)
+    const playerId = s0.teams[2].lineup[0]
+    let s = listPlayer(s0, playerId, 999_999_999) // nobody can afford it
+    s = { ...s, transferList: s.transferList.map(l => ({ ...l, roundsLeft: 1 })) }
+    const s1 = runTransfers(s, mulberry32(9))
+    expect(s1.transferList.find(l => l.playerId === playerId)).toBeUndefined()
+    expect(s1.teams[2].playerIds).toContain(playerId) // still theirs
+  })
+
+  it('ticks listing deadlines down', () => {
+    const s0 = newGame(1)
+    const playerId = s0.teams[2].lineup[0]
+    const s = listPlayer(s0, playerId, 100_000)
+    const s1 = runTransfers(s, mulberry32(9))
+    const listing = s1.transferList.find(l => l.playerId === playerId)
+    if (listing) expect(listing.roundsLeft).toBe(2) // 3 - 1 (may have sold early only at 0)
+  })
+
+  it('AI clubs eventually bid on a fairly priced listing', () => {
+    const s0 = newGame(1)
+    const playerId = s0.teams[2].lineup[0]
+    // cap the ask so it stays under every club's spending limit (0.7 × cash)
+    const askingPrice = Math.min(Math.round(marketValue(s0.players[playerId]) * 0.8), 500_000)
+    let s = listPlayer(s0, playerId, askingPrice)
+    // keep the listing alive and let several rounds of AI interest pass
+    const rand = mulberry32(5)
+    let sawBid = false
+    for (let i = 0; i < 10 && !sawBid; i++) {
+      s = { ...s, transferList: s.transferList.map(l => ({ ...l, roundsLeft: 5 })) }
+      s = runTransfers(s, rand)
+      const l = s.transferList.find(x => x.playerId === playerId)
+      sawBid = !s.teams[2].playerIds.includes(playerId) || (l?.currentBid ?? null) !== null
+    }
+    expect(sawBid).toBe(true)
+  })
+
+  it('a broke AI club force-lists its biggest earner', () => {
+    const s0 = newGame(1)
+    const s: GameState = { ...s0, teams: s0.teams.map(t => (t.id === 7 ? { ...t, cash: -100_000 } : t)) }
+    const s1 = runTransfers(s, mulberry32(3))
+    const listing = s1.transferList.find(l => l.sellerTeamId === 7)
+    expect(listing).toBeDefined()
+    const topEarner = [...s.teams[7].playerIds].sort(
+      (a, b) => s.players[b].salary - s.players[a].salary,
+    )[0]
+    expect(listing!.playerId).toBe(topEarner)
+  })
+
+  it('is deterministic', () => {
+    const s0 = newGame(11)
+    expect(runTransfers(s0, mulberry32(4))).toEqual(runTransfers(s0, mulberry32(4)))
   })
 })

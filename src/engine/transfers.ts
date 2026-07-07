@@ -1,8 +1,9 @@
-import { adjustCash, salaryFor, severanceFor, userLedger } from './finance'
+import { adjustCash, marketValue, salaryFor, severanceFor, userLedger } from './finance'
 import type { GameState, Player, TransferListing } from './types'
 
 export const MIN_SQUAD = 14
 export const LISTING_ROUNDS = 3
+export const OFFER_ROUNDS = 2
 
 export function transferPlayer(state: GameState, playerId: number, toTeamId: number, fee: number): GameState {
   const from = state.teams.find(t => t.playerIds.includes(playerId))!
@@ -109,4 +110,68 @@ export function renewContract(state: GameState, playerId: number): GameState {
       [playerId]: { ...p, salary: renewalSalary(p), contractSeasons: p.contractSeasons + 2 },
     },
   }
+}
+
+// One market tick: offers age, AI clubs list and bid, deadlines resolve.
+// Task 5 adds incoming-offer generation at the marked point.
+export function runTransfers(state: GameState, rand: () => number): GameState {
+  let s = state
+
+  // offers age out
+  s = {
+    ...s,
+    incomingOffers: s.incomingOffers
+      .map(o => ({ ...o, roundsLeft: o.roundsLeft - 1 }))
+      .filter(o => o.roundsLeft > 0),
+  }
+
+  // [Task 5 inserts incoming-offer generation here]
+
+  // AI clubs list players: forced sale when broke, otherwise occasional squad trim
+  for (const team of s.teams) {
+    if (team.id === s.userTeamId || team.playerIds.length <= MIN_SQUAD) continue
+    if (s.transferList.some(l => l.sellerTeamId === team.id)) continue
+    const broke = team.cash < 0
+    if (!broke && rand() >= 0.05) continue
+    const squad = team.playerIds.map(id => s.players[id])
+    const candidate = broke
+      ? [...squad].sort((a, b) => b.salary - a.salary)[0] // shed the biggest wage
+      : [...squad].sort((a, b) => a.level - b.level)[0] // trim the weakest
+    s = listPlayer(s, candidate.id, Math.round(marketValue(candidate) * 0.9))
+  }
+
+  // AI clubs bid (re-read each listing so later bidders see earlier bids)
+  for (const team of s.teams) {
+    if (team.id === s.userTeamId) continue
+    for (const { playerId } of s.transferList) {
+      const listing = s.transferList.find(l => l.playerId === playerId)!
+      if (listing.sellerTeamId === team.id || listing.currentBidderId === team.id) continue
+      if (rand() >= 0.15) continue
+      const bid = requiredBid(listing)
+      const valuation = Math.round(marketValue(s.players[playerId]) * (0.9 + rand() * 0.4))
+      if (bid <= valuation && bid <= team.cash * 0.7 && team.playerIds.length < 22) {
+        s = {
+          ...s,
+          transferList: s.transferList.map(l =>
+            l.playerId === playerId ? { ...l, currentBid: bid, currentBidderId: team.id } : l,
+          ),
+        }
+      }
+    }
+  }
+
+  // deadlines: sell to the highest bidder or quietly delist
+  const due = s.transferList.filter(l => l.roundsLeft <= 1)
+  s = {
+    ...s,
+    transferList: s.transferList
+      .filter(l => l.roundsLeft > 1)
+      .map(l => ({ ...l, roundsLeft: l.roundsLeft - 1 })),
+  }
+  for (const l of due) {
+    if (l.currentBid !== null && l.currentBidderId !== null) {
+      s = transferPlayer(s, l.playerId, l.currentBidderId, l.currentBid)
+    }
+  }
+  return s
 }
