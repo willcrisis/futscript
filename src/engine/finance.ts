@@ -7,6 +7,9 @@ import type { FinanceEntry, GameState, Player, Team } from './types'
 export const STARTING_CASH = 1_000_000
 export const LOAN_CAP = 2_000_000
 
+// gates and league prizes scale down the pyramid
+export const DIVISION_FACTOR: Record<number, number> = { 1: 1, 2: 0.7, 3: 0.5 }
+
 export function salaryFor(level: number): number {
   return Math.round(level * level * 2.5)
 }
@@ -50,8 +53,14 @@ export function userLedger(state: GameState, label: string, amount: number): Fin
 // The user additionally gets interest, loan charges, and board patience.
 // Must run BEFORE advanceRound increments state.round.
 export function runWeeklyFinances(state: GameState, rand: () => number): GameState {
-  const position = new Map(standings(state).map((row, i) => [row.teamId, i + 1]))
-  const homeThisRound = new Set(state.fixtures.filter(f => f.round === state.round).map(f => f.homeId))
+  const position = new Map<number, number>()
+  for (const division of new Set(state.teams.map(t => t.division))) {
+    standings(state, division).forEach((row, i) => position.set(row.teamId, i + 1))
+  }
+  const homeThisRound = new Set([
+    ...state.fixtures.filter(f => f.round === state.round).map(f => f.homeId),
+    ...state.cupFixtures.filter(f => f.week === state.round).map(f => f.homeId),
+  ])
 
   let finances = state.finances
   const addEntry = (label: string, amount: number) => {
@@ -66,7 +75,7 @@ export function runWeeklyFinances(state: GameState, rand: () => number): GameSta
 
     if (homeThisRound.has(team.id)) {
       const attendance = 10_000 + 800 * (16 - position.get(team.id)!) + randInt(rand, -1000, 1000)
-      const gate = attendance * TICKET_PRICE
+      const gate = Math.round(attendance * TICKET_PRICE * (DIVISION_FACTOR[team.division] ?? 1))
       cash += gate
       if (user) addEntry(`Gate receipts (${attendance} fans)`, gate)
     }

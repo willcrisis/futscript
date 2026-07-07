@@ -1,5 +1,5 @@
 import { adjustCash, runWeeklyFinances } from './finance'
-import { generateFixtures } from './fixtures'
+import { generateDivisionFixtures } from './fixtures'
 import { autoPick, patchLineup } from './lineup'
 import { simulateMatch } from './match'
 import { mulberry32, randInt } from './rng'
@@ -124,7 +124,9 @@ export function newSeason(state: GameState): GameState {
     players: ageSquads(players, rand),
     season: state.season + 1,
     round: 1,
-    fixtures: generateFixtures(teams.map(t => t.id), rand),
+    fixtures: [...new Set(teams.map(t => t.division))].sort().flatMap(d =>
+      generateDivisionFixtures(teams.filter(t => t.division === d).map(t => t.id), rand),
+    ),
     transferList: [],
     incomingOffers: [],
     brokeRounds: 0,
