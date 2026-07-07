@@ -90,8 +90,9 @@ export default function App() {
         ))}
       </nav>
       {screen === 'squad' && <SquadScreen state={state} setState={setState} />}
-      {screen === 'table' && <TableScreen state={state} />}
-      {screen === 'fixtures' && <FixturesScreen state={state} />}
+      {/* key: remount on rollover so the division select re-seeds after promotion/relegation */}
+      {screen === 'table' && <TableScreen key={state.season} state={state} />}
+      {screen === 'fixtures' && <FixturesScreen key={state.season} state={state} />}
       {screen === 'cup' && <p>Cup screen coming next.</p>}
       {screen === 'transfers' && <TransfersScreen state={state} setState={setState} />}
       {screen === 'finance' && <FinanceScreen state={state} setState={setState} />}
