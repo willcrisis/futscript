@@ -8,26 +8,34 @@ import {
   type FormationName,
   type GameState,
   type Player,
-  type Position,
   type Tactic,
   type TrainingStyle,
 } from '../engine/types'
+import Badge from '../ui/Badge'
+import Button from '../ui/Button'
+import ConfirmButton from '../ui/ConfirmButton'
+import DataTable from '../ui/DataTable'
+import type { Column } from '../ui/DataTable'
+import MoneyText from '../ui/MoneyText'
+import ScreenHeader from '../ui/ScreenHeader'
 
-const ORDER: Position[] = ['GK', 'DF', 'MF', 'FW']
+const ORDER = ['GK', 'DF', 'MF', 'FW']
 const TACTICS: Tactic[] = ['defensive', 'normal', 'attacking']
 const TRAINING_STYLES: TrainingStyle[] = ['light', 'normal', 'intensive', 'youth']
 
-function status(p: Player): string {
-  if (p.injuredForRounds > 0) return `🚑 ${p.injuredForRounds}`
-  if (p.suspendedForRounds > 0) return `⛔ ${p.suspendedForRounds}`
-  if (p.yellowCards > 0) return '🟨'.repeat(p.yellowCards)
-  return ''
+const SELECT_CLASS = 'rounded-md border border-rule bg-surface-raised px-2 py-1.5 text-sm'
+
+function statusBadge(p: Player) {
+  if (p.injuredForRounds > 0) return <Badge tone="danger">Injured · {p.injuredForRounds}w</Badge>
+  if (p.suspendedForRounds > 0) return <Badge tone="warn">Banned · {p.suspendedForRounds}w</Badge>
+  if (p.yellowCards > 0) return <Badge tone="muted">Cards · {p.yellowCards}</Badge>
+  return null
 }
 
-function formArrow(form: number): string {
-  if (form > 0) return `▲${form}`
-  if (form < 0) return `▼${-form}`
-  return '–'
+function formCell(form: number) {
+  if (form > 0) return <span className="text-accent-strong">▲{form}</span>
+  if (form < 0) return <span className="text-danger">▼{-form}</span>
+  return <span className="text-ink-faint">–</span>
 }
 
 interface Props {
@@ -38,7 +46,6 @@ interface Props {
 export default function SquadScreen({ state, setState }: Props) {
   const [selling, setSelling] = useState<number | null>(null)
   const [askingPrice, setAskingPrice] = useState(0)
-  const [confirmRelease, setConfirmRelease] = useState<number | null>(null)
   const team = state.teams.find(t => t.id === state.userTeamId)!
   const squad = team.playerIds
     .map(id => state.players[id])
@@ -47,131 +54,186 @@ export default function SquadScreen({ state, setState }: Props) {
   const withUserTeam = (fn: (s: GameState, t: typeof team) => GameState) =>
     setState(s => fn(s, s.teams.find(t => t.id === s.userTeamId)!))
 
+  const columns: Column<Player>[] = [
+    {
+      key: 'name',
+      label: 'Name',
+      render: p => (
+        <span className="inline-flex items-center gap-2">
+          {p.name}
+          {team.lineup.includes(p.id) && <Badge tone="accent">XI</Badge>}
+        </span>
+      ),
+    },
+    { key: 'age', label: 'Age', mono: true, hideOnMobile: true, render: p => p.age },
+    { key: 'level', label: 'Lvl', mono: true, render: p => <strong>{p.level}</strong> },
+    { key: 'form', label: 'Form', mono: true, hideOnMobile: true, render: p => formCell(p.form) },
+    {
+      key: 'fit',
+      label: 'Fit',
+      mono: true,
+      hideOnMobile: true,
+      render: p => <span className={p.fitness < 70 ? 'text-warn' : ''}>{p.fitness}%</span>,
+    },
+    { key: 'status', label: 'Status', render: p => statusBadge(p) },
+    {
+      key: 'salary',
+      label: 'Salary',
+      mono: true,
+      hideOnMobile: true,
+      render: p => (
+        <span className="inline-flex items-baseline gap-1">
+          <MoneyText amount={p.salary} size="sm" />
+          <span className="text-ink-faint">/wk</span>
+        </span>
+      ),
+    },
+    {
+      key: 'contract',
+      label: 'Contract',
+      mono: true,
+      hideOnMobile: true,
+      render: p => <span className={p.contractSeasons <= 1 ? 'text-warn' : ''}>{p.contractSeasons}y</span>,
+    },
+    {
+      key: 'value',
+      label: 'Value',
+      mono: true,
+      hideOnMobile: true,
+      render: p => <MoneyText amount={marketValue(p)} size="sm" />,
+    },
+    {
+      key: 'actions',
+      label: '',
+      render: p => {
+        const starting = team.lineup.includes(p.id)
+        const listed = state.transferList.some(l => l.playerId === p.id)
+        if (selling === p.id) {
+          return (
+            <div className="flex items-center gap-1.5">
+              <input
+                type="number"
+                value={askingPrice}
+                onChange={e => setAskingPrice(Number(e.target.value))}
+                className="w-24 rounded-md border border-rule bg-surface px-2 py-1 text-xs font-mono"
+              />
+              <Button
+                variant="primary"
+                size="sm"
+                onClick={() => { setState(s => listPlayer(s, p.id, askingPrice)); setSelling(null) }}
+              >
+                List
+              </Button>
+              <Button variant="ghost" size="sm" aria-label="Cancel" onClick={() => setSelling(null)}>
+                ✕
+              </Button>
+            </div>
+          )
+        }
+        return (
+          <div className="flex flex-wrap items-center gap-1.5">
+            {starting ? (
+              <span className="text-xs text-ink-faint">Starting</span>
+            ) : (
+              <Button
+                variant="ghost"
+                size="sm"
+                disabled={!isAvailable(p)}
+                onClick={() => withUserTeam((s, t) => updateTeam(s, t.id, { lineup: swapIn(t, s.players, p.id) }))}
+              >
+                Start
+              </Button>
+            )}
+            {listed ? (
+              <Badge tone="muted">Listed</Badge>
+            ) : (
+              <Button variant="ghost" size="sm" onClick={() => { setSelling(p.id); setAskingPrice(marketValue(p)) }}>
+                Sell
+              </Button>
+            )}
+            <ConfirmButton
+              label="Release"
+              confirmLabel={`Confirm ${formatMoney(-severanceFor(p))}`}
+              onConfirm={() => setState(s => releasePlayer(s, p.id))}
+              size="sm"
+            />
+            {p.contractSeasons <= 1 && (
+              <Button variant="ghost" size="sm" onClick={() => setState(s => renewContract(s, p.id))}>
+                Renew ({formatMoney(renewalSalary(p))}/wk)
+              </Button>
+            )}
+          </div>
+        )
+      },
+    },
+  ]
+
   return (
     <div>
-      <div className="controls">
-        <label>
-          Formation:{' '}
-          <select
-            value={team.formation}
-            onChange={e => {
-              const formation = e.target.value as FormationName
-              withUserTeam((s, t) => {
-                const next = { ...t, formation }
-                return updateTeam(s, t.id, { formation, lineup: autoPick(next, s.players) })
-              })
-            }}
-          >
-            {Object.keys(FORMATIONS).map(f => <option key={f}>{f}</option>)}
-          </select>
-        </label>{' '}
-        <label>
-          Tactic:{' '}
-          <select
-            value={team.tactic}
-            onChange={e => {
-              const tactic = e.target.value as Tactic
-              withUserTeam((s, t) => updateTeam(s, t.id, { tactic }))
-            }}
-          >
-            {TACTICS.map(t => <option key={t}>{t}</option>)}
-          </select>
-        </label>{' '}
-        <label>
-          Training:{' '}
-          <select
-            value={team.trainingStyle}
-            onChange={e => {
-              const trainingStyle = e.target.value as TrainingStyle
-              withUserTeam((s, t) => updateTeam(s, t.id, { trainingStyle }))
-            }}
-          >
-            {TRAINING_STYLES.map(t => <option key={t}>{t}</option>)}
-          </select>
-        </label>{' '}
-        <button onClick={() => withUserTeam((s, t) => updateTeam(s, t.id, { lineup: autoPick(t, s.players) }))}>
-          Auto-pick
-        </button>{' '}
-        <label>
-          <input
-            type="checkbox"
-            checked={state.playFriendlies}
-            onChange={e => {
-              const playFriendlies = e.target.checked
-              setState(s => ({ ...s, playFriendlies }))
-            }}
-          />{' '}
-          Friendlies on free weeks
-        </label>
-      </div>
-      <table>
-        <thead>
-          <tr>
-            <th>Pos</th><th>Name</th><th>Age</th><th>Level</th><th>Form</th><th>Fit</th>
-            <th>Status</th><th>Salary</th><th>Contract</th><th>Value</th><th></th>
-          </tr>
-        </thead>
-        <tbody>
-          {squad.map(p => {
-            const starting = team.lineup.includes(p.id)
-            return (
-              <tr key={p.id} className={starting ? 'starting' : ''}>
-                <td>{p.position}</td>
-                <td>{p.name}</td>
-                <td>{p.age}</td>
-                <td>{p.level}</td>
-                <td>{formArrow(p.form)}</td>
-                <td>{p.fitness}%</td>
-                <td>{status(p)}</td>
-                <td>{formatMoney(p.salary)}/wk</td>
-                <td>{p.contractSeasons}y</td>
-                <td>{formatMoney(marketValue(p))}</td>
-                <td className="actions">
-                  {selling === p.id ? (
-                    <>
-                      <input
-                        type="number"
-                        value={askingPrice}
-                        onChange={e => setAskingPrice(Number(e.target.value))}
-                        style={{ width: '7rem' }}
-                      />
-                      <button onClick={() => { setState(s => listPlayer(s, p.id, askingPrice)); setSelling(null) }}>List</button>
-                      <button onClick={() => setSelling(null)}>✕</button>
-                    </>
-                  ) : confirmRelease === p.id ? (
-                    <>
-                      <button onClick={() => { setState(s => releasePlayer(s, p.id)); setConfirmRelease(null) }}>
-                        Confirm release ({formatMoney(-severanceFor(p))})
-                      </button>
-                      <button onClick={() => setConfirmRelease(null)}>✕</button>
-                    </>
-                  ) : (
-                    <>
-                      {starting
-                        ? 'Starting'
-                        : <button
-                            disabled={!isAvailable(p)}
-                            onClick={() => withUserTeam((s, t) => updateTeam(s, t.id, { lineup: swapIn(t, s.players, p.id) }))}
-                          >
-                            Start
-                          </button>}
-                      {state.transferList.some(l => l.playerId === p.id)
-                        ? ' · listed'
-                        : <button onClick={() => { setSelling(p.id); setAskingPrice(marketValue(p)) }}>Sell</button>}
-                      <button onClick={() => setConfirmRelease(p.id)}>Release</button>
-                      {p.contractSeasons <= 1 && (
-                        <button onClick={() => setState(s => renewContract(s, p.id))}>
-                          Renew ({formatMoney(renewalSalary(p))}/wk)
-                        </button>
-                      )}
-                    </>
-                  )}
-                </td>
-              </tr>
-            )
-          })}
-        </tbody>
-      </table>
+      <ScreenHeader
+        label="SQUAD"
+        title={team.name}
+        actions={
+          <>
+            <select
+              aria-label="Formation"
+              value={team.formation}
+              onChange={e => {
+                const formation = e.target.value as FormationName
+                withUserTeam((s, t) => {
+                  const next = { ...t, formation }
+                  return updateTeam(s, t.id, { formation, lineup: autoPick(next, s.players) })
+                })
+              }}
+              className={SELECT_CLASS}
+            >
+              {Object.keys(FORMATIONS).map(f => <option key={f}>{f}</option>)}
+            </select>
+            <select
+              aria-label="Tactic"
+              value={team.tactic}
+              onChange={e => {
+                const tactic = e.target.value as Tactic
+                withUserTeam((s, t) => updateTeam(s, t.id, { tactic }))
+              }}
+              className={SELECT_CLASS}
+            >
+              {TACTICS.map(t => <option key={t}>{t}</option>)}
+            </select>
+            <select
+              aria-label="Training"
+              value={team.trainingStyle}
+              onChange={e => {
+                const trainingStyle = e.target.value as TrainingStyle
+                withUserTeam((s, t) => updateTeam(s, t.id, { trainingStyle }))
+              }}
+              className={SELECT_CLASS}
+            >
+              {TRAINING_STYLES.map(t => <option key={t}>{t}</option>)}
+            </select>
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => withUserTeam((s, t) => updateTeam(s, t.id, { lineup: autoPick(t, s.players) }))}
+            >
+              Auto-pick
+            </Button>
+            <label className="flex items-center gap-1.5 text-sm">
+              <input
+                type="checkbox"
+                checked={state.playFriendlies}
+                onChange={e => {
+                  const playFriendlies = e.target.checked
+                  setState(s => ({ ...s, playFriendlies }))
+                }}
+                className="accent-accent size-4"
+              />
+              Friendlies
+            </label>
+          </>
+        }
+      />
+      <DataTable columns={columns} rows={squad} rowKey={p => p.id} groupLabel={p => p.position} />
     </div>
   )
 }
