@@ -7,12 +7,17 @@ interface Props {
   confirmLabel: ReactNode
   onConfirm: () => void
   size?: 'sm' | 'md'
+  disabled?: boolean
 }
 
-export default function ConfirmButton({ label, confirmLabel, onConfirm, size = 'sm' }: Props) {
+export default function ConfirmButton({ label, confirmLabel, onConfirm, size = 'sm', disabled = false }: Props) {
   const [armed, setArmed] = useState(false)
   const timer = useRef<ReturnType<typeof setTimeout>>(undefined)
   const armedRef = useRef<HTMLSpanElement>(null)
+
+  useEffect(() => {
+    if (disabled) setArmed(false)
+  }, [disabled])
 
   useEffect(() => {
     if (!armed) return
@@ -31,12 +36,12 @@ export default function ConfirmButton({ label, confirmLabel, onConfirm, size = '
 
   return armed ? (
     <span ref={armedRef}>
-      <Button variant="danger" size={size} onClick={() => { setArmed(false); onConfirm() }}>
+      <Button variant="danger" size={size} disabled={disabled} onClick={() => { setArmed(false); onConfirm() }}>
         {confirmLabel}
       </Button>
     </span>
   ) : (
-    <Button variant="ghost" size={size} onClick={() => setArmed(true)}>
+    <Button variant="ghost" size={size} disabled={disabled} onClick={() => !disabled && setArmed(true)}>
       {label}
     </Button>
   )

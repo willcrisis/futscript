@@ -121,6 +121,7 @@ export default function FinanceScreen({ state, setState }: Props) {
                   }
                   confirmLabel={`Confirm ${formatMoney(EXPANSION.cost)}`}
                   onConfirm={() => setState(s => expandStadium(s))}
+                  disabled={user.cash < EXPANSION.cost}
                 />
               )}
             </div>
