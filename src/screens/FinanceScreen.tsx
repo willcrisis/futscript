@@ -2,6 +2,7 @@ import type { Dispatch, SetStateAction } from 'react'
 import { borrow, formatMoney, LOAN_CAP, MAINTENANCE_PER_SEAT, repayLoan, wageBill } from '../engine/finance'
 import { EXPANSION, expandStadium, setTicketPrice } from '../engine/stadium'
 import type { GameState } from '../engine/types'
+import { describeLedger } from '../i18n/ledger'
 import Button from '../ui/Button'
 import ConfirmButton from '../ui/ConfirmButton'
 import DataTable from '../ui/DataTable'
@@ -28,7 +29,7 @@ interface LedgerRow {
 }
 
 const ledgerColumns: Column<LedgerRow>[] = [
-  { key: 'item', label: 'Item', render: r => r.label },
+  { key: 'item', label: 'Item', render: r => describeLedger(r.label).text },
   { key: 'amount', label: 'Amount', align: 'right', render: r => <MoneyText amount={r.amount} signed /> },
 ]
 

@@ -214,6 +214,38 @@ export const en = {
   'app.newCareerButton': 'Start a new career',
   'app.championMessage': '🏆 {name} are the Division {division} champions!',
   'app.contractsExpireWarning': '⚠ {n} contract(s) expire — unrenewed players leave (cheapest are kept automatically if the squad would drop below 14)',
+
+  // Ledger labels (display-time translation of canonical engine strings)
+  'ledger.wages': 'Wages',
+  'ledger.maintenance': 'Stadium maintenance',
+  'ledger.sponsors': 'Sponsors',
+  'ledger.gate': 'Gate receipts ({n} fans)',
+  'ledger.friendlyGate': 'Friendly gate receipts',
+  'ledger.depositInterest': 'Deposit interest',
+  'ledger.overdraftCharge': 'Overdraft charge',
+  'ledger.loanInterest': 'Loan interest',
+  'ledger.loanDrawn': 'Loan drawn',
+  'ledger.loanRepayment': 'Loan repayment',
+  'ledger.sold': 'Sold {name}',
+  'ledger.signed': 'Signed {name}',
+  'ledger.released': 'Released {name} (severance)',
+  'ledger.prizeMoney': 'Prize money (finished {p} in Division {d})',
+  'ledger.cupWinners': 'Cup winners prize',
+  'ledger.cupRunnersUp': 'Cup runners-up prize',
+  'ledger.stadiumExpansion': 'Stadium expansion (+{n} seats)',
+  'ledger.stadiumExpansionComplete': 'Stadium expansion complete (+{n} seats)',
+
+  // Match event feed
+  'event.goal': 'GOAL! {player}',
+  'event.chance': 'Chance for {player} — saved!',
+  'event.yellow': '{player} is booked',
+  'event.red': '{player} is sent off!',
+  'event.injurySub': '{player} goes down injured — {sub} comes on',
+  'event.injuryNoSub': '{player} goes down injured — no substitute left!',
+
+  // Toasts
+  'toast.offer': '{bidder} offer {amount} for {player}',
+  'toast.boardPatience': 'Board patience running out: {n}/8 weeks in the red',
 } as const
 
 export type TranslationKey = keyof typeof en

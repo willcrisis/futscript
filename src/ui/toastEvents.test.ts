@@ -1,9 +1,12 @@
-import { describe, expect, it } from 'vitest'
+import { beforeEach, describe, expect, it } from 'vitest'
 import { newGame } from '../engine/newGame'
 import type { FinanceEntry, GameState, Offer } from '../engine/types'
+import { setLang } from '../i18n'
 import { detectToasts } from './toastEvents'
 
 const base = newGame(1)
+
+beforeEach(() => setLang('en'))
 
 function withFinances(finances: FinanceEntry[]): GameState {
   return { ...base, finances }

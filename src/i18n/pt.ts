@@ -216,4 +216,36 @@ export const pt: Record<TranslationKey, string> = {
   'app.newCareerButton': 'Começar uma nova carreira',
   'app.championMessage': '🏆 {name} são os campeões da Divisão {division}!',
   'app.contractsExpireWarning': '⚠ {n} contrato(s) vence(m) — jogadores não renovados saem (os mais baratos são mantidos automaticamente se o elenco cair abaixo de 14)',
+
+  // Ledger labels (display-time translation of canonical engine strings)
+  'ledger.wages': 'Salários',
+  'ledger.maintenance': 'Manutenção do estádio',
+  'ledger.sponsors': 'Patrocinadores',
+  'ledger.gate': 'Bilheteria ({n} torcedores)',
+  'ledger.friendlyGate': 'Bilheteria de amistoso',
+  'ledger.depositInterest': 'Juros de depósito',
+  'ledger.overdraftCharge': 'Juros de cheque especial',
+  'ledger.loanInterest': 'Juros do empréstimo',
+  'ledger.loanDrawn': 'Empréstimo tomado',
+  'ledger.loanRepayment': 'Pagamento do empréstimo',
+  'ledger.sold': 'Venda de {name}',
+  'ledger.signed': 'Contratação de {name}',
+  'ledger.released': 'Dispensa de {name} (rescisão)',
+  'ledger.prizeMoney': 'Premiação (terminou em {p}º na Divisão {d})',
+  'ledger.cupWinners': 'Premiação de campeão da copa',
+  'ledger.cupRunnersUp': 'Premiação de vice-campeão da copa',
+  'ledger.stadiumExpansion': 'Ampliação do estádio (+{n} lugares)',
+  'ledger.stadiumExpansionComplete': 'Ampliação do estádio concluída (+{n} lugares)',
+
+  // Match event feed
+  'event.goal': 'GOL! {player}',
+  'event.chance': 'Chance para {player} — defendida!',
+  'event.yellow': '{player} leva cartão amarelo',
+  'event.red': '{player} é expulso!',
+  'event.injurySub': '{player} se machuca — {sub} entra em campo',
+  'event.injuryNoSub': '{player} se machuca — sem substituto disponível!',
+
+  // Toasts
+  'toast.offer': '{bidder} oferece {amount} por {player}',
+  'toast.boardPatience': 'Paciência da diretoria acabando: {n}/8 semanas no vermelho',
 }

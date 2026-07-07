@@ -1,17 +1,17 @@
 import type { GameState, MatchEvent } from '../engine/types'
-import { t } from '../i18n'
+import { t, useLang } from '../i18n'
 
 export function eventText(e: MatchEvent, state: GameState): string {
   const player = state.players[e.playerId]?.name ?? '?'
   const sub = e.playerInId != null ? state.players[e.playerInId]?.name : null
   switch (e.type) {
-    case 'goal': return `GOAL! ${player}`
-    case 'chance': return `Chance for ${player} — saved!`
-    case 'yellow': return `${player} is booked`
-    case 'red': return `${player} is sent off!`
+    case 'goal': return t('event.goal', { player })
+    case 'chance': return t('event.chance', { player })
+    case 'yellow': return t('event.yellow', { player })
+    case 'red': return t('event.red', { player })
     case 'injury': return sub
-      ? `${player} goes down injured — ${sub} comes on`
-      : `${player} goes down injured — no substitute left!`
+      ? t('event.injurySub', { player, sub })
+      : t('event.injuryNoSub', { player })
   }
 }
 
@@ -47,6 +47,7 @@ interface Props {
 export default function EventFeed({
   events, state, emphasisTeamId, emptyText = t('common.noMatchReport'),
 }: Props) {
+  useLang()
   const name = (id: number) => state.teams.find(t => t.id === id)!.name
 
   if (events.length === 0) {
