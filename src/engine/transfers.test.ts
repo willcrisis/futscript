@@ -139,9 +139,12 @@ describe('runTransfers', () => {
     const s0 = newGame(1)
     const playerId = s0.teams[2].lineup[0]
     let s = listPlayer(s0, playerId, 100_000)
+    // Bid planted beyond any AI club's bidding cap (requiredBid 11M > 0.7 × 1M cash)
+    // so no rival can outbid before resolution; team 4's cash going negative is fine
+    // (overdraft pressure is by design).
     s = {
       ...s,
-      transferList: s.transferList.map(l => ({ ...l, roundsLeft: 1, currentBid: 150_000, currentBidderId: 4 })),
+      transferList: s.transferList.map(l => ({ ...l, roundsLeft: 1, currentBid: 10_000_000, currentBidderId: 4 })),
     }
     const s1 = runTransfers(s, mulberry32(9))
     expect(s1.transferList.find(l => l.playerId === playerId)).toBeUndefined()
