@@ -5,7 +5,7 @@ import { autoPick, patchLineup } from './lineup'
 import { simulateMatch } from './match'
 import { mulberry32, randInt } from './rng'
 import { applyPromotionRelegation, ensureThreeDivisions, retirePlayers, rolloverMood, seasonRecord, youthIntake } from './rollover'
-import { clampMood } from './stadium'
+import { clampMood, tickConstruction } from './stadium'
 import { standings } from './standings'
 import { ageSquads, applyWeeklyUpdates } from './training'
 import { MIN_SQUAD, renewalSalary, runTransfers } from './transfers'
@@ -144,6 +144,7 @@ export function advanceRound(state: GameState): GameState {
   }
   s = runTransfers(s, rand)
   s = runWeeklyFinances(s, rand)
+  s = tickConstruction(s)
 
   // once a cup week fully resolves, the next round is drawn
   if (cupToday.length > 0) {
