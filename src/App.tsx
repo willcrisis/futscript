@@ -95,7 +95,7 @@ export default function App() {
       {/* key: remount on rollover so the division select re-seeds after promotion/relegation */}
       {screen === 'table' && <TableScreen key={state.season} state={state} />}
       {screen === 'fixtures' && <FixturesScreen key={state.season} state={state} />}
-      {screen === 'cup' && <CupScreen state={state} />}
+      {screen === 'cup' && <CupScreen key={state.season} state={state} />}
       {screen === 'transfers' && <TransfersScreen state={state} setState={setState} />}
       {screen === 'finance' && <FinanceScreen state={state} setState={setState} />}
       {screen === 'history' && <HistoryScreen state={state} />}

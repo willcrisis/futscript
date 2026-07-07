@@ -25,7 +25,7 @@ export default function CupScreen({ state }: { state: GameState }) {
                 <tr
                   key={i}
                   className={[f.homeId, f.awayId].includes(state.userTeamId) ? 'user' : ''}
-                  onClick={() => setSelected(f.homeGoals !== null && f !== selected ? f : null)}
+                  onClick={() => { if (f.homeGoals === null) return; setSelected(f !== selected ? f : null) }}
                   style={{ cursor: f.homeGoals !== null ? 'pointer' : 'default' }}
                 >
                   <td className="home">{name(f.homeId)}</td>
