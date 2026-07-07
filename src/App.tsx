@@ -13,6 +13,7 @@ import type { MatchLike } from './screens/MatchScreen'
 import TransfersScreen from './screens/TransfersScreen'
 import FinanceScreen from './screens/FinanceScreen'
 import CupScreen from './screens/CupScreen'
+import HistoryScreen from './screens/HistoryScreen'
 
 type Screen = 'squad' | 'table' | 'fixtures' | 'cup' | 'transfers' | 'finance' | 'history'
 
@@ -97,7 +98,7 @@ export default function App() {
       {screen === 'cup' && <CupScreen state={state} />}
       {screen === 'transfers' && <TransfersScreen state={state} setState={setState} />}
       {screen === 'finance' && <FinanceScreen state={state} setState={setState} />}
-      {screen === 'history' && <p>History screen coming next.</p>}
+      {screen === 'history' && <HistoryScreen state={state} />}
     </div>
   )
 }

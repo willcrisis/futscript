@@ -91,7 +91,18 @@ export default function SquadScreen({ state, setState }: Props) {
         </label>{' '}
         <button onClick={() => withUserTeam((s, t) => updateTeam(s, t.id, { lineup: autoPick(t, s.players) }))}>
           Auto-pick
-        </button>
+        </button>{' '}
+        <label>
+          <input
+            type="checkbox"
+            checked={state.playFriendlies}
+            onChange={e => {
+              const playFriendlies = e.target.checked
+              setState(s => ({ ...s, playFriendlies }))
+            }}
+          />{' '}
+          Friendlies on free weeks
+        </label>
       </div>
       <table>
         <thead>
