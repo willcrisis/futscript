@@ -164,7 +164,7 @@ describe('save/load', () => {
     const v3ish = {
       ...v3state,
       version: 3,
-      // newGame always seats the user at teams[0], which is Division 3 (excluded below) —
+      // newGame seats the user at a random Division 3 club (excluded below) —
       // re-point userTeamId at a retained Division 1 club so the world stays internally consistent
       userTeamId: div1[0].id,
       fixtures: [],
@@ -233,7 +233,7 @@ describe('save slots', () => {
     const slots = listSlots(storage)
     expect(slots[0]).toBeNull()
     expect(slots[1]).toMatchObject({ slot: 2, season: 1, division: 3 })
-    expect(slots[1]!.teamName).toBe(s.teams[0].name)
+    expect(slots[1]!.teamName).toBe(s.teams.find(t => t.id === s.userTeamId)!.name)
     deleteSlot(2, storage)
     expect(listSlots(storage)[1]).toBeNull()
   })

@@ -199,6 +199,8 @@ export const en = {
   'saves.language': 'Language',
   'saves.languageEnglish': 'English',
   'saves.languagePortuguese': 'Português',
+  'saves.newCareer': 'New career',
+  'saves.newCareerConfirm': 'Confirm — replaces the active slot',
 
   // Match screen
   'speed.slow': 'Slow',

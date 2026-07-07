@@ -142,9 +142,11 @@ describe('advanceRound', () => {
 
   it('never fields injured or suspended players', () => {
     let s = newGame(7)
+    const user = s.teams.find(t => t.id === s.userTeamId)!
+    const ai = s.teams.find(t => t.id !== s.userTeamId)!
     // pre-suspend a user starter and an AI starter
-    const userStarter = s.teams[0].lineup[3]
-    const aiStarter = s.teams[5].lineup[3]
+    const userStarter = user.lineup[3]
+    const aiStarter = ai.lineup[3]
     s = {
       ...s,
       players: {
@@ -154,8 +156,8 @@ describe('advanceRound', () => {
       },
     }
     const s1 = advanceRound(s)
-    expect(s1.teams[0].lineup).not.toContain(userStarter)
-    expect(s1.teams[5].lineup).not.toContain(aiStarter)
+    expect(s1.teams.find(t => t.id === user.id)!.lineup).not.toContain(userStarter)
+    expect(s1.teams.find(t => t.id === ai.id)!.lineup).not.toContain(aiStarter)
     // counters ticked down
     expect(s1.players[userStarter].suspendedForRounds).toBe(1)
     expect(s1.players[aiStarter].injuredForRounds).toBe(1)
@@ -163,9 +165,10 @@ describe('advanceRound', () => {
 
   it('keeps the user lineup otherwise intact but re-picks AI teams', () => {
     const s0 = newGame(9)
-    const userLineup = [...s0.teams[0].lineup]
+    const user = s0.teams.find(t => t.id === s0.userTeamId)!
+    const userLineup = [...user.lineup]
     const s1 = advanceRound(s0)
-    expect(s1.teams[0].lineup).toEqual(userLineup) // nobody unavailable yet
+    expect(s1.teams.find(t => t.id === user.id)!.lineup).toEqual(userLineup) // nobody unavailable yet
   })
 
   it('no-ops once the season is over', () => {
@@ -382,7 +385,7 @@ describe('newSeason — the long game', () => {
 
   it('force-renews the cheapest expiring contracts so the user squad never drops below MIN_SQUAD', () => {
     const s0 = newGame(1)
-    const user = s0.teams[0]
+    const user = s0.teams.find(t => t.id === s0.userTeamId)!
     const kept = user.playerIds.slice(0, 15)
     const expiring = kept.slice(0, 3)
     const players = { ...s0.players }

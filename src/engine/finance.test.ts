@@ -126,7 +126,7 @@ describe('loans', () => {
 
 describe('division-aware gates', () => {
   it('pays a gate for a home cup tie', () => {
-    let s = newGame(9)
+    let s = newGame(10)
     for (let week = 1; week < CUP_WEEKS[0]; week++) s = advanceRound(s)
     // week 4: only cup ties are scheduled
     const cupHomes = new Set(s.cupFixtures.filter(f => f.week === CUP_WEEKS[0]).map(f => f.homeId))

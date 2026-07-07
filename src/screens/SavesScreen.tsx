@@ -1,5 +1,6 @@
 import { useRef, useState } from 'react'
 import type { Dispatch, SetStateAction } from 'react'
+import { newGame } from '../engine/newGame'
 import {
   activeSlot, deleteSlot, exportSave, importSave, listSlots, loadSlot,
   saveToSlot, setActiveSlot, SLOTS,
@@ -138,6 +139,14 @@ export default function SavesScreen({ state, setState }: Props) {
             <option value="en">{t('saves.languageEnglish')}</option>
             <option value="pt">{t('saves.languagePortuguese')}</option>
           </select>
+        </div>
+        <div className="mt-3 flex items-center justify-between gap-3 text-sm">
+          <span className="text-ink-muted">{t('saves.newCareer')}</span>
+          <ConfirmButton
+            label={t('saves.newCareer')}
+            confirmLabel={t('saves.newCareerConfirm')}
+            onConfirm={() => setState(newGame(Date.now() % 2147483647))}
+          />
         </div>
       </Panel>
     </div>

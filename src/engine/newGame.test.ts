@@ -9,7 +9,7 @@ describe('newGame', () => {
     expect(Object.keys(state.players)).toHaveLength(48 * 18)
     expect(state.season).toBe(1)
     expect(state.round).toBe(1)
-    expect(state.userTeamId).toBe(state.teams[0].id)
+    expect(state.teams.some(t => t.id === state.userTeamId)).toBe(true)
     expect(state.fixtures).toHaveLength(720)
 
     const teamNames = new Set(state.teams.map(t => t.name))
@@ -60,7 +60,8 @@ describe('newGame', () => {
       expect(state.teams.filter(t => t.division === division)).toHaveLength(16)
     }
     expect(state.teams[0].division).toBe(3)
-    expect(state.userTeamId).toBe(state.teams[0].id)
+    const userTeam = state.teams.find(t => t.id === state.userTeamId)!
+    expect(userTeam.division).toBe(3)
     expect(state.fixtures).toHaveLength(720) // 240 per division
     expect(state.cupFixtures).toHaveLength(16)
     // level bands per division
@@ -74,5 +75,14 @@ describe('newGame', () => {
     }
     const names = new Set(state.teams.map(t => t.name))
     expect(names.size).toBe(48)
+  })
+
+  it('assigns different starting clubs across seeds (random Division 3 draw)', () => {
+    const clubs = new Set([1, 2, 3, 4, 5, 6, 7, 8].map(seed => newGame(seed).userTeamId))
+    expect(clubs.size).toBeGreaterThan(1) // 8 seeds landing on one club: (1/16)^7 — a broken draw, not luck
+    for (const seed of [1, 2]) {
+      const s = newGame(seed)
+      expect(s.teams.find(t => t.id === s.userTeamId)!.division).toBe(3)
+    }
   })
 })

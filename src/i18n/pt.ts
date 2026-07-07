@@ -201,6 +201,8 @@ export const pt: Record<TranslationKey, string> = {
   'saves.language': 'Idioma',
   'saves.languageEnglish': 'English',
   'saves.languagePortuguese': 'Português',
+  'saves.newCareer': 'Nova carreira',
+  'saves.newCareerConfirm': 'Confirmar — substitui o jogo salvo ativo',
 
   // Match screen
   'speed.slow': 'Lento',
