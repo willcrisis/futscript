@@ -15,7 +15,10 @@ export function detectToasts(prev: GameState, next: GameState): ToastInput[] {
     }
   }
 
-  const fresh = next.finances.slice(prev.finances.length)
+  // identity diff: ledger entries are stable object references through every engine spread,
+  // so this survives the 300-entry cap (a length-based slice would go permanently blind once capped)
+  const prevEntries = new Set(prev.finances)
+  const fresh = next.finances.filter(e => !prevEntries.has(e))
   for (const e of fresh) {
     if (e.label.startsWith('Sold ') || e.label.startsWith('Signed ') || e.label.startsWith('Stadium expansion complete')) {
       out.push({
