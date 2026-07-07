@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { marketValue, salaryFor, severanceFor } from './finance'
+import { marketValue, severanceFor } from './finance'
 import { mulberry32 } from './rng'
 import { newGame } from './newGame'
 import {
