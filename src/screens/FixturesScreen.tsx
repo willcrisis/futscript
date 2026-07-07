@@ -18,7 +18,7 @@ export default function FixturesScreen({ state }: { state: GameState }) {
     <div>
       <div className="round-nav">
         <button disabled={round <= 1} onClick={() => { setRound(round - 1); setSelected(null) }}>‹</button>
-        <span>Round {round}</span>
+        <span>Week {round}</span>
         <button disabled={round >= total} onClick={() => { setRound(round + 1); setSelected(null) }}>›</button>
       </div>
       {divisions.length > 1 && (

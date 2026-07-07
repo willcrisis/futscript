@@ -1,5 +1,6 @@
 import type { Dispatch, SetStateAction } from 'react'
 import { borrow, formatMoney, LOAN_CAP, repayLoan, wageBill } from '../engine/finance'
+import { EXPANSION, expandStadium, setTicketPrice } from '../engine/stadium'
 import type { GameState } from '../engine/types'
 
 const STEP = 100_000
@@ -30,6 +31,41 @@ export default function FinanceScreen({ state, setState }: Props) {
         <button disabled={state.loanBalance === 0} onClick={() => setState(s => repayLoan(s, STEP))}>
           Repay {formatMoney(STEP)}
         </button>
+      </div>
+      <h3>Stadium</h3>
+      <p>
+        Capacity: <strong>{user.capacity.toLocaleString('en-US')}</strong> seats ·
+        Fan mood: {user.fanMood}/100 ·
+        Maintenance: {formatMoney(Math.round(user.capacity * 1.5))}/wk
+      </p>
+      <div className="controls">
+        <label>
+          Ticket price:{' '}
+          <input
+            type="number"
+            min={5}
+            max={60}
+            value={user.ticketPrice}
+            style={{ width: '4rem' }}
+            onChange={e => {
+              const price = Number(e.target.value)
+              setState(s => setTicketPrice(s, price))
+            }}
+          />
+        </label>{' '}
+        {state.construction ? (
+          <span>
+            🏗 +{state.construction.addedCapacity.toLocaleString('en-US')} seats ready in{' '}
+            {state.construction.weeksLeft} week{state.construction.weeksLeft > 1 ? 's' : ''}
+          </span>
+        ) : (
+          <button
+            disabled={user.cash < EXPANSION.cost}
+            onClick={() => setState(s => expandStadium(s))}
+          >
+            Expand +{EXPANSION.seats.toLocaleString('en-US')} seats ({formatMoney(EXPANSION.cost)}, {EXPANSION.weeks} wks)
+          </button>
+        )}
       </div>
       <table>
         <thead>
