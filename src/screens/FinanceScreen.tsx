@@ -84,6 +84,11 @@ export default function FinanceScreen({ state, setState }: Props) {
   const expenses = weekEntries.filter(e => e.amount < 0).reduce((s, e) => s + e.amount, 0)
   const net = income + expenses
   const categoryTotals = summarizeByCategory(weekEntries)
+  const hasGate = categoryTotals.some(c => c.category === 'gate')
+  // gate receipts only come from home matches (league or cup) — read the user's fixtures for the week
+  const hadHomeMatch =
+    state.fixtures.some(f => f.round === lastWeekPlayed && f.homeId === user.id && f.homeGoals !== null) ||
+    state.cupFixtures.some(f => f.week === lastWeekPlayed && f.homeId === user.id && f.homeGoals !== null)
 
   return (
     <div>
@@ -102,10 +107,19 @@ export default function FinanceScreen({ state, setState }: Props) {
             <div className="mt-4 flex flex-col gap-1.5 border-t border-rule pt-3 text-sm">
               {categoryTotals.map(c => (
                 <div key={c.category} className="flex items-center justify-between">
-                  <span className="text-ink-muted">{t(CATEGORY_KEYS[c.category])}</span>
+                  <span className="text-ink-muted">
+                    {t(CATEGORY_KEYS[c.category])}
+                    {c.category === 'gate' && <span className="ml-1.5 text-ink-faint">· {t('finance.gateHint')}</span>}
+                  </span>
                   <MoneyText amount={c.total} signed />
                 </div>
               ))}
+              {!hasGate && !hadHomeMatch && (
+                <div className="flex items-center justify-between">
+                  <span className="text-ink-muted">{t('category.gate')}</span>
+                  <span className="text-xs text-ink-faint">{t('finance.awayWeek')}</span>
+                </div>
+              )}
             </div>
           </>
         )}

@@ -73,6 +73,9 @@ export const pt: Record<TranslationKey, string> = {
   'table.lost': 'D',
   'table.goalsFor': 'GP',
   'table.goalsAgainst': 'GC',
+  'table.searchLabel': 'Buscar clubes',
+  'table.searchPlaceholder': 'Buscar clubes…',
+  'table.searchNoMatch': 'Nenhum clube corresponde a “{query}”.',
 
   // Stats screen
   'stats.header': 'ARTILHEIROS',
@@ -91,6 +94,8 @@ export const pt: Record<TranslationKey, string> = {
   'fixtures.nextWeek': 'Próxima semana',
   'fixtures.weekLabel': 'Semana {n}',
   'fixtures.cupWeekEmpty': 'Semana de copa — veja a aba Copa.',
+  'fixtures.homeMatch': 'Jogo em casa',
+  'fixtures.awayMatch': 'Jogo fora',
 
   // Cup screen
   'cup.round1': '1ª rodada',
@@ -121,9 +126,9 @@ export const pt: Record<TranslationKey, string> = {
   'squad.valueColumn': 'Valor',
   'squad.perWeekSuffix': '/sem',
   'squad.xiBadge': 'XI',
-  'squad.formationLabel': 'Formação',
-  'squad.tacticLabel': 'Tática',
-  'squad.trainingLabel': 'Treino',
+  'squad.formation': 'Formação',
+  'squad.tactic': 'Tática',
+  'squad.training': 'Treino',
   'squad.tacticDefensive': 'defensiva',
   'squad.tacticNormal': 'normal',
   'squad.tacticAttacking': 'ofensiva',
@@ -142,7 +147,8 @@ export const pt: Record<TranslationKey, string> = {
   'squad.renew': 'Renovar',
   'squad.renewFor': 'Renovar · {salary}/sem',
   'squad.autoPick': 'Escalação automática',
-  'squad.friendlies': 'Amistosos',
+  'squad.friendlies': 'Amistosos nas semanas livres',
+  'squad.friendliesHint': 'Renda extra de bilheteria em semanas de copa em que você não joga; risco normal de lesão.',
 
   // Transfers screen
   'transfers.header': 'MERCADO',
@@ -160,6 +166,7 @@ export const pt: Record<TranslationKey, string> = {
   'transfers.counterButton': 'Contraproposta (listar por {amount})',
   'transfers.rejectButton': 'Recusar',
   'transfers.bidButton': 'Dar lance',
+  'transfers.outbid': 'Superado — seu lance foi {amount}',
   'transfers.transferListPanel': 'Lista de transferências',
   'transfers.noListings': 'Ninguém está à venda esta semana.',
   'transfers.posColumn': 'Pos',
@@ -252,6 +259,8 @@ export const pt: Record<TranslationKey, string> = {
   'finance.ledger': 'Extrato',
   'finance.showDetails': 'Mostrar detalhes',
   'finance.hideDetails': 'Ocultar detalhes',
+  'finance.gateHint': 'arrecadado em jogos em casa',
+  'finance.awayWeek': 'semana fora — sem bilheteria',
 
   // Ledger categories (finance summary breakdown)
   'category.gate': 'Bilheteria',
@@ -276,4 +285,15 @@ export const pt: Record<TranslationKey, string> = {
   // Toasts
   'toast.offer': '{bidder} oferece {amount} por {player}',
   'toast.boardPatience': 'Paciência da diretoria acabando: {n}/8 semanas no vermelho',
+  'toast.outbid': 'Você foi superado no lance por {player}',
+
+  // Welcome screen
+  'welcome.title': 'Bem-vindo ao banco de reservas',
+  'welcome.yourClub': 'Você assume o comando do {club}, recém-nomeado na Divisão {division}.',
+  'welcome.start': 'Começar a temporada',
+  'welcome.featureSquad': 'Escale seu time, defina as táticas e gerencie o elenco semana a semana.',
+  'welcome.featureMarket': 'Compre e venda no mercado de transferências para reforçar seu time.',
+  'welcome.featureFinance': 'Equilibre as contas — bilheteria, salários e o banco.',
+  'welcome.featureClimb': 'Suba da Divisão 3 até o topo, um acesso de cada vez.',
+  'welcome.featureCup': 'Busque a glória na Copa Nacional.',
 }

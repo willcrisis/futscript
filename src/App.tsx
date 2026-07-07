@@ -14,6 +14,7 @@ import type { ScreenId } from './ui/Shell'
 import { ToastProvider, useToasts } from './ui/Toast'
 import { detectToasts } from './ui/toastEvents'
 import CupScreen from './screens/CupScreen'
+import WelcomeScreen from './screens/WelcomeScreen'
 import FinanceScreen from './screens/FinanceScreen'
 import FixturesScreen from './screens/FixturesScreen'
 import HistoryScreen from './screens/HistoryScreen'
@@ -38,11 +39,21 @@ function Game() {
   // Subscribing here re-renders the whole tree on language change — acceptable at this app's size.
   useLang()
   const { push } = useToasts()
-  const [state, setState] = useState<GameState>(() => load() ?? newGame(Date.now() % 2147483647))
+  // Load once; a missing save means this session begins a brand-new career (show the welcome takeover).
+  const [boot] = useState(() => {
+    const loaded = load()
+    return { state: loaded ?? newGame(Date.now() % 2147483647), fresh: loaded === null }
+  })
+  const [state, setState] = useState<GameState>(boot.state)
   const [screen, setScreen] = useState<ScreenId>('home')
   const [replay, setReplay] = useState<MatchLike | null>(null)
+  const [tableFocus, setTableFocus] = useState<number | null>(null)
+  const [showWelcome, setShowWelcome] = useState(boot.fresh)
   const advancingRef = useRef(false)
   useEffect(() => { save(state) }, [state])
+
+  const goToTeam = (teamId: number) => { setTableFocus(teamId); setScreen('table') }
+  const startNewCareer = () => { setState(newGame(Date.now() % 2147483647)); setShowWelcome(true) }
 
   const userTeam = state.teams.find(t => t.id === state.userTeamId)!
   const total = totalRounds(state)
@@ -71,6 +82,10 @@ function Game() {
     }
   }
 
+  if (showWelcome) {
+    return <WelcomeScreen state={state} onDismiss={() => setShowWelcome(false)} />
+  }
+
   if (replay) {
     return <MatchScreen fixture={replay} state={state} onClose={() => setReplay(null)} />
   }
@@ -83,7 +98,7 @@ function Game() {
         <p className="max-w-md text-ink-muted">
           {t('app.sackedMessage', { team: userTeam.name, n: state.season })}
         </p>
-        <Button variant="primary" onClick={() => setState(newGame(Date.now() % 2147483647))}>
+        <Button variant="primary" onClick={startNewCareer}>
           {t('app.newCareerButton')}
         </Button>
       </div>
@@ -120,16 +135,23 @@ function Game() {
           )}
         </Panel>
       )}
-      {screen === 'home' && <HomeScreen state={state} onAdvance={advance} onNavigate={setScreen} />}
+      {screen === 'home' && <HomeScreen state={state} onAdvance={advance} onNavigate={setScreen} onShowTeam={goToTeam} />}
       {screen === 'squad' && <SquadScreen state={state} setState={setState} />}
-      {screen === 'table' && <TableScreen key={state.season} state={state} />}
+      {screen === 'table' && (
+        <TableScreen
+          key={state.season}
+          state={state}
+          focusTeamId={tableFocus ?? undefined}
+          onFocusConsumed={() => setTableFocus(null)}
+        />
+      )}
       {screen === 'fixtures' && <FixturesScreen key={state.season} state={state} />}
       {screen === 'cup' && <CupScreen key={state.season} state={state} />}
       {screen === 'stats' && <StatsScreen state={state} />}
       {screen === 'transfers' && <TransfersScreen state={state} setState={setState} />}
       {screen === 'finance' && <FinanceScreen state={state} setState={setState} />}
       {screen === 'history' && <HistoryScreen state={state} />}
-      {screen === 'saves' && <SavesScreen state={state} setState={setState} />}
+      {screen === 'saves' && <SavesScreen state={state} setState={setState} onNewCareer={startNewCareer} />}
     </Shell>
   )
 }

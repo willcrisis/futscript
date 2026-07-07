@@ -16,6 +16,8 @@ interface Props<T> {
   rows: T[]
   rowKey: (row: T) => string | number
   rowAccent?: (row: T) => 'user' | 'up' | 'down' | null
+  /** Extra classes for a specific row (e.g. a highlight ring), layered on top of any spine. */
+  rowClass?: (row: T) => string | undefined
   onRowClick?: (row: T) => void
   groupLabel?: (row: T) => string
   empty?: ReactNode
@@ -31,7 +33,7 @@ function cellClass<T>(c: Column<T>): string {
   return `${c.align === 'right' ? 'text-right' : 'text-left'} ${c.mono ? 'font-mono tabular-nums' : ''}`
 }
 
-export default function DataTable<T>({ columns, rows, rowKey, rowAccent, onRowClick, groupLabel, empty }: Props<T>) {
+export default function DataTable<T>({ columns, rows, rowKey, rowAccent, rowClass, onRowClick, groupLabel, empty }: Props<T>) {
   if (rows.length === 0 && empty) return <>{empty}</>
   const clickable = onRowClick !== undefined
 
@@ -64,7 +66,7 @@ export default function DataTable<T>({ columns, rows, rowKey, rowAccent, onRowCl
               <tr
                 key={rowKey(row)}
                 onClick={clickable ? () => onRowClick(row) : undefined}
-                className={`border-b border-rule/60 ${accent ? SPINE[accent] : ''} ${clickable ? 'cursor-pointer hover:bg-surface-raised' : ''}`}
+                className={`border-b border-rule/60 ${accent ? SPINE[accent] : ''} ${rowClass?.(row) ?? ''} ${clickable ? 'cursor-pointer hover:bg-surface-raised' : ''}`}
               >
                 {columns.map(c => (
                   <td key={c.key} className={`px-2 py-2 ${cellClass(c)}`}>{c.render(row)}</td>
@@ -94,7 +96,7 @@ export default function DataTable<T>({ columns, rows, rowKey, rowAccent, onRowCl
             <div
               key={rowKey(row)}
               onClick={clickable ? () => onRowClick(row) : undefined}
-              className={`rounded-lg border border-rule bg-surface-raised p-3 ${accent ? SPINE[accent] : ''} ${clickable ? 'cursor-pointer' : ''}`}
+              className={`rounded-lg border border-rule bg-surface-raised p-3 ${accent ? SPINE[accent] : ''} ${rowClass?.(row) ?? ''} ${clickable ? 'cursor-pointer' : ''}`}
             >
               <div className={`text-sm font-medium ${first.mono ? 'font-mono tabular-nums' : ''}`}>{first.render(row)}</div>
               {rest.length > 0 && (

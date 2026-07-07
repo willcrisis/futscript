@@ -58,6 +58,7 @@ export interface TransferListing {
   minPrice: number
   currentBid: number | null
   currentBidderId: number | null
+  userBid?: number // the user's last bid on this listing; persists after a rival covers it (optional — old saves omit it)
   roundsLeft: number // sells to the highest bidder when this hits 0
 }
 

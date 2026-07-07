@@ -17,11 +17,20 @@ const ROUND_NAME_KEYS: TranslationKey[] = [
 const ROW = 'grid w-full grid-cols-[1fr_auto_1fr] items-center gap-3 rounded-lg border border-rule bg-surface-raised px-3 py-2'
 const SPINE = 'shadow-[inset_3px_0_0_0_var(--accent)]'
 
+function ClubName({ name, division }: { name: string; division: number }) {
+  return (
+    <span>
+      {name} <span className="text-ink-faint">· D{division}</span>
+    </span>
+  )
+}
+
 function TieRow({
-  f, name, isUser, onToggle,
+  f, name, divisionOf, isUser, onToggle,
 }: {
   f: CupFixture
   name: (id: number) => string
+  divisionOf: (id: number) => number
   isUser: boolean
   onToggle: () => void
 }) {
@@ -33,14 +42,14 @@ function TieRow({
     <>
       <div className={`flex items-center justify-end gap-2 text-right ${loser(f.homeId) ? 'text-ink-faint' : ''}`}>
         {f.winnerId === f.homeId && <Badge tone="accent">{t('cup.through')}</Badge>}
-        {name(f.homeId)}
+        <ClubName name={name(f.homeId)} division={divisionOf(f.homeId)} />
       </div>
       <div className="text-center font-mono text-sm tabular-nums">
         {played ? `${f.homeGoals} – ${f.awayGoals}` : <span className="text-ink-muted">{t('common.vs')}</span>}
         {penalties && <span className="text-ink-faint"> {t('cup.penalties')}</span>}
       </div>
       <div className={`flex items-center gap-2 text-left ${loser(f.awayId) ? 'text-ink-faint' : ''}`}>
-        {name(f.awayId)}
+        <ClubName name={name(f.awayId)} division={divisionOf(f.awayId)} />
         {f.winnerId === f.awayId && <Badge tone="accent">{t('cup.through')}</Badge>}
       </div>
     </>
@@ -62,6 +71,7 @@ export default function CupScreen({ state }: { state: GameState }) {
   useLang()
   const [selected, setSelected] = useState<CupFixture | null>(null)
   const name = (id: number) => state.teams.find(t => t.id === id)!.name
+  const divisionOf = (id: number) => state.teams.find(t => t.id === id)!.division
   if (state.cupFixtures.length === 0) {
     return (
       <div>
@@ -94,6 +104,7 @@ export default function CupScreen({ state }: { state: GameState }) {
                   key={i}
                   f={f}
                   name={name}
+                  divisionOf={divisionOf}
                   isUser={[f.homeId, f.awayId].includes(state.userTeamId)}
                   onToggle={() => { if (f.homeGoals === null) return; setSelected(f !== selected ? f : null) }}
                 />
@@ -104,8 +115,10 @@ export default function CupScreen({ state }: { state: GameState }) {
       </div>
       {selected && (
         <Panel className="mt-4">
-          <h3 className="mb-2 font-semibold">
-            {name(selected.homeId)} {selected.homeGoals} – {selected.awayGoals} {name(selected.awayId)}
+          <h3 className="mb-2 flex flex-wrap items-baseline gap-1.5 font-semibold">
+            <ClubName name={name(selected.homeId)} division={divisionOf(selected.homeId)} />
+            <span>{selected.homeGoals} – {selected.awayGoals}</span>
+            <ClubName name={name(selected.awayId)} division={divisionOf(selected.awayId)} />
           </h3>
           <EventFeed events={selected.events ?? []} state={state} />
         </Panel>

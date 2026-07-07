@@ -208,42 +208,48 @@ export default function SquadScreen({ state, setState }: Props) {
         title={team.name}
         actions={
           <>
-            <select
-              aria-label={t('squad.formationLabel')}
-              value={team.formation}
-              onChange={e => {
-                const formation = e.target.value as FormationName
-                withUserTeam((s, t) => {
-                  const next = { ...t, formation }
-                  return updateTeam(s, t.id, { formation, lineup: autoPick(next, s.players) })
-                })
-              }}
-              className={SELECT_CLASS}
-            >
-              {Object.keys(FORMATIONS).map(f => <option key={f}>{f}</option>)}
-            </select>
-            <select
-              aria-label={t('squad.tacticLabel')}
-              value={team.tactic}
-              onChange={e => {
-                const tactic = e.target.value as Tactic
-                withUserTeam((s, t) => updateTeam(s, t.id, { tactic }))
-              }}
-              className={SELECT_CLASS}
-            >
-              {TACTICS.map(tactic => <option key={tactic} value={tactic}>{t(TACTIC_LABEL_KEYS[tactic])}</option>)}
-            </select>
-            <select
-              aria-label={t('squad.trainingLabel')}
-              value={team.trainingStyle}
-              onChange={e => {
-                const trainingStyle = e.target.value as TrainingStyle
-                withUserTeam((s, t) => updateTeam(s, t.id, { trainingStyle }))
-              }}
-              className={SELECT_CLASS}
-            >
-              {TRAINING_STYLES.map(style => <option key={style} value={style}>{t(TRAINING_LABEL_KEYS[style])}</option>)}
-            </select>
+            <label className="flex flex-col gap-0.5">
+              <span className="text-[10px] font-semibold uppercase tracking-wider text-ink-faint">{t('squad.formation')}</span>
+              <select
+                value={team.formation}
+                onChange={e => {
+                  const formation = e.target.value as FormationName
+                  withUserTeam((s, t) => {
+                    const next = { ...t, formation }
+                    return updateTeam(s, t.id, { formation, lineup: autoPick(next, s.players) })
+                  })
+                }}
+                className={SELECT_CLASS}
+              >
+                {Object.keys(FORMATIONS).map(f => <option key={f}>{f}</option>)}
+              </select>
+            </label>
+            <label className="flex flex-col gap-0.5">
+              <span className="text-[10px] font-semibold uppercase tracking-wider text-ink-faint">{t('squad.tactic')}</span>
+              <select
+                value={team.tactic}
+                onChange={e => {
+                  const tactic = e.target.value as Tactic
+                  withUserTeam((s, t) => updateTeam(s, t.id, { tactic }))
+                }}
+                className={SELECT_CLASS}
+              >
+                {TACTICS.map(tactic => <option key={tactic} value={tactic}>{t(TACTIC_LABEL_KEYS[tactic])}</option>)}
+              </select>
+            </label>
+            <label className="flex flex-col gap-0.5">
+              <span className="text-[10px] font-semibold uppercase tracking-wider text-ink-faint">{t('squad.training')}</span>
+              <select
+                value={team.trainingStyle}
+                onChange={e => {
+                  const trainingStyle = e.target.value as TrainingStyle
+                  withUserTeam((s, t) => updateTeam(s, t.id, { trainingStyle }))
+                }}
+                className={SELECT_CLASS}
+              >
+                {TRAINING_STYLES.map(style => <option key={style} value={style}>{t(TRAINING_LABEL_KEYS[style])}</option>)}
+              </select>
+            </label>
             <Button
               variant="ghost"
               size="sm"
@@ -251,7 +257,7 @@ export default function SquadScreen({ state, setState }: Props) {
             >
               {t('squad.autoPick')}
             </Button>
-            <label className="flex items-center gap-1.5 text-sm">
+            <label className="flex items-center gap-1.5 text-sm" title={t('squad.friendliesHint')}>
               <input
                 type="checkbox"
                 checked={state.playFriendlies}

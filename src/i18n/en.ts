@@ -71,6 +71,9 @@ export const en = {
   'table.lost': 'L',
   'table.goalsFor': 'GF',
   'table.goalsAgainst': 'GA',
+  'table.searchLabel': 'Search clubs',
+  'table.searchPlaceholder': 'Search clubs…',
+  'table.searchNoMatch': 'No club matches “{query}”.',
 
   // Stats screen
   'stats.header': 'SCORERS',
@@ -89,6 +92,8 @@ export const en = {
   'fixtures.nextWeek': 'Next week',
   'fixtures.weekLabel': 'Week {n}',
   'fixtures.cupWeekEmpty': 'Cup week — see the Cup tab.',
+  'fixtures.homeMatch': 'Home match',
+  'fixtures.awayMatch': 'Away match',
 
   // Cup screen
   'cup.round1': 'Round 1',
@@ -119,9 +124,9 @@ export const en = {
   'squad.valueColumn': 'Value',
   'squad.perWeekSuffix': '/wk',
   'squad.xiBadge': 'XI',
-  'squad.formationLabel': 'Formation',
-  'squad.tacticLabel': 'Tactic',
-  'squad.trainingLabel': 'Training',
+  'squad.formation': 'Formation',
+  'squad.tactic': 'Tactic',
+  'squad.training': 'Training',
   'squad.tacticDefensive': 'defensive',
   'squad.tacticNormal': 'normal',
   'squad.tacticAttacking': 'attacking',
@@ -140,7 +145,8 @@ export const en = {
   'squad.renew': 'Renew',
   'squad.renewFor': 'Renew · {salary}/wk',
   'squad.autoPick': 'Auto-pick',
-  'squad.friendlies': 'Friendlies',
+  'squad.friendlies': 'Friendlies on free weeks',
+  'squad.friendliesHint': "Extra gate income on cup weeks you're not playing; normal injury risk.",
 
   // Transfers screen
   'transfers.header': 'MARKET',
@@ -158,6 +164,7 @@ export const en = {
   'transfers.counterButton': 'Counter (list at {amount})',
   'transfers.rejectButton': 'Reject',
   'transfers.bidButton': 'Bid',
+  'transfers.outbid': 'Outbid — you bid {amount}',
   'transfers.transferListPanel': 'Transfer list',
   'transfers.noListings': 'Nobody is for sale this week.',
   'transfers.posColumn': 'Pos',
@@ -250,6 +257,8 @@ export const en = {
   'finance.ledger': 'Ledger',
   'finance.showDetails': 'Show details',
   'finance.hideDetails': 'Hide details',
+  'finance.gateHint': 'earned at home matches',
+  'finance.awayWeek': 'away week — no gate receipts',
 
   // Ledger categories (finance summary breakdown)
   'category.gate': 'Gate receipts',
@@ -274,6 +283,17 @@ export const en = {
   // Toasts
   'toast.offer': '{bidder} offer {amount} for {player}',
   'toast.boardPatience': 'Board patience running out: {n}/8 weeks in the red',
+  'toast.outbid': 'You have been outbid on {player}',
+
+  // Welcome screen
+  'welcome.title': 'Welcome to the dugout',
+  'welcome.yourClub': 'You take charge of {club}, newly appointed in Division {division}.',
+  'welcome.start': 'Start the season',
+  'welcome.featureSquad': 'Pick your XI, set the tactics, and manage the squad week to week.',
+  'welcome.featureMarket': 'Buy and sell in the transfer market to strengthen your side.',
+  'welcome.featureFinance': 'Balance the books — gate receipts, wages, and the bank.',
+  'welcome.featureClimb': 'Climb from Division 3 to the summit, one promotion at a time.',
+  'welcome.featureCup': 'Chase glory in the National Cup.',
 } as const
 
 export type TranslationKey = keyof typeof en

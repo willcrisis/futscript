@@ -34,6 +34,16 @@ export function detectToasts(prev: GameState, next: GameState): ToastInput[] {
     }
   }
 
+  // outbid: a listing still exists, the user led it last state, and a rival leads it now
+  const prevListings = new Map(prev.transferList.map(l => [l.playerId, l]))
+  for (const l of next.transferList) {
+    const before = prevListings.get(l.playerId)
+    if (before && before.currentBidderId === prev.userTeamId && l.currentBidderId !== next.userTeamId) {
+      const player = next.players[l.playerId]
+      if (player) out.push({ tone: 'warn', text: t('toast.outbid', { player: player.name }) })
+    }
+  }
+
   if (next.brokeRounds >= 6 && next.brokeRounds > prev.brokeRounds) {
     out.push({ tone: 'danger', text: t('toast.boardPatience', { n: next.brokeRounds }) })
   }

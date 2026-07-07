@@ -1,6 +1,5 @@
 import { useRef, useState } from 'react'
 import type { Dispatch, SetStateAction } from 'react'
-import { newGame } from '../engine/newGame'
 import {
   activeSlot, deleteSlot, exportSave, importSave, listSlots, loadSlot,
   saveToSlot, setActiveSlot, SLOTS,
@@ -20,9 +19,10 @@ import { useToasts } from '../ui/Toast'
 interface Props {
   state: GameState
   setState: Dispatch<SetStateAction<GameState>>
+  onNewCareer: () => void
 }
 
-export default function SavesScreen({ state, setState }: Props) {
+export default function SavesScreen({ state, setState, onNewCareer }: Props) {
   const [, bump] = useState(0) // slots live in localStorage; re-render after writes
   const lang = useLang()
   const fileInput = useRef<HTMLInputElement>(null)
@@ -145,7 +145,7 @@ export default function SavesScreen({ state, setState }: Props) {
           <ConfirmButton
             label={t('saves.newCareer')}
             confirmLabel={t('saves.newCareerConfirm')}
-            onConfirm={() => setState(newGame(Date.now() % 2147483647))}
+            onConfirm={onNewCareer}
           />
         </div>
       </Panel>

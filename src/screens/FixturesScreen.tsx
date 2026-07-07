@@ -31,14 +31,16 @@ export default function FixturesScreen({ state }: { state: GameState }) {
         actions={
           <>
             {divisions.length > 1 && (
-              <select
-                value={division}
-                onChange={e => setDivision(Number(e.target.value))}
-                className="rounded-md border border-rule bg-surface-raised px-2 py-1.5 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 focus-visible:ring-offset-surface"
-                aria-label={t('common.division')}
-              >
-                {divisions.map(d => <option key={d} value={d}>{d}</option>)}
-              </select>
+              <label className="flex flex-col gap-0.5">
+                <span className="text-[10px] font-semibold uppercase tracking-wider text-ink-faint">{t('common.division')}</span>
+                <select
+                  value={division}
+                  onChange={e => setDivision(Number(e.target.value))}
+                  className="rounded-md border border-rule bg-surface-raised px-2 py-1.5 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 focus-visible:ring-offset-surface"
+                >
+                  {divisions.map(d => <option key={d} value={d}>{d}</option>)}
+                </select>
+              </label>
             )}
             <div className="flex items-center gap-1">
               <Button
@@ -71,12 +73,21 @@ export default function FixturesScreen({ state }: { state: GameState }) {
           {fixtures.map((f, i) => {
             const played = f.homeGoals !== null
             const isUser = f.homeId === state.userTeamId || f.awayId === state.userTeamId
+            const userHome = f.homeId === state.userTeamId
             const rowClass = `${ROW} ${isUser ? SPINE : ''}`
             const content = (
               <>
                 <div className="text-right">{name(f.homeId)}</div>
                 <div className="text-center font-mono text-sm tabular-nums">
                   {played ? `${f.homeGoals} – ${f.awayGoals}` : <span className="text-ink-muted">{t('common.vs')}</span>}
+                  {isUser && (
+                    <span
+                      className="ml-1.5 text-ink-faint"
+                      title={userHome ? t('fixtures.homeMatch') : t('fixtures.awayMatch')}
+                    >
+                      {userHome ? 'H' : 'A'}
+                    </span>
+                  )}
                 </div>
                 <div className="text-left">{name(f.awayId)}</div>
               </>

@@ -1,6 +1,6 @@
 import { beforeEach, describe, expect, it } from 'vitest'
 import { newGame } from '../engine/newGame'
-import type { FinanceEntry, GameState, Offer } from '../engine/types'
+import type { FinanceEntry, GameState, Offer, TransferListing } from '../engine/types'
 import { setLang } from '../i18n'
 import { detectToasts } from './toastEvents'
 
@@ -35,6 +35,32 @@ describe('detectToasts', () => {
     const toasts = detectToasts(prev, next)
     expect(toasts).toHaveLength(1)
     expect(toasts[0].tone).toBe('accent')
+  })
+
+  it('warns when a rival covers the user\'s leading bid on a still-listed player', () => {
+    const playerId = base.teams[16].playerIds[0] // a Division 2 club, never the user
+    const listing: TransferListing = {
+      playerId, sellerTeamId: 16, minPrice: 100_000, currentBid: 100_000,
+      currentBidderId: base.userTeamId, userBid: 100_000, roundsLeft: 3,
+    }
+    const prev: GameState = { ...base, transferList: [listing] }
+    const next: GameState = {
+      ...base,
+      transferList: [{ ...listing, currentBid: 120_000, currentBidderId: 17 }],
+    }
+    const toasts = detectToasts(prev, next)
+    expect(toasts.some(t => t.tone === 'warn')).toBe(true)
+  })
+
+  it('does not warn while the user is still leading the listing', () => {
+    const playerId = base.teams[16].playerIds[0]
+    const listing: TransferListing = {
+      playerId, sellerTeamId: 16, minPrice: 100_000, currentBid: 100_000,
+      currentBidderId: base.userTeamId, userBid: 100_000, roundsLeft: 3,
+    }
+    const prev: GameState = { ...base, transferList: [listing] }
+    const next: GameState = { ...base, transferList: [{ ...listing, roundsLeft: 2 }] }
+    expect(detectToasts(prev, next)).toHaveLength(0)
   })
 
   it('caps output at 3 toasts even when more news qualifies', () => {

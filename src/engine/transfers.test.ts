@@ -59,6 +59,26 @@ describe('listPlayer / placeBid', () => {
     expect(placeBid(s, aiPlayer, 5_000_000)).toEqual(s) // more than user cash → unchanged
   })
 
+  it('records the user bid and keeps it after a rival covers the listing', () => {
+    const s0 = newGame(1)
+    const aiPlayer = s0.teams.find(t => t.id !== s0.userTeamId && t.division === 3)!.lineup[0]
+    let s = listPlayer(s0, aiPlayer, 300_000)
+    s = placeBid(s, aiPlayer, 300_000)
+    expect(s.transferList[0].userBid).toBe(300_000)
+    expect(s.transferList[0].currentBidderId).toBe(s.userTeamId)
+
+    // a Division 2 rival (id 20, never the user) covers the bid
+    const RIVAL_ID = 20
+    s = {
+      ...s,
+      transferList: s.transferList.map(l =>
+        l.playerId === aiPlayer ? { ...l, currentBid: 400_000, currentBidderId: RIVAL_ID } : l,
+      ),
+    }
+    expect(s.transferList[0].userBid).toBe(300_000) // user's bid persists
+    expect(s.transferList[0].currentBidderId).not.toBe(s.userTeamId)
+  })
+
   it('will not let the user bid on their own listing', () => {
     const s0 = newGame(1)
     const own = s0.teams.find(t => t.id === s0.userTeamId)!.lineup[0]

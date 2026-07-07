@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { standings } from '../engine/standings'
 import type { GameState } from '../engine/types'
 import { t, useLang } from '../i18n'
@@ -19,13 +19,48 @@ interface Row {
   points: number
 }
 
-export default function TableScreen({ state }: { state: GameState }) {
+const fold = (s: string) => s.normalize('NFD').replace(/\p{Diacritic}/gu, '').toLowerCase()
+
+interface Props {
+  state: GameState
+  focusTeamId?: number
+  onFocusConsumed?: () => void
+}
+
+export default function TableScreen({ state, focusTeamId, onFocusConsumed }: Props) {
   useLang()
   const userDivision = state.teams.find(t => t.id === state.userTeamId)!.division
-  const [division, setDivision] = useState(userDivision)
+  const focusTeam = focusTeamId !== undefined ? state.teams.find(t => t.id === focusTeamId) : undefined
+  const [division, setDivision] = useState(focusTeam?.division ?? userDivision)
+  const [highlightId, setHighlightId] = useState<number | null>(focusTeam?.id ?? null)
+  const [query, setQuery] = useState('')
   const divisions = [...new Set(state.teams.map(t => t.division))].sort()
   const name = (id: number) => state.teams.find(t => t.id === id)!.name
   const rows: Row[] = standings(state, division).map((r, i) => ({ pos: i + 1, ...r, name: name(r.teamId) }))
+
+  // App hands off focus via focusTeamId; consume it once so ordinary nav back to the tab doesn't re-highlight
+  useEffect(() => {
+    if (focusTeamId !== undefined) onFocusConsumed?.()
+  }, [focusTeamId, onFocusConsumed])
+
+  const onSearch = (raw: string) => {
+    setQuery(raw)
+    const q = raw.trim()
+    if (q.length < 2) {
+      setHighlightId(null)
+      return
+    }
+    const needle = fold(q)
+    const match = state.teams.find(t => fold(t.name).includes(needle))
+    if (match) {
+      setDivision(match.division)
+      setHighlightId(match.id)
+    } else {
+      setHighlightId(null)
+    }
+  }
+
+  const noMatch = query.trim().length >= 2 && highlightId === null
 
   const columns: Column<Row>[] = [
     { key: 'pos', label: t('common.pos'), mono: true, render: r => r.pos },
@@ -63,19 +98,40 @@ export default function TableScreen({ state }: { state: GameState }) {
         label={t('table.header', { division })}
         title={t('table.title')}
         actions={
-          divisions.length > 1 && (
-            <select
-              value={division}
-              onChange={e => setDivision(Number(e.target.value))}
-              className="rounded-md border border-rule bg-surface-raised px-2 py-1.5 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 focus-visible:ring-offset-surface"
-              aria-label={t('common.division')}
-            >
-              {divisions.map(d => <option key={d} value={d}>{d}</option>)}
-            </select>
-          )
+          <>
+            <input
+              type="search"
+              value={query}
+              onChange={e => onSearch(e.target.value)}
+              placeholder={t('table.searchPlaceholder')}
+              aria-label={t('table.searchLabel')}
+              className="w-40 rounded-md border border-rule bg-surface-raised px-2 py-1.5 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 focus-visible:ring-offset-surface"
+            />
+            {divisions.length > 1 && (
+              <label className="flex flex-col gap-0.5">
+                <span className="text-[10px] font-semibold uppercase tracking-wider text-ink-faint">{t('common.division')}</span>
+                <select
+                  value={division}
+                  onChange={e => { setDivision(Number(e.target.value)); setHighlightId(null) }}
+                  className="rounded-md border border-rule bg-surface-raised px-2 py-1.5 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 focus-visible:ring-offset-surface"
+                >
+                  {divisions.map(d => <option key={d} value={d}>{d}</option>)}
+                </select>
+              </label>
+            )}
+          </>
         }
       />
-      <DataTable columns={columns} rows={rows} rowKey={r => r.teamId} rowAccent={rowAccent} />
+      {noMatch && (
+        <p className="mb-3 text-sm text-ink-faint">{t('table.searchNoMatch', { query: query.trim() })}</p>
+      )}
+      <DataTable
+        columns={columns}
+        rows={rows}
+        rowKey={r => r.teamId}
+        rowAccent={rowAccent}
+        rowClass={r => (r.teamId === highlightId ? 'ring-1 ring-accent' : undefined)}
+      />
     </div>
   )
 }

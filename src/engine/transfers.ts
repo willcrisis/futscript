@@ -65,7 +65,7 @@ export function placeBid(state: GameState, playerId: number, amount: number): Ga
   return {
     ...state,
     transferList: state.transferList.map(l =>
-      l.playerId === playerId ? { ...l, currentBid: amount, currentBidderId: state.userTeamId } : l,
+      l.playerId === playerId ? { ...l, currentBid: amount, currentBidderId: state.userTeamId, userBid: amount } : l,
     ),
   }
 }

@@ -15,11 +15,12 @@ interface Props {
   state: GameState
   onAdvance: () => void
   onNavigate: (s: ScreenId) => void
+  onShowTeam?: (teamId: number) => void
 }
 
 interface Row { pos: number; teamId: number; name: string; points: number; gd: number }
 
-export default function HomeScreen({ state, onAdvance, onNavigate }: Props) {
+export default function HomeScreen({ state, onAdvance, onNavigate, onShowTeam }: Props) {
   useLang()
   const user = state.teams.find(t => t.id === state.userTeamId)!
   const name = (id: number) => state.teams.find(t => t.id === id)!.name
@@ -94,7 +95,17 @@ export default function HomeScreen({ state, onAdvance, onNavigate }: Props) {
           ) : nextMatch ? (
             <div className="flex items-center justify-between gap-3">
               <div>
-                <div className="text-lg font-medium">{opponentId !== null && name(opponentId)}</div>
+                <div className="text-lg font-medium">
+                  {opponentId !== null && (onShowTeam ? (
+                    <button
+                      type="button"
+                      onClick={() => onShowTeam(opponentId)}
+                      className="rounded-sm underline-offset-2 hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 focus-visible:ring-offset-surface"
+                    >
+                      {name(opponentId)}
+                    </button>
+                  ) : name(opponentId))}
+                </div>
                 <div className="mt-0.5 text-xs text-ink-muted">
                   {isHome ? t('home.venueHome') : t('home.venueAway')} ·{' '}
                   {league ? t('home.leagueWeek', { week }) : t('home.cupRound', { round: cup!.cupRound })}

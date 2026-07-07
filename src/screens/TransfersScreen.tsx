@@ -62,22 +62,26 @@ export default function TransfersScreen({ state, setState }: Props) {
         if (mine) return <Badge tone="muted">{t('transfers.yourListing')}</Badge>
         if (leading) return <Badge tone="accent">{t('transfers.youLead')}</Badge>
         const floor = requiredBid(l)
+        const outbid = l.userBid !== undefined && l.currentBidderId !== state.userTeamId && l.currentBidderId !== null
         return (
-          <div className="flex items-center gap-1.5">
-            <input
-              type="number"
-              value={drafts[l.playerId] ?? floor}
-              onChange={e => setDrafts({ ...drafts, [l.playerId]: e.target.value })}
-              className="w-24 rounded-md border border-rule bg-surface px-2 py-1 text-xs font-mono focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 focus-visible:ring-offset-surface"
-            />
-            <Button
-              variant="primary"
-              size="sm"
-              disabled={floor > user.cash}
-              onClick={() => setState(s => placeBid(s, l.playerId, Number(drafts[l.playerId] ?? floor)))}
-            >
-              {t('transfers.bidButton')}
-            </Button>
+          <div className="flex flex-col gap-1">
+            {outbid && <Badge tone="warn">{t('transfers.outbid', { amount: formatMoney(l.userBid!) })}</Badge>}
+            <div className="flex items-center gap-1.5">
+              <input
+                type="number"
+                value={drafts[l.playerId] ?? floor}
+                onChange={e => setDrafts({ ...drafts, [l.playerId]: e.target.value })}
+                className="w-24 rounded-md border border-rule bg-surface px-2 py-1 text-xs font-mono focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 focus-visible:ring-offset-surface"
+              />
+              <Button
+                variant="primary"
+                size="sm"
+                disabled={floor > user.cash}
+                onClick={() => setState(s => placeBid(s, l.playerId, Number(drafts[l.playerId] ?? floor)))}
+              >
+                {t('transfers.bidButton')}
+              </Button>
+            </div>
           </div>
         )
       },
