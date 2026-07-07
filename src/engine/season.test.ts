@@ -96,6 +96,14 @@ describe('advanceRound', () => {
     expect(s1.teams[0].lineup).toEqual(userLineup) // nobody unavailable yet
   })
 
+  it('no-ops once the season is over', () => {
+    let s = newGame(7)
+    for (let i = 0; i < totalRounds(s); i++) s = advanceRound(s)
+    expect(s.round).toBe(totalRounds(s) + 1)
+    expect(s.fixtures.every(f => f.homeGoals !== null)).toBe(true)
+    expect(advanceRound(s)).toEqual(s)
+  })
+
   it('produces discipline and squad churn over a full season', () => {
     let s = newGame(31)
     for (let i = 0; i < totalRounds(s); i++) s = advanceRound(s)
