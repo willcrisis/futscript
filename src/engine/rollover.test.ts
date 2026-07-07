@@ -80,6 +80,21 @@ describe('youthIntake', () => {
     expect(rookie.contractSeasons).toBe(3)
     expect(rookie.seasonGoals).toBe(0)
   })
+
+  it('tops the user squad back up to MIN_SQUAD after heavy retirement', () => {
+    const s = newGame(3)
+    const trimmed = s.teams.map(t => (t.id === s.userTeamId ? { ...t, playerIds: t.playerIds.slice(0, 11), lineup: [] } : t))
+    const out = youthIntake(s.players, trimmed, mulberry32(4), s.userTeamId)
+    const user = out.teams.find(t => t.id === s.userTeamId)!
+    expect(user.playerIds.length).toBeGreaterThanOrEqual(14) // MIN_SQUAD
+  })
+
+  it('AI clubs keep the normal intake thresholds', () => {
+    const s = newGame(3)
+    const trimmed = s.teams.map(t => (t.id === 5 ? { ...t, playerIds: t.playerIds.slice(0, 11), lineup: [] } : t))
+    const out = youthIntake(s.players, trimmed, mulberry32(4), s.userTeamId)
+    expect(out.teams.find(t => t.id === 5)!.playerIds).toHaveLength(13) // 11 + 2, no user floor
+  })
 })
 
 describe('ensureThreeDivisions', () => {

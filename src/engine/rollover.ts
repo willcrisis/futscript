@@ -6,6 +6,7 @@ import { LEVEL_RANGE, SQUAD_TEMPLATE } from './newGame'
 import { randInt } from './rng'
 import { INITIAL_CAPACITY } from './stadium'
 import { standings } from './standings'
+import { MIN_SQUAD } from './transfers'
 import type { GameState, Player, Position, SeasonRecord, Team } from './types'
 
 // bottom three of each upper division swap with the top three below it
@@ -66,12 +67,15 @@ export function youthIntake(
   players: Record<number, Player>,
   teams: Team[],
   rand: () => number,
+  userTeamId?: number,
   idFloor = 0,
 ): { players: Record<number, Player>; teams: Team[] } {
   const nextPlayers = { ...players }
   let nextId = nextFreeId(players, idFloor)
   const nextTeams = teams.map(team => {
-    const count = team.playerIds.length >= 20 ? 0 : team.playerIds.length < 16 ? 2 : 1
+    let count = team.playerIds.length >= 20 ? 0 : team.playerIds.length < 16 ? 2 : 1
+    // retirement can never leave the user below the floor; AI clubs use the normal thresholds
+    if (team.id === userTeamId) count = Math.max(count, MIN_SQUAD - team.playerIds.length)
     if (count === 0) return team
     const ids: number[] = []
     for (let i = 0; i < count; i++) {

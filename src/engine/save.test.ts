@@ -1,7 +1,10 @@
 import { describe, expect, it } from 'vitest'
 import { salaryFor } from './finance'
+import { generateFixtures } from './fixtures'
 import { newGame } from './newGame'
+import { mulberry32 } from './rng'
 import { load, save } from './save'
+import { newSeason } from './season'
 
 function fakeStorage(): Storage {
   const m = new Map<string, string>()
@@ -144,5 +147,54 @@ describe('save/load', () => {
     expect(state!.teams[1]).toMatchObject({ capacity: 25_000 }) // division 1
     expect(state!.construction).toBeNull()
     expect(state!.allTimeScorers).toEqual([])
+  })
+
+  it('a migrated 16-team world expands to three divisions at its first rollover', () => {
+    const storage = fakeStorage()
+    // minimal-but-valid v3 world: reuse a real 48-team game and keep only division 1,
+    // stripping every v4/v5 field so the payload is version-3-shaped
+    const base = newGame(77)
+    const div1 = base.teams.filter(t => t.division === 1)
+    const keep = new Set(div1.flatMap(t => t.playerIds))
+    const { cupFixtures: _c, history: _h, playFriendlies: _p, construction: _k, allTimeScorers: _a, ...v3state } = base
+    void _c; void _h; void _p; void _k; void _a
+    const v3ish = {
+      ...v3state,
+      version: 3,
+      // newGame always seats the user at teams[0], which is Division 3 (excluded below) —
+      // re-point userTeamId at a retained Division 1 club so the world stays internally consistent
+      userTeamId: div1[0].id,
+      fixtures: [],
+      teams: div1.map(t => {
+        const { division: _d, capacity: _cap, ticketPrice: _t, fanMood: _f, ...v3team } = t
+        void _d; void _cap; void _t; void _f
+        return v3team
+      }),
+      players: Object.fromEntries(
+        Object.entries(base.players)
+          .filter(([id]) => keep.has(Number(id)))
+          .map(([id, p]) => {
+            const { seasonGoals: _g, ...v3player } = p
+            void _g
+            return [id, v3player]
+          }),
+      ),
+    }
+    storage.setItem('futscript-save', JSON.stringify(v3ish))
+    const migrated = load(storage)!
+    expect(migrated.version).toBe(5)
+    expect(migrated.teams).toHaveLength(16)
+    expect(migrated.teams.every(t => t.division === 1)).toBe(true)
+    // give it played fixtures so standings/prizes are meaningful, then roll over
+    const played = { ...migrated, fixtures: generateFixtures(migrated.teams.map(t => t.id), mulberry32(1)).map(f => ({ ...f, homeGoals: 1, awayGoals: 0 })) }
+    const next = newSeason(played)
+    expect(next.teams).toHaveLength(48)
+    for (const d of [1, 2, 3]) expect(next.teams.filter(t => t.division === d)).toHaveLength(16)
+    expect(next.fixtures).toHaveLength(720)
+    expect(next.cupFixtures).toHaveLength(16)
+    expect(next.history).toHaveLength(1)
+    expect(next.history[0].cupWinner).toBe('—')
+    expect(next.history[0].champions).toHaveLength(1)
+    expect(next.teams.every(t => t.capacity > 0 && t.fanMood >= 0)).toBe(true)
   })
 })

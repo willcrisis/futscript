@@ -212,7 +212,7 @@ export function newSeason(state: GameState): GameState {
   // pre-rollover max, so retirements/departures pruning the working record never free up
   // a low id that collides with a still-referenced (pre-rollover) player of the same id
   const idFloor = Math.max(0, ...Object.keys(state.players).map(Number))
-  ;({ players, teams } = youthIntake(players, teams, rand, idFloor))
+  ;({ players, teams } = youthIntake(players, teams, rand, state.userTeamId, idFloor))
   ;({ players, teams } = ensureThreeDivisions(players, teams, rand, idFloor))
 
   players = ageSquads(players, rand)
