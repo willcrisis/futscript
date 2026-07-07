@@ -10,9 +10,9 @@ export const LOAN_CAP = 2_000_000
 // scales fan interest and league prizes down the pyramid
 export const DIVISION_FACTOR: Record<number, number> = { 1: 1, 2: 0.8, 3: 0.6 }
 
-const MAINTENANCE_PER_SEAT = 1.5
+export const MAINTENANCE_PER_SEAT = 1.2
 // ponytail: sponsor money — retune here and nowhere else
-export const SPONSOR_BASE: Record<number, number> = { 1: 40_000, 2: 22_000, 3: 12_000 }
+export const SPONSOR_BASE: Record<number, number> = { 1: 40_000, 2: 24_000, 3: 15_000 }
 
 export function salaryFor(level: number): number {
   return Math.round(level * level * 2)
@@ -90,7 +90,7 @@ export function runWeeklyFinances(state: GameState, rand: () => number): GameSta
         (9_000 + 900 * (16 - position.get(team.id)!)) * (DIVISION_FACTOR[team.division] ?? 1),
       )
       const priceFactor = (15 / team.ticketPrice) ** 1.5
-      const moodFactor = 0.6 + (team.fanMood / 100) * 0.6
+      const moodFactor = 0.8 + (team.fanMood / 100) * 0.3 // ponytail: floor softened so a losing streak dents gates without a death spiral
       const attendance = Math.max(
         0,
         Math.min(team.capacity, Math.round(interest * priceFactor * moodFactor) + randInt(rand, -500, 500)),

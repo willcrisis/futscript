@@ -3,7 +3,7 @@ import { mulberry32 } from './rng'
 import { newGame } from './newGame'
 import {
   adjustCash, borrow, formatMoney, marketValue, LOAN_CAP, repayLoan, runWeeklyFinances, salaryFor,
-  severanceFor, STARTING_CASH, wageBill, SPONSOR_BASE,
+  severanceFor, STARTING_CASH, wageBill, SPONSOR_BASE, MAINTENANCE_PER_SEAT,
 } from './finance'
 import type { GameState, Player } from './types'
 import { CUP_WEEKS } from './fixtures'
@@ -57,7 +57,7 @@ describe('runWeeklyFinances', () => {
     const homeIds = new Set(s0.fixtures.filter(f => f.round === 1).map(f => f.homeId))
     for (const t of s1.teams) {
       const team0 = s0.teams.find(x => x.id === t.id)!
-      const maintenance = Math.round(team0.capacity * 1.5)
+      const maintenance = Math.round(team0.capacity * MAINTENANCE_PER_SEAT)
       const sponsors = Math.round((SPONSOR_BASE[team0.division] ?? SPONSOR_BASE[3]) * (0.5 + team0.fanMood / 100))
       const before = STARTING_CASH - wageBill(t.id, s0) - maintenance + sponsors
       if (homeIds.has(t.id)) expect(t.cash).toBeGreaterThan(before) // gate beat zero
@@ -152,7 +152,7 @@ describe('stadium finances', () => {
     )!
     const before = s0.teams.find(t => t.id === awayDiv1.id)!
     // away week: wages out, maintenance out, sponsors in — nothing else
-    const expected = before.cash - wageBill(awayDiv1.id, s0) - Math.round(before.capacity * 1.5)
+    const expected = before.cash - wageBill(awayDiv1.id, s0) - Math.round(before.capacity * MAINTENANCE_PER_SEAT)
       + Math.round(SPONSOR_BASE[1] * (0.5 + before.fanMood / 100))
     expect(awayDiv1.cash).toBe(expected)
   })
@@ -186,7 +186,7 @@ describe('stadium finances', () => {
     const s2 = runWeeklyFinances(dear, mulberry32(3))
     const gate2 = s2.finances.find(e => e.label.startsWith('Gate receipts'))!
     const fans2 = Number(gate2.label.match(/\((\d+) fans\)/)![1])
-    expect(fans2).toBeLessThan(1_500) // (15/60)^1.5 = 0.125, mood factor 0.6
+    expect(fans2).toBeLessThan(2_200) // (15/60)^1.5 = 0.125, mood factor floor 0.8, plus jitter
     expect(fans2).toBeGreaterThanOrEqual(0)
   })
 

@@ -1,5 +1,5 @@
 import type { Dispatch, SetStateAction } from 'react'
-import { borrow, formatMoney, LOAN_CAP, repayLoan, wageBill } from '../engine/finance'
+import { borrow, formatMoney, LOAN_CAP, MAINTENANCE_PER_SEAT, repayLoan, wageBill } from '../engine/finance'
 import { EXPANSION, expandStadium, setTicketPrice } from '../engine/stadium'
 import type { GameState } from '../engine/types'
 
@@ -36,7 +36,7 @@ export default function FinanceScreen({ state, setState }: Props) {
       <p>
         Capacity: <strong>{user.capacity.toLocaleString('en-US')}</strong> seats ·
         Fan mood: {user.fanMood}/100 ·
-        Maintenance: {formatMoney(Math.round(user.capacity * 1.5))}/wk
+        Maintenance: {formatMoney(Math.round(user.capacity * MAINTENANCE_PER_SEAT))}/wk
       </p>
       <div className="controls">
         <label>

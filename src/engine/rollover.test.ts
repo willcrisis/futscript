@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'vitest'
+import { cupWinner } from './cup'
 import { newGame } from './newGame'
 import {
   applyPromotionRelegation, ensureThreeDivisions, retirePlayers, rolloverMood, seasonRecord, youthIntake,
@@ -151,6 +152,10 @@ describe('rolloverMood', () => {
     const before = (id: number) => s.teams.find(t => t.id === id)!.fanMood
     expect(moodOf(d1Champ)).toBe(Math.min(100, before(d1Champ) + 20))
     for (const id of d2Top) expect(moodOf(id)).toBeGreaterThanOrEqual(Math.min(100, before(id) + 30)) // +30 promoted (+20 more if d2 champion)
-    for (const id of d1Bottom) expect(moodOf(id)).toBe(Math.max(0, before(id) - 20))
+    const cupChamp = cupWinner(s)
+    for (const id of d1Bottom) {
+      if (id === cupChamp) continue // a relegated cup winner nets -20 +25
+      expect(moodOf(id)).toBe(Math.max(0, before(id) - 20))
+    }
   })
 })
