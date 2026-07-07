@@ -1,5 +1,13 @@
 import { useEffect, useState } from 'react'
-import type { Fixture, GameState, MatchEvent } from '../engine/types'
+import type { GameState, MatchEvent } from '../engine/types'
+
+export interface MatchLike {
+  homeId: number
+  awayId: number
+  homeGoals: number | null
+  awayGoals: number | null
+  events?: MatchEvent[]
+}
 
 export function eventText(e: MatchEvent, state: GameState): string {
   const player = state.players[e.playerId]?.name ?? '?'
@@ -16,7 +24,7 @@ export function eventText(e: MatchEvent, state: GameState): string {
 }
 
 interface Props {
-  fixture: Fixture
+  fixture: MatchLike
   state: GameState
   onClose: () => void
 }

@@ -8,7 +8,11 @@ export default function FixturesScreen({ state }: { state: GameState }) {
   const [round, setRound] = useState(() => Math.min(Math.max(state.round - 1, 1), total))
   const [selected, setSelected] = useState<Fixture | null>(null)
   const name = (id: number) => state.teams.find(t => t.id === id)!.name
-  const fixtures = state.fixtures.filter(f => f.round === round)
+  const userDivision = state.teams.find(t => t.id === state.userTeamId)!.division
+  const [division, setDivision] = useState(userDivision)
+  const divisions = [...new Set(state.teams.map(t => t.division))].sort()
+  const divisionOf = (teamId: number) => state.teams.find(t => t.id === teamId)!.division
+  const fixtures = state.fixtures.filter(f => f.round === round && divisionOf(f.homeId) === division)
 
   return (
     <div>
@@ -17,8 +21,21 @@ export default function FixturesScreen({ state }: { state: GameState }) {
         <span>Round {round}</span>
         <button disabled={round >= total} onClick={() => { setRound(round + 1); setSelected(null) }}>›</button>
       </div>
+      {divisions.length > 1 && (
+        <div className="controls">
+          <label>
+            Division:{' '}
+            <select value={division} onChange={e => setDivision(Number(e.target.value))}>
+              {divisions.map(d => <option key={d} value={d}>{d}</option>)}
+            </select>
+          </label>
+        </div>
+      )}
       <table>
         <tbody>
+          {fixtures.length === 0 && (
+            <tr><td colSpan={3}>Cup week — see the Cup tab.</td></tr>
+          )}
           {fixtures.map((f, i) => (
             <tr
               key={i}
