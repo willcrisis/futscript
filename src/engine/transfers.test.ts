@@ -3,7 +3,7 @@ import { marketValue, severanceFor } from './finance'
 import { mulberry32 } from './rng'
 import { newGame } from './newGame'
 import {
-  acceptOffer, counterOffer, listPlayer, MIN_SQUAD, placeBid, rejectOffer, releasePlayer, renewalSalary, renewContract,
+  acceptOffer, counterOffer, delistPlayer, listPlayer, MIN_SQUAD, placeBid, rejectOffer, releasePlayer, renewalSalary, renewContract,
   requiredBid, runTransfers, transferPlayer,
 } from './transfers'
 import type { GameState } from './types'
@@ -280,5 +280,22 @@ describe('incoming offers', () => {
     const s1 = counterOffer(s, playerId, BIDDER_ID)
     expect(s1.incomingOffers).toHaveLength(0)
     expect(s1.transferList[0]).toMatchObject({ playerId, sellerTeamId: s.userTeamId, minPrice: 600_000 })
+  })
+})
+
+describe('delistPlayer', () => {
+  it('removes the user own listing and any bid on it', () => {
+    let s = newGame(1)
+    const mine = s.teams.find(t => t.id === s.userTeamId)!.playerIds[0]
+    s = listPlayer(s, mine, 500_000)
+    expect(s.transferList.some(l => l.playerId === mine)).toBe(true)
+    s = delistPlayer(s, mine)
+    expect(s.transferList.some(l => l.playerId === mine)).toBe(false)
+  })
+
+  it('is a no-op for a player that is not listed', () => {
+    const s = newGame(1)
+    const mine = s.teams.find(t => t.id === s.userTeamId)!.playerIds[0]
+    expect(delistPlayer(s, mine)).toBe(s)
   })
 })

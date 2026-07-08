@@ -66,6 +66,12 @@ export function listPlayer(state: GameState, playerId: number, minPrice: number)
   }
 }
 
+export function delistPlayer(state: GameState, playerId: number): GameState {
+  const listing = state.transferList.find(l => l.playerId === playerId)
+  if (!listing || listing.sellerTeamId !== state.userTeamId) return state
+  return { ...state, transferList: state.transferList.filter(l => l.playerId !== playerId) }
+}
+
 export function requiredBid(listing: TransferListing): number {
   return listing.currentBid === null ? listing.minPrice : Math.round(listing.currentBid * 1.1)
 }
