@@ -1,6 +1,7 @@
 import { adjustCash, marketValue, salaryFor, severanceFor, userLedger } from './finance'
 import { pushNews } from './news'
 import type { GameState, Player, TransferListing } from './types'
+import { isManaged } from './types'
 
 export const MIN_SQUAD = 14
 export const LISTING_ROUNDS = 3
@@ -23,8 +24,8 @@ export function transferPlayer(state: GameState, playerId: number, toTeamId: num
   teams = adjustCash(teams, toTeamId, -fee)
 
   let finances = state.finances
-  if (from.id === state.userTeamId) finances = userLedger(state, `Sold ${player.name}`, fee)
-  else if (toTeamId === state.userTeamId) finances = userLedger(state, `Signed ${player.name}`, -fee)
+  if (isManaged(state, from.id)) finances = userLedger(state, `Sold ${player.name}`, fee)
+  else if (isManaged(state, toTeamId)) finances = userLedger(state, `Signed ${player.name}`, -fee)
 
   let result: GameState = {
     ...state,
@@ -37,9 +38,9 @@ export function transferPlayer(state: GameState, playerId: number, toTeamId: num
 
   const userDivision = state.teams.find(t => t.id === state.userTeamId)!.division
   const buyer = state.teams.find(t => t.id === toTeamId)!
-  if (from.id === state.userTeamId) {
+  if (isManaged(state, from.id)) {
     result = pushNews(result, 'userSold', { player: player.name, amount: fee })
-  } else if (toTeamId === state.userTeamId) {
+  } else if (isManaged(state, toTeamId)) {
     result = pushNews(result, 'userSigned', { player: player.name, amount: fee })
   } else if (from.division === userDivision || buyer.division === userDivision) {
     result = pushNews(result, 'rivalTransfer', { player: player.name, from: from.name, to: buyer.name, amount: fee })
@@ -143,7 +144,7 @@ export function runTransfers(state: GameState, rand: () => number): GameState {
   }
 
   // occasionally an AI club knocks on the user's door
-  if (rand() < 0.15) {
+  if (s.manager.employed && rand() < 0.15) {
     const user = s.teams.find(t => t.id === s.userTeamId)!
     const suitors = s.teams.filter(t => t.id !== s.userTeamId && t.cash > 200_000)
     if (suitors.length > 0 && user.playerIds.length > MIN_SQUAD) {
@@ -164,7 +165,7 @@ export function runTransfers(state: GameState, rand: () => number): GameState {
 
   // AI clubs list players: forced sale when broke, otherwise occasional squad trim
   for (const team of s.teams) {
-    if (team.id === s.userTeamId || team.playerIds.length <= MIN_SQUAD) continue
+    if (isManaged(s, team.id) || team.playerIds.length <= MIN_SQUAD) continue
     if (s.transferList.some(l => l.sellerTeamId === team.id)) continue
     const broke = team.cash < 0
     if (!broke && rand() >= 0.05) continue
@@ -177,7 +178,7 @@ export function runTransfers(state: GameState, rand: () => number): GameState {
 
   // AI clubs bid (re-read each listing so later bidders see earlier bids)
   for (const team of s.teams) {
-    if (team.id === s.userTeamId) continue
+    if (isManaged(s, team.id)) continue
     for (const { playerId } of s.transferList) {
       const listing = s.transferList.find(l => l.playerId === playerId)!
       if (listing.sellerTeamId === team.id || listing.currentBidderId === team.id) continue

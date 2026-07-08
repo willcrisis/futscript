@@ -424,6 +424,45 @@ describe('newSeason — the long game', () => {
   })
 })
 
+describe('spectator gates', () => {
+  it('an unemployed manager spectates: world advances, old club runs itself', () => {
+    const base = newGame(23)
+    const state = { ...base, manager: { ...base.manager, employed: false } }
+    let s = state
+    for (let i = 0; i < 8; i++) s = advanceRound(s)
+    expect(s.round).toBe(9) // the world kept moving
+    expect(s.finances).toEqual([]) // no ledger for a club you don't run
+    expect(s.brokeRounds).toBe(0)
+    expect(s.incomingOffers).toEqual([])
+    const badTypes = ['userSigned', 'userSold', 'starterInjured', 'boardWarning', 'offerReceived']
+    expect(s.news.filter(n => badTypes.includes(n.type))).toEqual([])
+  })
+
+  it('at rollover an unmanaged club auto-renews its expiring contracts', () => {
+    let state = newGame(29)
+    state = { ...state, manager: { ...state.manager, employed: false } }
+    const user = state.teams.find(t => t.id === state.userTeamId)!
+    const players = { ...state.players }
+    for (const id of user.playerIds) players[id] = { ...players[id], contractSeasons: 1 }
+    state = { ...state, players, round: totalRounds(state) + 1 }
+    const next = newSeason(state)
+    const after = next.teams.find(t => t.id === state.userTeamId)!
+    // retirees may still leave, but nobody walks over an expired deal: survivors are all renewed
+    expect(after.playerIds.length).toBeGreaterThanOrEqual(14)
+    for (const id of after.playerIds) expect(next.players[id].contractSeasons).toBeGreaterThanOrEqual(1)
+  })
+
+  // found during self-review: newSeason's own prize-money and cup-prize addEntry calls wrote to
+  // state.finances keyed only on teamId === userTeamId, without checking employment — a club a
+  // spectating user doesn't run would still get a phantom ledger line for winning the league or cup.
+  it('season-end prize money and cup prizes never touch the ledger for an unmanaged club', () => {
+    let state = newGame(29)
+    state = { ...state, manager: { ...state.manager, employed: false }, round: totalRounds(state) + 1 }
+    const next = newSeason(state)
+    expect(next.finances).toEqual([])
+  })
+})
+
 describe('friendlies', () => {
   function toFreeWeek(seed: number, playFriendlies: boolean) {
     let s: GameState = { ...newGame(seed), playFriendlies }

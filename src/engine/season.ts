@@ -12,6 +12,7 @@ import { standings } from './standings'
 import { ageSquads, applyWeeklyUpdates } from './training'
 import { MIN_SQUAD, renewalSalary, runTransfers } from './transfers'
 import type { GameState, MatchEvent, Player } from './types'
+import { isManaged } from './types'
 
 export function totalRounds(state: GameState): number {
   return Math.max(
@@ -60,7 +61,7 @@ export function advanceRound(state: GameState): GameState {
 
   // an idle user on a cup week can host a friendly (user setting)
   let friendly: { homeId: number; awayId: number } | null = null
-  if (state.playFriendlies && cupToday.length > 0 && !playingIds.has(state.userTeamId)) {
+  if (state.manager.employed && state.playFriendlies && cupToday.length > 0 && !playingIds.has(state.userTeamId)) {
     const idle = state.teams.filter(t => t.id !== state.userTeamId && !playingIds.has(t.id))
     if (idle.length > 0) {
       friendly = { homeId: state.userTeamId, awayId: idle[Math.floor(rand() * idle.length)].id }
@@ -72,7 +73,7 @@ export function advanceRound(state: GameState): GameState {
   // refresh lineups only for clubs that play this week
   const teams = state.teams.map(t =>
     playingIds.has(t.id)
-      ? { ...t, lineup: t.id === state.userTeamId ? patchLineup(t, state.players) : autoPick(t, state.players) }
+      ? { ...t, lineup: isManaged(state, t.id) ? patchLineup(t, state.players) : autoPick(t, state.players) }
       : t,
   )
   const byId = new Map(teams.map(t => [t.id, t]))
@@ -154,11 +155,13 @@ export function advanceRound(state: GameState): GameState {
 
   // the week's stories
   const userDivision = byId.get(state.userTeamId)!.division
-  const userLineup = new Set(byId.get(state.userTeamId)!.lineup)
-  for (const e of roundEvents) {
-    if (e.type === 'injury' && userLineup.has(e.playerId)) {
-      const hurt = s.players[e.playerId]
-      if (hurt) s = pushNews(s, 'starterInjured', { player: hurt.name, weeks: hurt.injuredForRounds })
+  if (state.manager.employed) {
+    const userLineup = new Set(byId.get(state.userTeamId)!.lineup)
+    for (const e of roundEvents) {
+      if (e.type === 'injury' && userLineup.has(e.playerId)) {
+        const hurt = s.players[e.playerId]
+        if (hurt) s = pushNews(s, 'starterInjured', { player: hurt.name, weeks: hurt.injuredForRounds })
+      }
     }
   }
   for (const f of fixtures.filter(f => f.round === week && f.homeGoals !== null)) {
@@ -244,7 +247,7 @@ export function newSeason(state: GameState): GameState {
     standings(state, division).forEach((row, i) => {
       const prize = Math.round((1_500_000 - i * 75_000) * (DIVISION_FACTOR[division] ?? 1))
       teams = adjustCash(teams, row.teamId, prize)
-      if (row.teamId === state.userTeamId) addEntry(`Prize money (finished ${i + 1} in Division ${division})`, prize)
+      if (isManaged(careered, row.teamId)) addEntry(`Prize money (finished ${i + 1} in Division ${division})`, prize)
     })
   }
 
@@ -255,8 +258,8 @@ export function newSeason(state: GameState): GameState {
       const runnerUp = final.winnerId === final.homeId ? final.awayId : final.homeId
       teams = adjustCash(teams, final.winnerId, 1_000_000)
       teams = adjustCash(teams, runnerUp, 400_000)
-      if (final.winnerId === state.userTeamId) addEntry('Cup winners prize', 1_000_000)
-      if (runnerUp === state.userTeamId) addEntry('Cup runners-up prize', 400_000)
+      if (isManaged(careered, final.winnerId)) addEntry('Cup winners prize', 1_000_000)
+      if (isManaged(careered, runnerUp)) addEntry('Cup runners-up prize', 400_000)
     }
   }
 
@@ -277,7 +280,9 @@ export function newSeason(state: GameState): GameState {
   // contracts: one season shorter; AI auto-renews; unrenewed user players walk,
   // but never below MIN_SQUAD — the cheapest expiring contracts force-renew first
   const userTeamNow = teams.find(t => t.id === state.userTeamId)!
-  const expiring = userTeamNow.playerIds.filter(id => players[id].contractSeasons - 1 <= 0)
+  const expiring = careered.manager.employed
+    ? userTeamNow.playerIds.filter(id => players[id].contractSeasons - 1 <= 0)
+    : []
   const mustKeep = Math.max(0, MIN_SQUAD - (userTeamNow.playerIds.length - expiring.length))
   const forceRenewed = new Set(
     [...expiring].sort((a, b) => players[a].salary - players[b].salary).slice(0, mustKeep),
@@ -288,7 +293,7 @@ export function newSeason(state: GameState): GameState {
       const remaining = p.contractSeasons - 1
       if (remaining > 0) {
         players[id] = { ...p, contractSeasons: remaining }
-      } else if (team.id !== state.userTeamId || forceRenewed.has(id)) {
+      } else if (!isManaged(careered, team.id) || forceRenewed.has(id)) {
         players[id] = { ...p, contractSeasons: randInt(rand, 1, 3), salary: renewalSalary(p) }
       } else {
         delete players[id]

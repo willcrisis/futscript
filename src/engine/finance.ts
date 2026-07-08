@@ -73,7 +73,7 @@ export function runWeeklyFinances(state: GameState, rand: () => number): GameSta
   }
 
   const teams = state.teams.map(team => {
-    const user = team.id === state.userTeamId
+    const user = state.manager.employed && team.id === state.userTeamId
     const wages = wageBill(team.id, state)
     let cash = team.cash - wages
     if (user) addEntry('Wages', -wages)
@@ -121,7 +121,7 @@ export function runWeeklyFinances(state: GameState, rand: () => number): GameSta
   })
 
   const cashAfter = teams.find(t => t.id === state.userTeamId)!.cash
-  const brokeRounds = cashAfter < 0 ? state.brokeRounds + 1 : 0
+  const brokeRounds = state.manager.employed && cashAfter < 0 ? state.brokeRounds + 1 : 0
   let result: GameState = { ...state, teams, finances, brokeRounds }
   if (brokeRounds >= 6 && state.brokeRounds < 6) {
     result = pushNews(result, 'boardWarning', { n: brokeRounds })
