@@ -72,7 +72,7 @@ export function newGame(seed: number): GameState {
   const userTeamId = divisionThree[randInt(rand, 0, divisionThree.length - 1)].id
 
   return {
-    version: 5,
+    version: 6,
     seed,
     rngState: randInt(rand, 1, 2 ** 31 - 1),
     season: 1,
@@ -92,5 +92,6 @@ export function newGame(seed: number): GameState {
     finances: [],
     construction: null,
     allTimeScorers: [],
+    news: [],
   }
 }

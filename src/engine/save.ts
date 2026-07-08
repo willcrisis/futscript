@@ -15,7 +15,8 @@ export function migrateToCurrent(raw: unknown): GameState | null {
     if (state?.version === 2) state = migrateV2(state)
     if (state?.version === 3) state = migrateV3(state)
     if (state?.version === 4) state = migrateV4(state)
-    if (state?.version !== 5) return null
+    if (state?.version === 5) state = migrateV5(state)
+    if (state?.version !== 6) return null
     const shaped =
       Array.isArray(state.teams) &&
       state.players !== null &&
@@ -148,7 +149,7 @@ function migrateV3(s: any): any {
   }
 }
 
-function migrateV4(s: any): GameState {
+function migrateV4(s: any): any {
   return {
     ...s,
     version: 5,
@@ -160,5 +161,13 @@ function migrateV4(s: any): GameState {
     })),
     construction: null,
     allTimeScorers: [],
+  }
+}
+
+function migrateV5(s: any): GameState {
+  return {
+    ...s,
+    version: 6,
+    news: [],
   }
 }

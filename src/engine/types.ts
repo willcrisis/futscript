@@ -112,8 +112,21 @@ export interface ScorerRecord {
   goals: number
 }
 
+export type NewsType =
+  | 'userSigned' | 'userSold' | 'userRenewed' | 'userOutbid' | 'offerReceived'
+  | 'starterInjured' | 'boardWarning' | 'constructionDone'
+  | 'rivalTransfer' | 'heavyWin' | 'cupRun'
+  | 'champions' | 'cupWinner' | 'promoted' | 'relegated'
+
+export interface NewsItem {
+  season: number
+  week: number
+  type: NewsType
+  params: Record<string, string | number> // names and numbers as data — translated at render time
+}
+
 export interface GameState {
-  version: 5
+  version: 6
   seed: number
   rngState: number // seeds the RNG for the next advanceRound
   season: number
@@ -133,4 +146,5 @@ export interface GameState {
   finances: FinanceEntry[] // user club ledger, newest last
   construction: { addedCapacity: number; weeksLeft: number } | null // user stadium expansion in progress
   allTimeScorers: ScorerRecord[] // top 50, updated at each rollover
+  news: NewsItem[] // newest last, capped at NEWS_CAP
 }

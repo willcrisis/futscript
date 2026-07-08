@@ -9,12 +9,12 @@ function makeState(fixtures: Fixture[]): GameState {
     capacity: 9_000, ticketPrice: 15, fanMood: 50,
   }))
   return {
-    version: 5, seed: 1, rngState: 1, season: 1, round: 1,
+    version: 6, seed: 1, rngState: 1, season: 1, round: 1,
     userTeamId: 0, players: {}, teams, fixtures,
     cupFixtures: [], history: [], playFriendlies: false,
     transferList: [], incomingOffers: [], loanBalance: 0,
     brokeRounds: 0, gameOver: false, finances: [],
-    construction: null, allTimeScorers: [],
+    construction: null, allTimeScorers: [], news: [],
   }
 }
 
