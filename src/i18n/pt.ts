@@ -319,4 +319,21 @@ export const pt: Record<TranslationKey, string> = {
   'welcome.featureFinance': 'Equilibre as contas — bilheteria, salários e o banco.',
   'welcome.featureClimb': 'Suba da Divisão 3 até o topo, um acesso de cada vez.',
   'welcome.featureCup': 'Busque a glória na Copa Nacional.',
+
+  // News feed
+  'news.userSigned': 'Você contratou {player} por {amount}',
+  'news.userSold': 'Você vendeu {player} por {amount}',
+  'news.userRenewed': '{player} assinou novo contrato por {salary}/sem',
+  'news.userOutbid': 'Você foi superado no lance por {player}',
+  'news.offerReceived': '{bidder} ofereceu {amount} por {player}',
+  'news.starterInjured': '{player} se lesionou — {weeks}sem fora',
+  'news.boardWarning': 'A diretoria está perdendo a paciência: {n}/8 semanas no vermelho',
+  'news.constructionDone': 'Ampliação do estádio concluída: +{seats} lugares',
+  'news.rivalTransfer': '{player} deixa o {from} e vai para o {to} por {amount}',
+  'news.heavyWin': '{winner} goleia o {loser} por {score}',
+  'news.cupRun': '{club} avança à rodada {round} da copa',
+  'news.champions': '{club} é o campeão da Divisão {division}',
+  'news.cupWinner': '{club} vence a Copa',
+  'news.promoted': '{club} é promovido',
+  'news.relegated': '{club} é rebaixado',
 }

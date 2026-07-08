@@ -317,6 +317,23 @@ export const en = {
   'welcome.featureFinance': 'Balance the books — gate receipts, wages, and the bank.',
   'welcome.featureClimb': 'Climb from Division 3 to the summit, one promotion at a time.',
   'welcome.featureCup': 'Chase glory in the National Cup.',
+
+  // News feed
+  'news.userSigned': 'You signed {player} for {amount}',
+  'news.userSold': 'You sold {player} for {amount}',
+  'news.userRenewed': '{player} signed a new deal at {salary}/wk',
+  'news.userOutbid': 'You were outbid on {player}',
+  'news.offerReceived': '{bidder} bid {amount} for {player}',
+  'news.starterInjured': '{player} injured — out {weeks}w',
+  'news.boardWarning': 'The board is losing patience: {n}/8 weeks in the red',
+  'news.constructionDone': 'Stadium expansion complete: +{seats} seats',
+  'news.rivalTransfer': '{player} moves from {from} to {to} for {amount}',
+  'news.heavyWin': '{winner} thrash {loser} {score}',
+  'news.cupRun': '{club} reach cup round {round}',
+  'news.champions': '{club} are Division {division} champions',
+  'news.cupWinner': '{club} win the Cup',
+  'news.promoted': '{club} promoted',
+  'news.relegated': '{club} relegated',
 } as const
 
 export type TranslationKey = keyof typeof en
