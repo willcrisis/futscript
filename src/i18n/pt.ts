@@ -321,6 +321,10 @@ export const pt: Record<TranslationKey, string> = {
   'welcome.featureCup': 'Busque a glória na Copa Nacional.',
 
   // News feed
+  'news.title': 'Notícias',
+  'news.empty': 'Nada a relatar ainda',
+  'news.showAll': 'Ver todas as {n}',
+  'news.showLess': 'Ver menos',
   'news.userSigned': 'Você contratou {player} por {amount}',
   'news.userSold': 'Você vendeu {player} por {amount}',
   'news.userRenewed': '{player} assinou novo contrato por {salary}/sem',

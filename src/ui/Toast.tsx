@@ -42,7 +42,7 @@ export function ToastProvider({ children }: { children: ReactNode }) {
   return (
     <ToastContext.Provider value={{ push }}>
       {children}
-      <div aria-live="polite" className="fixed left-1/2 top-3 z-50 flex w-[calc(100vw-2rem)] max-w-sm -translate-x-1/2 flex-col gap-2 md:bottom-4 md:left-auto md:right-4 md:top-auto md:translate-x-0">
+      <div aria-live="polite" className="fixed left-1/2 top-3 z-50 flex w-[calc(100vw-2rem)] max-w-sm -translate-x-1/2 flex-col gap-2 md:bottom-4 md:left-auto md:right-4 md:top-auto md:translate-x-0 xl:right-[19rem]">
         {toasts.map(t => (
           <div
             key={t.id}

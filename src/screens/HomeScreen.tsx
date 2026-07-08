@@ -1,3 +1,4 @@
+import { useState } from 'react'
 import { totalRounds } from '../engine/season'
 import { standings } from '../engine/standings'
 import type { GameState } from '../engine/types'
@@ -6,6 +7,7 @@ import Button from '../ui/Button'
 import DataTable from '../ui/DataTable'
 import type { Column } from '../ui/DataTable'
 import MoneyText from '../ui/MoneyText'
+import NewsRail from '../ui/NewsRail'
 import Panel from '../ui/Panel'
 import ScreenHeader from '../ui/ScreenHeader'
 import type { ScreenId } from '../ui/Shell'
@@ -22,6 +24,7 @@ interface Row { pos: number; teamId: number; name: string; points: number; gd: n
 
 export default function HomeScreen({ state, onAdvance, onNavigate, onShowTeam }: Props) {
   useLang()
+  const [newsExpanded, setNewsExpanded] = useState(false)
   const user = state.teams.find(t => t.id === state.userTeamId)!
   const name = (id: number) => state.teams.find(t => t.id === id)!.name
   const total = totalRounds(state)
@@ -178,6 +181,20 @@ export default function HomeScreen({ state, onAdvance, onNavigate, onShowTeam }:
               <div className="border-t border-rule pt-3 text-xs text-ink-faint">{t('home.allQuiet')}</div>
             )}
           </div>
+        </Panel>
+      </div>
+
+      <div className="mt-4 xl:hidden">
+        <Panel label={t('news.title')}>
+          <NewsRail state={state} limit={newsExpanded ? undefined : 5} />
+          {state.news.length > 5 && (
+            <button
+              className="mt-2 text-xs text-ink-muted underline-offset-2 hover:underline"
+              onClick={() => setNewsExpanded(e => !e)}
+            >
+              {newsExpanded ? t('news.showLess') : t('news.showAll', { n: state.news.length })}
+            </button>
+          )}
         </Panel>
       </div>
     </div>

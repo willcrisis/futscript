@@ -319,6 +319,10 @@ export const en = {
   'welcome.featureCup': 'Chase glory in the National Cup.',
 
   // News feed
+  'news.title': 'News',
+  'news.empty': 'Nothing to report yet',
+  'news.showAll': 'Show all {n}',
+  'news.showLess': 'Show less',
   'news.userSigned': 'You signed {player} for {amount}',
   'news.userSold': 'You sold {player} for {amount}',
   'news.userRenewed': '{player} signed a new deal at {salary}/wk',

@@ -6,6 +6,8 @@ import { t, useLang } from '../i18n'
 import type { TranslationKey } from '../i18n'
 import Button from './Button'
 import MoneyText from './MoneyText'
+import NewsRail from './NewsRail'
+import SectionLabel from './SectionLabel'
 import ThemeToggle from './ThemeToggle'
 import {
   CupIcon, FinanceIcon, FixturesIcon, HistoryIcon, HomeIcon, MoreIcon,
@@ -127,7 +129,7 @@ export default function Shell({ screen, onNavigate, state, advanceLabel, onAdvan
       </aside>
 
       {/* content */}
-      <main className="mx-auto w-full max-w-4xl px-4 pb-28 pt-6 md:ml-52 md:pb-10">
+      <main className="mx-auto w-full max-w-4xl px-4 pb-28 pt-6 md:ml-52 md:pb-10 xl:mr-72">
         {/* mobile vitals line */}
         <div className="mb-4 flex items-center justify-between text-xs text-ink-muted md:hidden">
           <span className="font-medium text-ink">{user.name}</span>
@@ -137,6 +139,17 @@ export default function Shell({ screen, onNavigate, state, advanceLabel, onAdvan
         </div>
         {children}
       </main>
+
+      {/* news rail — wide screens only */}
+      <aside
+        aria-label={t('news.title')}
+        className="fixed inset-y-0 right-0 hidden w-72 flex-col overflow-y-auto border-l border-rule bg-surface-raised p-4 xl:flex"
+      >
+        <SectionLabel>{t('news.title')}</SectionLabel>
+        <div className="mt-2">
+          <NewsRail state={state} />
+        </div>
+      </aside>
 
       {/* mobile: floating advance + bottom bar */}
       <div className="fixed bottom-16 right-4 z-40 mb-[env(safe-area-inset-bottom)] md:hidden">
