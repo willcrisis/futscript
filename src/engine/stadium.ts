@@ -1,4 +1,5 @@
 import { adjustCash, userLedger } from './finance'
+import { pushNews } from './news'
 import type { GameState } from './types'
 
 // ponytail: stadium economy constants — retune here and nowhere else
@@ -32,12 +33,16 @@ export function tickConstruction(state: GameState): GameState {
   if (state.construction === null) return state
   const weeksLeft = state.construction.weeksLeft - 1
   if (weeksLeft > 0) return { ...state, construction: { ...state.construction, weeksLeft } }
-  return {
-    ...state,
-    construction: null,
-    teams: state.teams.map(t =>
-      t.id === state.userTeamId ? { ...t, capacity: t.capacity + state.construction!.addedCapacity } : t,
-    ),
-    finances: userLedger(state, `Stadium expansion complete (+${state.construction.addedCapacity} seats)`, 0),
-  }
+  return pushNews(
+    {
+      ...state,
+      construction: null,
+      teams: state.teams.map(t =>
+        t.id === state.userTeamId ? { ...t, capacity: t.capacity + state.construction!.addedCapacity } : t,
+      ),
+      finances: userLedger(state, `Stadium expansion complete (+${state.construction.addedCapacity} seats)`, 0),
+    },
+    'constructionDone',
+    { seats: state.construction.addedCapacity },
+  )
 }

@@ -1,3 +1,4 @@
+import { pushNews } from './news'
 import { randInt } from './rng'
 import { standings } from './standings'
 import type { FinanceEntry, GameState, Player, Team } from './types'
@@ -121,7 +122,11 @@ export function runWeeklyFinances(state: GameState, rand: () => number): GameSta
 
   const cashAfter = teams.find(t => t.id === state.userTeamId)!.cash
   const brokeRounds = cashAfter < 0 ? state.brokeRounds + 1 : 0
-  return { ...state, teams, finances, brokeRounds, gameOver: state.gameOver || brokeRounds >= BROKE_ROUNDS_LIMIT }
+  let result: GameState = { ...state, teams, finances, brokeRounds, gameOver: state.gameOver || brokeRounds >= BROKE_ROUNDS_LIMIT }
+  if (brokeRounds >= 6 && state.brokeRounds < 6) {
+    result = pushNews(result, 'boardWarning', { n: brokeRounds })
+  }
+  return result
 }
 
 export function borrow(state: GameState, amount: number): GameState {

@@ -1,4 +1,5 @@
 import { adjustCash, marketValue, salaryFor, severanceFor, userLedger } from './finance'
+import { pushNews } from './news'
 import type { GameState, Player, TransferListing } from './types'
 
 export const MIN_SQUAD = 14
@@ -25,7 +26,7 @@ export function transferPlayer(state: GameState, playerId: number, toTeamId: num
   if (from.id === state.userTeamId) finances = userLedger(state, `Sold ${player.name}`, fee)
   else if (toTeamId === state.userTeamId) finances = userLedger(state, `Signed ${player.name}`, -fee)
 
-  return {
+  let result: GameState = {
     ...state,
     teams,
     finances,
@@ -33,6 +34,17 @@ export function transferPlayer(state: GameState, playerId: number, toTeamId: num
     transferList: state.transferList.filter(l => l.playerId !== playerId),
     incomingOffers: state.incomingOffers.filter(o => o.playerId !== playerId),
   }
+
+  const userDivision = state.teams.find(t => t.id === state.userTeamId)!.division
+  const buyer = state.teams.find(t => t.id === toTeamId)!
+  if (from.id === state.userTeamId) {
+    result = pushNews(result, 'userSold', { player: player.name, amount: fee })
+  } else if (toTeamId === state.userTeamId) {
+    result = pushNews(result, 'userSigned', { player: player.name, amount: fee })
+  } else if (from.division === userDivision || buyer.division === userDivision) {
+    result = pushNews(result, 'rivalTransfer', { player: player.name, from: from.name, to: buyer.name, amount: fee })
+  }
+  return result
 }
 
 export function listPlayer(state: GameState, playerId: number, minPrice: number): GameState {
@@ -103,13 +115,18 @@ export function renewContract(state: GameState, playerId: number): GameState {
   const user = state.teams.find(t => t.id === state.userTeamId)!
   const p = state.players[playerId]
   if (!user.playerIds.includes(playerId) || p.contractSeasons > 1) return state
-  return {
-    ...state,
-    players: {
-      ...state.players,
-      [playerId]: { ...p, salary: renewalSalary(p), contractSeasons: p.contractSeasons + 2 },
+  const salary = renewalSalary(p)
+  return pushNews(
+    {
+      ...state,
+      players: {
+        ...state.players,
+        [playerId]: { ...p, salary, contractSeasons: p.contractSeasons + 2 },
+      },
     },
-  }
+    'userRenewed',
+    { player: p.name, salary },
+  )
 }
 
 // One market tick: offers age, AI clubs list and bid, deadlines resolve.
@@ -140,6 +157,7 @@ export function runTransfers(state: GameState, rand: () => number): GameState {
           ...s,
           incomingOffers: [...s.incomingOffers, { playerId: targetId, bidderTeamId: suitor.id, amount, roundsLeft: OFFER_ROUNDS }],
         }
+        s = pushNews(s, 'offerReceived', { bidder: suitor.name, player: s.players[targetId].name, amount })
       }
     }
   }
@@ -167,12 +185,14 @@ export function runTransfers(state: GameState, rand: () => number): GameState {
       const bid = requiredBid(listing)
       const valuation = Math.round(marketValue(s.players[playerId]) * (0.9 + rand() * 0.4))
       if (bid <= valuation && bid <= team.cash * 0.7 && team.playerIds.length < 22) {
+        const wasUserLeading = listing.currentBidderId === s.userTeamId
         s = {
           ...s,
           transferList: s.transferList.map(l =>
             l.playerId === playerId ? { ...l, currentBid: bid, currentBidderId: team.id } : l,
           ),
         }
+        if (wasUserLeading) s = pushNews(s, 'userOutbid', { player: s.players[playerId].name })
       }
     }
   }
