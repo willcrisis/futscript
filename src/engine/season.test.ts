@@ -264,7 +264,11 @@ describe('backlog semantics', () => {
 
 describe('newSeason', () => {
   it('newSeason carries career state through the rollover', () => {
-    let state = newGame(17)
+    // seed 2: the user manager survives the full season (unrelated to this test's
+    // assertions — seed 17 used to work here, but the verbatim-lineup + auto-drop
+    // change in advanceRound perturbs which players are fielded, which perturbs match
+    // results and confidence, and seed 17's manager now gets sacked mid-season)
+    let state = newGame(2)
     while (state.round <= totalRounds(state)) state = advanceRound(state)
     const next = newSeason(state)
     expect(next.manager).toBeDefined()
@@ -531,6 +535,20 @@ describe('fan mood', () => {
     for (const t of s.teams) {
       expect(t.fanMood).toBeGreaterThanOrEqual(0)
       expect(t.fanMood).toBeLessThanOrEqual(100)
+    }
+  })
+})
+
+describe('user lineup hygiene', () => {
+  it('never contains an injured or suspended player after a round', () => {
+    let s = newGame(1)
+    for (let i = 0; i < 12; i++) {
+      s = advanceRound(s)
+      const user = s.teams.find(t => t.id === s.userTeamId)!
+      for (const id of user.lineup) {
+        expect(s.players[id].injuredForRounds).toBe(0)
+        expect(s.players[id].suspendedForRounds).toBe(0)
+      }
     }
   })
 })

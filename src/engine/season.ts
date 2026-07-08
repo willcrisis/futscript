@@ -2,7 +2,7 @@ import { runCareerSeasonEnd, runCareerWeek } from './career'
 import { cupWinner, drawFirstCupRound, drawNextCupRound } from './cup'
 import { CUP_WEEKS, generateDivisionFixtures } from './fixtures'
 import { adjustCash, DIVISION_FACTOR, runWeeklyFinances, TICKET_PRICE, userLedger } from './finance'
-import { autoPick, patchLineup } from './lineup'
+import { autoPick, isAvailable, managedMatchLineup } from './lineup'
 import { simulateMatch } from './match'
 import { pushNews } from './news'
 import { mulberry32, randInt } from './rng'
@@ -73,7 +73,7 @@ export function advanceRound(state: GameState): GameState {
   // refresh lineups only for clubs that play this week
   const teams = state.teams.map(t =>
     playingIds.has(t.id)
-      ? { ...t, lineup: isManaged(state, t.id) ? patchLineup(t, state.players) : autoPick(t, state.players) }
+      ? { ...t, lineup: isManaged(state, t.id) ? managedMatchLineup(t, state.players) : autoPick(t, state.players) }
       : t,
   )
   const byId = new Map(teams.map(t => [t.id, t]))
@@ -140,7 +140,13 @@ export function advanceRound(state: GameState): GameState {
   const starters = new Set(teams.filter(t => playingIds.has(t.id)).flatMap(t => t.lineup))
   players = applyWeeklyUpdates(players, teams, starters, rand)
 
-  let s: GameState = { ...state, teams: teamsWithMood, players, fixtures, cupFixtures }
+  // freshly injured/suspended user players leave the XI at once (no auto-refill —
+  // the advance gate makes the manager pick replacements). Formation stays a suggestion.
+  const cleanedTeams = teamsWithMood.map(t =>
+    isManaged(state, t.id) ? { ...t, lineup: t.lineup.filter(id => isAvailable(players[id])) } : t,
+  )
+
+  let s: GameState = { ...state, teams: cleanedTeams, players, fixtures, cupFixtures }
   if (friendlyIncome > 0) {
     s = {
       ...s,
