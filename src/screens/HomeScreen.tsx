@@ -20,16 +20,18 @@ interface Props {
   state: GameState
   setState: Dispatch<SetStateAction<GameState>>
   onAdvance: () => void
+  advanceDisabled?: boolean
   onNavigate: (s: ScreenId) => void
   onShowClub?: (teamId: number) => void
 }
 
 interface Row { pos: number; teamId: number; name: string; points: number; gd: number }
 
-export default function HomeScreen({ state, setState, onAdvance, onNavigate, onShowClub }: Props) {
+export default function HomeScreen({ state, setState, onAdvance, advanceDisabled, onNavigate, onShowClub }: Props) {
   useLang()
   const [newsExpanded, setNewsExpanded] = useState(false)
   const user = state.teams.find(t => t.id === state.userTeamId)!
+  const userLineupLen = state.teams.find(t => t.id === state.userTeamId)?.lineup.length ?? 0
   const name = (id: number) => state.teams.find(t => t.id === id)!.name
   const total = totalRounds(state)
   const week = state.round
@@ -156,14 +158,20 @@ export default function HomeScreen({ state, setState, onAdvance, onNavigate, onS
                   {league ? t('home.leagueWeek', { week }) : t('home.cupRound', { round: cup!.cupRound })}
                 </div>
               </div>
-              <Button variant="primary" onClick={onAdvance}>{t('shell.advanceWeek')}</Button>
+              <div className="flex flex-col items-end gap-1">
+                <Button variant="primary" disabled={advanceDisabled} onClick={onAdvance}>{t('shell.advanceWeek')}</Button>
+                {advanceDisabled && <span className="text-[11px] text-warn">{t('squad.selectElevenHint', { n: userLineupLen })}</span>}
+              </div>
             </div>
           ) : (
             <div className="flex items-center justify-between gap-3">
               <p className="text-sm text-ink-muted">
                 {state.playFriendlies ? t('home.freeWeekFriendly') : t('home.freeWeek')}
               </p>
-              <Button variant="primary" onClick={onAdvance}>{t('shell.advanceWeek')}</Button>
+              <div className="flex flex-col items-end gap-1">
+                <Button variant="primary" disabled={advanceDisabled} onClick={onAdvance}>{t('shell.advanceWeek')}</Button>
+                {advanceDisabled && <span className="text-[11px] text-warn">{t('squad.selectElevenHint', { n: userLineupLen })}</span>}
+              </div>
             </div>
           )}
         </Panel>

@@ -40,6 +40,8 @@ interface Props {
   state: GameState
   advanceLabel: string
   onAdvance: () => void
+  advanceDisabled?: boolean
+  advanceHint?: string
   onShowClub?: (teamId: number) => void
   children: ReactNode
 }
@@ -50,7 +52,7 @@ function attentionFor(id: ScreenId, state: GameState): boolean {
   return false
 }
 
-export default function Shell({ screen, onNavigate, state, advanceLabel, onAdvance, onShowClub, children }: Props) {
+export default function Shell({ screen, onNavigate, state, advanceLabel, onAdvance, advanceDisabled = false, advanceHint, onShowClub, children }: Props) {
   useLang() // subscribes Shell to language changes; re-renders nav/labels below
   const [moreOpen, setMoreOpen] = useState(false)
   const moreButtonRef = useRef<HTMLButtonElement>(null)
@@ -126,9 +128,10 @@ export default function Shell({ screen, onNavigate, state, advanceLabel, onAdvan
             </div>
             <ThemeToggle />
           </div>
-          <Button variant="primary" className="mt-3 w-full" onClick={onAdvance}>
+          <Button variant="primary" className="mt-3 w-full" disabled={advanceDisabled} onClick={onAdvance}>
             {advanceLabel}
           </Button>
+          {advanceDisabled && advanceHint && <p className="mt-1.5 text-center text-[11px] text-warn">{advanceHint}</p>}
         </div>
       </aside>
 
@@ -158,7 +161,10 @@ export default function Shell({ screen, onNavigate, state, advanceLabel, onAdvan
 
       {/* mobile: floating advance + bottom bar */}
       <div className="fixed bottom-16 right-4 z-40 mb-[env(safe-area-inset-bottom)] md:hidden">
-        <Button variant="primary" onClick={onAdvance}>{advanceLabel}</Button>
+        {advanceDisabled && advanceHint && (
+          <p className="mb-1 rounded bg-surface-raised px-2 py-0.5 text-right text-[11px] text-warn shadow">{advanceHint}</p>
+        )}
+        <Button variant="primary" disabled={advanceDisabled} onClick={onAdvance}>{advanceLabel}</Button>
       </div>
       <nav aria-label={t('nav.sections')} className="fixed inset-x-0 bottom-0 z-40 flex border-t border-rule bg-surface-raised pb-[env(safe-area-inset-bottom)] md:hidden">
         {MOBILE_PRIMARY.filter(id => employed || !HIDDEN_WHEN_UNEMPLOYED.includes(id)).map(id => {

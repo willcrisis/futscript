@@ -157,6 +157,7 @@ export const en = {
   'squad.autoPick': 'Auto-pick',
   'squad.friendlies': 'Friendlies on free weeks',
   'squad.friendliesHint': "Extra gate income on cup weeks you're not playing; normal injury risk.",
+  'squad.selectElevenHint': 'Pick 11 to continue ({n}/11)',
 
   // Transfers screen
   'transfers.header': 'MARKET',

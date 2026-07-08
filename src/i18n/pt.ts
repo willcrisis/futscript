@@ -159,6 +159,7 @@ export const pt: Record<TranslationKey, string> = {
   'squad.autoPick': 'Escalação automática',
   'squad.friendlies': 'Amistosos nas semanas livres',
   'squad.friendliesHint': 'Renda extra de bilheteria em semanas de copa em que você não joga; risco normal de lesão.',
+  'squad.selectElevenHint': 'Escale 11 para continuar ({n}/11)',
 
   // Transfers screen
   'transfers.header': 'MERCADO',

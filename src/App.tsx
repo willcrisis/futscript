@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
 import { renameManager } from './engine/career'
 import { cupWinner } from './engine/cup'
+import { isAvailable } from './engine/lineup'
 import { newGame } from './engine/newGame'
 import { load, save } from './engine/save'
 import { advanceRound, newSeason, totalRounds } from './engine/season'
@@ -63,12 +64,14 @@ function Game() {
   const total = totalRounds(state)
   const seasonOver = state.round > total
   const employed = state.manager.employed
+  const availableCount = employed ? userTeam.playerIds.filter(id => isAvailable(state.players[id])).length : 0
+  const needsEleven = employed && !seasonOver && availableCount >= 11 && userTeam.lineup.length !== 11
   useEffect(() => {
     if (!employed && ['squad', 'transfers', 'finance'].includes(screen)) setScreen('home')
   }, [employed, screen])
 
   const advance = () => {
-    if (advancingRef.current) return
+    if (advancingRef.current || needsEleven) return
     advancingRef.current = true
     try {
       if (seasonOver) {
@@ -95,7 +98,7 @@ function Game() {
   }
 
   if (replay) {
-    return <MatchScreen fixture={replay} state={state} onClose={() => setReplay(null)} />
+    return <MatchScreen fixture={replay} state={state} onClose={() => { setReplay(null); setScreen('home') }} />
   }
 
   const champion = seasonOver
@@ -113,6 +116,8 @@ function Game() {
       state={state}
       advanceLabel={seasonOver ? t('shell.newSeason') : t('shell.advanceWeek')}
       onAdvance={advance}
+      advanceDisabled={needsEleven}
+      advanceHint={needsEleven ? t('squad.selectElevenHint', { n: userTeam.lineup.length }) : undefined}
       onShowClub={openClub}
     >
       {champion && (
@@ -130,7 +135,7 @@ function Game() {
         </Panel>
       )}
       {screen === 'home' && (employed
-        ? <HomeScreen state={state} setState={setState} onAdvance={advance} onNavigate={setScreen} onShowClub={openClub} />
+        ? <HomeScreen state={state} setState={setState} onAdvance={advance} advanceDisabled={needsEleven} onNavigate={setScreen} onShowClub={openClub} />
         : <UnemployedScreen state={state} setState={setState} onAdvance={advance} />)}
       {screen === 'squad' && <SquadScreen state={state} setState={setState} />}
       {screen === 'table' && (
