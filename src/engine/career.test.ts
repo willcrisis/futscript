@@ -1,7 +1,20 @@
 import { describe, expect, it } from 'vitest'
-import { expectedRank, hireManager, runCareerSeasonEnd, runCareerWeek, sackAiManager, teamStrength } from './career'
-import { BROKE_ROUNDS_LIMIT } from './finance'
+import {
+  acceptJob,
+  declineOffer,
+  expectedRank,
+  hireManager,
+  JOB_OFFER_ROUNDS,
+  renameManager,
+  restructuredLoan,
+  runCareerSeasonEnd,
+  runCareerWeek,
+  sackAiManager,
+  teamStrength,
+} from './career'
+import { BROKE_ROUNDS_LIMIT, LOAN_CAP } from './finance'
 import { newGame } from './newGame'
+import { MIN_SQUAD } from './transfers'
 
 describe('expectation', () => {
   it('teamStrength sums the best 11 levels only', () => {
@@ -205,5 +218,88 @@ describe('season verdict', () => {
     expect(judged.manager.confidence).toBeLessThan(60)
     const grace = { ...strong, manager: { ...strong.manager, hiredSeason: strong.season } }
     expect(runCareerSeasonEnd(grace, never, 36).manager.confidence).toBe(60)
+  })
+})
+
+function unemployed(seed: number) {
+  const base = newGame(seed)
+  return { ...base, manager: { ...base.manager, employed: false } }
+}
+
+describe('job market', () => {
+  it('offers arrive reputation-tiered and age out', () => {
+    const low = { ...unemployed(43), round: 5 }
+    const out = runCareerWeek(low, always) // always → offer fires, rep 30 → Division 3 only
+    expect(out.manager.jobOffers).toHaveLength(1)
+    const club = out.teams.find(t => t.id === out.manager.jobOffers[0].teamId)!
+    expect(club.division).toBe(3)
+    expect(out.news.some(n => n.type === 'jobOffer')).toBe(true)
+
+    let aging = out
+    for (let i = 0; i < JOB_OFFER_ROUNDS; i++) {
+      aging = runCareerWeek({ ...aging, manager: { ...aging.manager, jobOffers: aging.manager.jobOffers.slice(0, 1) } }, never)
+    }
+    expect(aging.manager.jobOffers).toHaveLength(0)
+
+    const famous = { ...unemployed(43), round: 5, manager: { ...unemployed(43).manager, employed: false, reputation: 80 } }
+    const rich = runCareerWeek(famous, always)
+    expect([1, 2, 3]).toContain(rich.teams.find(t => t.id === rich.manager.jobOffers[0].teamId)!.division)
+  })
+
+  it('acceptJob: restructure, top-up, incumbent to pool, honeymoon on', () => {
+    const state = unemployed(47)
+    const target = state.teams.find(t => t.id !== state.userTeamId)!
+    const broke = {
+      ...state,
+      teams: state.teams.map(t => (t.id === target.id ? { ...t, cash: -3_000_000, playerIds: t.playerIds.slice(0, MIN_SQUAD) } : t)),
+      manager: { ...state.manager, employed: false, jobOffers: [{ teamId: target.id, roundsLeft: 3 }] },
+    }
+    const out = acceptJob(broke, target.id)
+    expect(out.userTeamId).toBe(target.id)
+    expect(out.manager).toMatchObject({ employed: true, confidence: 60, hiredSeason: broke.season })
+    const club = out.teams.find(t => t.id === target.id)!
+    expect(club.cash).toBe(0)
+    expect(out.loanBalance).toBe(LOAN_CAP) // 3M debt: 2M loan, 1M written off
+    expect(club.playerIds.length).toBe(16) // academy top-up to sellable headroom
+    expect(club.manager).toBe(out.manager.name)
+    expect(out.unemployedPool).toContain(target.manager)
+    expect(out.incomingOffers).toEqual([])
+    expect(out.finances).toEqual([])
+    expect(out.news.some(n => n.type === 'userHired')).toBe(true)
+    expect(out.rngState).not.toBe(broke.rngState) // UI action recaptures the stream
+  })
+
+  it('restructuredLoan previews the takeover debt', () => {
+    const t = newGame(1).teams[0]
+    expect(restructuredLoan({ ...t, cash: 500_000 })).toBe(0)
+    expect(restructuredLoan({ ...t, cash: -700_000 })).toBe(700_000)
+    expect(restructuredLoan({ ...t, cash: -9_000_000 })).toBe(LOAN_CAP)
+  })
+
+  it('decline and rename are safe no-ops on bad input', () => {
+    const state = unemployed(53)
+    const withOffer = { ...state, manager: { ...state.manager, jobOffers: [{ teamId: 3, roundsLeft: 2 }] } }
+    expect(declineOffer(withOffer, 3).manager.jobOffers).toEqual([])
+    expect(renameManager(state, '  ').manager.name).toBe(state.manager.name)
+    expect(renameManager(state, ' Zé Mão de Onça ').manager.name).toBe('Zé Mão de Onça')
+    expect(acceptJob(state, 999)).toBe(state) // no such offer
+  })
+
+  it('poaching while employed: division above, overperformers only', () => {
+    // user overperforming in Division 3 → poach offer can only come from Division 2
+    const base = newGame(59)
+    const user = base.teams.find(t => t.id === base.userTeamId)!
+    const opponents = base.teams.filter(t => t.division === user.division && t.id !== user.id).slice(0, 10)
+    const fixtures = opponents.map((opp, i) => ({
+      round: i + 1, homeId: user.id, awayId: opp.id, homeGoals: 3, awayGoals: 0,
+    }))
+    const flying = { ...base, fixtures, round: 11 }
+    const out = runCareerWeek(flying, always)
+    if (out.manager.jobOffers.length > 0) {
+      expect(out.teams.find(t => t.id === out.manager.jobOffers[0].teamId)!.division).toBe(user.division - 1)
+    }
+    // season end fires more reliably
+    const seasonOut = runCareerSeasonEnd(flying, always, 36)
+    expect(seasonOut.manager.jobOffers.length).toBeGreaterThan(0)
   })
 })

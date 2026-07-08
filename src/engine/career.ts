@@ -1,8 +1,9 @@
 import { cupWinner } from './cup'
-import { BROKE_ROUNDS_LIMIT } from './finance'
+import { BROKE_ROUNDS_LIMIT, LOAN_CAP } from './finance'
 import { randomName } from './names'
 import { pushNews } from './news'
-import { randInt } from './rng'
+import { mulberry32, randInt } from './rng'
+import { makeRookie } from './rollover'
 import { standings } from './standings'
 import type { GameState, Player, Team } from './types'
 import { isManaged } from './types'
@@ -26,6 +27,11 @@ export const REP_TITLE = 10
 export const REP_PROMOTION = 8
 export const REP_CUP = 6
 export const REP_OVERPERFORM = 4
+export const JOB_OFFER_CHANCE = 0.4
+export const POACH_WEEKLY = 0.03
+export const POACH_SEASON_END = 0.5
+export const REP_D1 = 65
+export const REP_D2 = 45
 
 const clamp = (n: number) => Math.max(0, Math.min(100, n))
 
@@ -126,13 +132,130 @@ function runAiSackings(state: GameState, rand: () => number): GameState {
   return s
 }
 
+export function restructuredLoan(team: Team): number {
+  return Math.min(Math.max(0, -team.cash), LOAN_CAP)
+}
+
+function ageJobOffers(state: GameState): GameState {
+  if (state.manager.jobOffers.length === 0) return state
+  const jobOffers = state.manager.jobOffers
+    .map(o => ({ ...o, roundsLeft: o.roundsLeft - 1 }))
+    .filter(o => o.roundsLeft > 0)
+  return { ...state, manager: { ...state.manager, jobOffers } }
+}
+
+function pushJobOffer(state: GameState, teamId: number, week?: number): GameState {
+  const club = state.teams.find(t => t.id === teamId)!
+  const next: GameState = {
+    ...state,
+    manager: { ...state.manager, jobOffers: [...state.manager.jobOffers, { teamId, roundsLeft: JOB_OFFER_ROUNDS }] },
+  }
+  return pushNews(next, 'jobOffer', { club: club.name }, week)
+}
+
+function generateJobOffers(state: GameState, rand: () => number): GameState {
+  if (state.manager.jobOffers.length >= MAX_JOB_OFFERS || rand() >= JOB_OFFER_CHANCE) return state
+  const rep = state.manager.reputation
+  const divisions = rep >= REP_D1 ? [1, 2, 3] : rep >= REP_D2 ? [2, 3] : [3]
+  const offering = new Set(state.manager.jobOffers.map(o => o.teamId))
+  const candidates = state.teams.filter(
+    t => divisions.includes(t.division) && t.id !== state.userTeamId && !offering.has(t.id),
+  )
+  // strugglers are where jobs open up
+  const size = 16
+  const strugglers = candidates.filter(t => positionOf(state, t.id) > size / 2)
+  const from = strugglers.length > 0 ? strugglers : candidates
+  if (from.length === 0) return state
+  return pushJobOffer(state, from[randInt(rand, 0, from.length - 1)].id)
+}
+
+function maybePoach(state: GameState, rand: () => number): GameState {
+  const division = userDivision(state)
+  // ponytail: poaching only reaches down from the division above — D1 benches don't get poached
+  if (division === 1 || state.round < AI_SACK_FROM_WEEK) return state
+  if (state.manager.jobOffers.length > 0) return state
+  if (expectedRank(state, state.userTeamId) - positionOf(state, state.userTeamId) < 3) return state
+  if (rand() >= POACH_WEEKLY) return state
+  const richer = state.teams.filter(t => t.division === division - 1)
+  return pushJobOffer(state, richer[randInt(rand, 0, richer.length - 1)].id)
+}
+
+export function declineOffer(state: GameState, teamId: number): GameState {
+  return {
+    ...state,
+    manager: { ...state.manager, jobOffers: state.manager.jobOffers.filter(o => o.teamId !== teamId) },
+  }
+}
+
+export function renameManager(state: GameState, name: string): GameState {
+  const trimmed = name.trim()
+  return trimmed ? { ...state, manager: { ...state.manager, name: trimmed } } : state
+}
+
+function topUpSquad(state: GameState, teamId: number, rand: () => number): GameState {
+  const team = state.teams.find(t => t.id === teamId)!
+  const need = TAKEOVER_SQUAD - team.playerIds.length
+  if (need <= 0) return state
+  const players = { ...state.players }
+  let nextId = Math.max(0, ...Object.keys(players).map(Number)) + 1
+  const ids: number[] = []
+  for (let i = 0; i < need; i++) {
+    const rookie = makeRookie(rand, nextId++)
+    players[rookie.id] = rookie
+    ids.push(rookie.id)
+  }
+  return {
+    ...state,
+    players,
+    teams: state.teams.map(t => (t.id === teamId ? { ...t, playerIds: [...t.playerIds, ...ids] } : t)),
+  }
+}
+
+// A UI action: derives its own rand from rngState and re-captures it, so the
+// result is deterministic from the save and the weekly stream is not reused.
+export function acceptJob(state: GameState, teamId: number): GameState {
+  if (!state.manager.jobOffers.some(o => o.teamId === teamId)) return state
+  const rand = mulberry32(state.rngState)
+  let s = state
+  if (s.manager.employed) s = hireManager(s, s.userTeamId, rand) // the old bench gets a new face
+  const target = s.teams.find(t => t.id === teamId)!
+  s = { ...s, unemployedPool: [...s.unemployedPool, target.manager].slice(-POOL_CAP) }
+  s = { ...s, userTeamId: teamId } // from here "user division" means the new club (news filters)
+  s = pushNews(s, 'managerSacked', { club: target.name, manager: target.manager })
+  const debt = restructuredLoan(target)
+  s = {
+    ...s,
+    teams: s.teams.map(t =>
+      t.id === teamId
+        ? { ...t, manager: s.manager.name, managerHiredSeason: s.season, cash: Math.max(0, t.cash) }
+        : t,
+    ),
+    loanBalance: debt, // the board restructures: overdraft becomes a loan, the rest written off
+    brokeRounds: 0,
+    incomingOffers: [],
+    finances: [], // fresh ledger for the new club
+    construction: null,
+    manager: {
+      ...s.manager,
+      employed: true,
+      confidence: CONFIDENCE_START,
+      hiredSeason: s.season,
+      jobOffers: [],
+    },
+  }
+  s = topUpSquad(s, teamId, rand)
+  s = pushNews(s, 'userHired', { club: target.name, manager: s.manager.name })
+  return { ...s, rngState: randInt(rand, 1, 2 ** 31 - 1) }
+}
+
 // The weekly career tick. Extended by later tasks (job market).
 export function runCareerWeek(state: GameState, rand: () => number): GameState {
-  let s = runAiSackings(state, rand)
-  if (!s.manager.employed) return s
+  let s = ageJobOffers(state)
+  s = runAiSackings(s, rand)
+  if (!s.manager.employed) return generateJobOffers(s, rand)
   s = updateConfidence(s)
   if (s.manager.confidence <= 0 || s.brokeRounds >= BROKE_ROUNDS_LIMIT) return sackUser(s, rand)
-  return s
+  return maybePoach(s, rand)
 }
 
 // Season-end carousel: boards react to the final table, including the user's own verdict.
@@ -174,5 +297,9 @@ export function runCareerSeasonEnd(state: GameState, rand: () => number, week: n
     },
   }
   if (s.manager.confidence <= 0) s = sackUser(s, rand, week)
+  if (s.manager.employed && gap >= 3 && user.division > 1 && rand() < POACH_SEASON_END) {
+    const richer = s.teams.filter(t => t.division === user.division - 1)
+    s = pushJobOffer(s, richer[randInt(rand, 0, richer.length - 1)].id, week)
+  }
   return s
 }
