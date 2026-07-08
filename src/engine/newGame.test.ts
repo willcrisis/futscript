@@ -48,7 +48,6 @@ describe('newGame', () => {
     expect(state.incomingOffers).toEqual([])
     expect(state.loanBalance).toBe(0)
     expect(state.brokeRounds).toBe(0)
-    expect(state.gameOver).toBe(false)
     expect(state.finances).toEqual([])
   })
 
@@ -84,5 +83,26 @@ describe('newGame', () => {
       const s = newGame(seed)
       expect(s.teams.find(t => t.id === s.userTeamId)!.division).toBe(3)
     }
+  })
+
+  it('v7: every club has a manager, the user has a career, the pool starts empty', () => {
+    const state = newGame(7)
+    expect(state.version).toBe(7)
+    for (const team of state.teams) {
+      expect(team.manager).toMatch(/\S+ \S+/) // "First Last" — \S so accented names (André, ...) still match
+      expect(team.managerHiredSeason).toBe(0)
+    }
+    expect(state.manager).toMatchObject({ reputation: 30, confidence: 60, employed: true, hiredSeason: 0, jobOffers: [] })
+    expect(state.manager.name).toMatch(/\S+ \S+/)
+    expect(state.unemployedPool).toEqual([])
+    expect('gameOver' in state).toBe(false)
+  })
+
+  it('v7: the user club draw is still the last thing the seed decides', () => {
+    // same seed → identical world (teams, players, fixtures) regardless of which club the user got
+    const a = newGame(42)
+    const b = newGame(42)
+    expect(a.userTeamId).toBe(b.userTeamId)
+    expect(a.teams.map(t => t.manager)).toEqual(b.teams.map(t => t.manager))
   })
 })

@@ -9,6 +9,7 @@ import StatChip from '../ui/StatChip'
 function columns(): Column<SeasonRecord>[] {
   return [
     { key: 'season', label: t('history.seasonColumn'), mono: true, render: h => h.season },
+    { key: 'club', label: t('history.clubColumn'), render: h => h.club },
     { key: 'champions', label: t('history.championsColumn'), render: h => h.champions[0] ?? '—' },
     { key: 'cup', label: t('history.cupColumn'), render: h => h.cupWinner },
     {
@@ -27,9 +28,8 @@ function columns(): Column<SeasonRecord>[] {
 
 export default function HistoryScreen({ state }: { state: GameState }) {
   useLang()
-  const userName = state.teams.find(t => t.id === state.userTeamId)!.name
-  const titles = state.history.filter(h => h.champions[0] === userName).length
-  const cups = state.history.filter(h => h.cupWinner === userName).length
+  const titles = state.history.filter(h => h.champions[0] === h.club).length
+  const cups = state.history.filter(h => h.cupWinner === h.club).length
 
   return (
     <div>
@@ -38,9 +38,10 @@ export default function HistoryScreen({ state }: { state: GameState }) {
         <EmptyState>{t('history.emptyState')}</EmptyState>
       ) : (
         <>
-          <div className="mb-4 grid max-w-md grid-cols-2 gap-3">
+          <div className="mb-4 grid max-w-md grid-cols-3 gap-3">
             <StatChip label={t('history.d1Titles')} value={titles} />
             <StatChip label={t('history.cups')} value={cups} />
+            <StatChip label={t('history.reputation')} value={state.manager.reputation} />
           </div>
           <DataTable columns={columns()} rows={state.history.slice().reverse()} rowKey={h => h.season} />
         </>

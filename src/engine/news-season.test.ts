@@ -6,7 +6,7 @@ import type { GameState } from './types'
 
 function playSeason(seed: number): GameState {
   let s = newGame(seed)
-  for (let i = 0; i < totalRounds(s) && !s.gameOver; i++) s = advanceRound(s)
+  for (let i = 0; i < totalRounds(s); i++) s = advanceRound(s)
   return s
 }
 

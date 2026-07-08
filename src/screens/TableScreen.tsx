@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useState } from 'react'
 import { standings } from '../engine/standings'
 import type { GameState } from '../engine/types'
 import { t, useLang } from '../i18n'
@@ -23,25 +23,18 @@ const fold = (s: string) => s.normalize('NFD').replace(/\p{Diacritic}/gu, '').to
 
 interface Props {
   state: GameState
-  focusTeamId?: number
-  onFocusConsumed?: () => void
+  onShowClub?: (teamId: number) => void
 }
 
-export default function TableScreen({ state, focusTeamId, onFocusConsumed }: Props) {
+export default function TableScreen({ state, onShowClub }: Props) {
   useLang()
   const userDivision = state.teams.find(t => t.id === state.userTeamId)!.division
-  const focusTeam = focusTeamId !== undefined ? state.teams.find(t => t.id === focusTeamId) : undefined
-  const [division, setDivision] = useState(focusTeam?.division ?? userDivision)
-  const [highlightId, setHighlightId] = useState<number | null>(focusTeam?.id ?? null)
+  const [division, setDivision] = useState(userDivision)
+  const [highlightId, setHighlightId] = useState<number | null>(null)
   const [query, setQuery] = useState('')
   const divisions = [...new Set(state.teams.map(t => t.division))].sort()
   const name = (id: number) => state.teams.find(t => t.id === id)!.name
   const rows: Row[] = standings(state, division).map((r, i) => ({ pos: i + 1, ...r, name: name(r.teamId) }))
-
-  // App hands off focus via focusTeamId; consume it once so ordinary nav back to the tab doesn't re-highlight
-  useEffect(() => {
-    if (focusTeamId !== undefined) onFocusConsumed?.()
-  }, [focusTeamId, onFocusConsumed])
 
   const onSearch = (raw: string) => {
     setQuery(raw)
@@ -131,6 +124,7 @@ export default function TableScreen({ state, focusTeamId, onFocusConsumed }: Pro
         rowKey={r => r.teamId}
         rowAccent={rowAccent}
         rowClass={r => (r.teamId === highlightId ? 'ring-1 ring-accent' : undefined)}
+        onRowClick={onShowClub ? r => onShowClub(r.teamId) : undefined}
       />
     </div>
   )

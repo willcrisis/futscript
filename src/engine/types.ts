@@ -50,6 +50,8 @@ export interface Team {
   capacity: number // stadium seats
   ticketPrice: number // dollars, user-settable 5-60
   fanMood: number // 0-100; drives attendance and sponsors
+  manager: string // AI manager name; for the user's club it is stale — render state.manager.name instead
+  managerHiredSeason: number // 0 = founding; === current season → immune from sacking
 }
 
 export interface TransferListing {
@@ -103,6 +105,7 @@ export interface SeasonRecord {
   topScorer: { player: string; team: string; goals: number }
   userDivision: number
   userPosition: number
+  club: string // which club the manager ran that season ('—' if unemployed all season)
 }
 
 export interface ScorerRecord {
@@ -117,6 +120,7 @@ export type NewsType =
   | 'starterInjured' | 'boardWarning' | 'constructionDone'
   | 'rivalTransfer' | 'heavyWin' | 'cupRun'
   | 'champions' | 'cupWinner' | 'promoted' | 'relegated'
+  | 'managerSacked' | 'managerHired' | 'userSacked' | 'userHired' | 'jobOffer'
 
 export interface NewsItem {
   season: number
@@ -125,8 +129,28 @@ export interface NewsItem {
   params: Record<string, string | number> // names and numbers as data — translated at render time
 }
 
+export interface JobOffer {
+  teamId: number
+  roundsLeft: number // offer expires when this hits 0
+}
+
+export interface Manager {
+  name: string
+  reputation: number // 0-100, career-long, survives sackings
+  confidence: number // 0-100, board patience with results; 0 = sacked
+  employed: boolean // false = spectating, awaiting offers
+  hiredSeason: number // season the current job started; === current season → honeymoon (gains only)
+  jobOffers: JobOffer[] // job market (unemployed) or poach offers (employed)
+}
+
+// The one predicate for "does the user run this club" — lives here so every
+// engine module can import it without cycles.
+export function isManaged(state: GameState, teamId: number): boolean {
+  return state.manager.employed && teamId === state.userTeamId
+}
+
 export interface GameState {
-  version: 6
+  version: 7
   seed: number
   rngState: number // seeds the RNG for the next advanceRound
   season: number
@@ -142,9 +166,10 @@ export interface GameState {
   incomingOffers: Offer[]
   loanBalance: number // user club only
   brokeRounds: number // consecutive rounds the user's cash was negative
-  gameOver: boolean // board ran out of patience
   finances: FinanceEntry[] // user club ledger, newest last
   construction: { addedCapacity: number; weeksLeft: number } | null // user stadium expansion in progress
   allTimeScorers: ScorerRecord[] // top 50, updated at each rollover
   news: NewsItem[] // newest last, capped at NEWS_CAP
+  manager: Manager
+  unemployedPool: string[] // sacked AI names awaiting a bench, oldest dropped at POOL_CAP
 }

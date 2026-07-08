@@ -29,12 +29,12 @@ describe('expandStadium', () => {
     expect(expandStadium(s1)).toBe(s1) // one at a time
   })
 
-  it('refuses when broke or sacked', () => {
+  it('refuses when broke or unemployed', () => {
     const s0 = newGame(1)
     const broke = { ...s0, teams: adjustCash(s0.teams, s0.userTeamId, -900_000) }
     expect(expandStadium(broke)).toBe(broke)
-    const over = { ...s0, gameOver: true }
-    expect(expandStadium(over)).toBe(over)
+    const unemployed = { ...s0, manager: { ...s0.manager, employed: false } }
+    expect(expandStadium(unemployed)).toBe(unemployed)
   })
 })
 

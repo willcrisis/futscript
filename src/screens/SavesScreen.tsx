@@ -1,5 +1,6 @@
 import { useRef, useState } from 'react'
 import type { Dispatch, SetStateAction } from 'react'
+import { renameManager } from '../engine/career'
 import {
   activeSlot, deleteSlot, exportSave, importSave, listSlots, loadSlot,
   saveToSlot, setActiveSlot, SLOTS,
@@ -129,6 +130,18 @@ export default function SavesScreen({ state, setState, onNewCareer }: Props) {
 
       <Panel label={t('saves.settings')} className="mt-4">
         <div className="flex items-center justify-between gap-3 text-sm">
+          <span className="text-ink-muted">{t('saves.managerName')}</span>
+          <input
+            type="text"
+            defaultValue={state.manager.name}
+            key={state.manager.name}
+            maxLength={40}
+            aria-label={t('saves.managerName')}
+            onBlur={e => setState(s => renameManager(s, e.target.value))}
+            className="w-48 rounded-md border border-rule bg-surface px-2 py-1.5 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent"
+          />
+        </div>
+        <div className="mt-3 flex items-center justify-between gap-3 text-sm">
           <span className="text-ink-muted">{t('saves.language')}</span>
           <select
             value={lang}

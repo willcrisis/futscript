@@ -19,6 +19,7 @@ export const pt: Record<TranslationKey, string> = {
   'shell.newSeason': 'Nova temporada',
   'shell.theme': 'Tema',
   'shell.seasonWeek': 'T{season} S{week}',
+  'shell.unemployed': 'Desempregado',
 
   // Shared across screens
   'common.weeksShort': '{n}sem',
@@ -32,6 +33,8 @@ export const pt: Record<TranslationKey, string> = {
   'common.age': 'Idade',
   'common.level': 'Nív',
   'common.division': 'Divisão',
+  'common.position': 'Pos',
+  'common.status': 'Situação',
   'common.vs': 'x',
   'common.switchToLight': 'Mudar para tema claro',
   'common.switchToDark': 'Mudar para tema escuro',
@@ -63,6 +66,13 @@ export const pt: Record<TranslationKey, string> = {
   'home.boardPatience': 'Paciência da diretoria {n}/8',
   'home.cupTieThisWeek': 'Jogo de copa esta semana',
   'home.allQuiet': 'Tudo tranquilo no clube.',
+  'home.boardConfidence': 'Confiança da diretoria',
+  'home.confidenceAttention': 'A diretoria está inquieta — confiança {n}/100',
+  'home.poachPanel': 'Querem você',
+  'home.poachOffer': 'O {club} (Divisão {division}) quer você como técnico',
+  'home.poachDetails': 'Caixa {cash} · Salários {wages}/sem · Empréstimo após assumir {loan}',
+  'home.poachAccept': 'Aceitar o cargo',
+  'home.poachDecline': 'Recusar',
 
   // Table screen
   'table.header': 'DIVISÃO {division}',
@@ -187,6 +197,8 @@ export const pt: Record<TranslationKey, string> = {
   'history.emptyState': 'Nenhuma temporada concluída ainda — a história é escrita ao final de cada temporada.',
   'history.d1Titles': 'Títulos D1',
   'history.cups': 'Copas',
+  'history.clubColumn': 'Clube',
+  'history.reputation': 'Reputação',
 
   // Saves screen
   'saves.header': 'CARREIRAS',
@@ -205,6 +217,7 @@ export const pt: Record<TranslationKey, string> = {
   'saves.importNote': 'Importar substitui o slot ativo. Excluir o slot {slot} (o ativo) mantém seu jogo em memória até o próximo salvamento automático.',
   'saves.invalidFile': 'Esse arquivo não é um save válido do futscript.',
   'saves.settings': 'Configurações',
+  'saves.managerName': 'Nome do técnico',
   'saves.language': 'Idioma',
   'saves.languageEnglish': 'English',
   'saves.languagePortuguese': 'Português',
@@ -224,12 +237,19 @@ export const pt: Record<TranslationKey, string> = {
   'match.inProgress': 'A partida está em andamento…',
 
   // App chrome
-  'app.sackedHeader': 'A DIRETORIA DECIDIU',
-  'app.sackedTitle': 'Demitido!',
-  'app.sackedMessage': '{team} passou tempo demais no vermelho. A diretoria te mostrou a porta depois de {n} temporada(s).',
-  'app.newCareerButton': 'Começar uma nova carreira',
   'app.championMessage': '🏆 {name} é o campeão da Divisão {division}!',
   'app.contractsExpireWarning': '⚠ {n} contrato(s) vence(m) — jogadores não renovados saem (os mais baratos são mantidos automaticamente se o elenco cair abaixo de 14)',
+
+  // Unemployed screen
+  'unemployed.header': 'Aguardando propostas',
+  'unemployed.message': 'Você foi demitido. O campeonato continua — avance as semanas e as propostas virão.',
+  'unemployed.reputation': 'Reputação',
+  'unemployed.offersPanel': 'Propostas de emprego',
+  'unemployed.noOffers': 'Nenhuma proposta esta semana. Continue avançando — sempre demitem alguém.',
+  'unemployed.offerRow': '{club} — Divisão {division}, {position}º lugar, {squad} jogadores',
+  'unemployed.offerFinances': 'Caixa {cash} · Salários {wages}/sem · Empréstimo após assumir {loan}',
+  'unemployed.accept': 'Aceitar o cargo',
+  'unemployed.decline': 'Recusar',
 
   // Ledger labels (display-time translation of canonical engine strings)
   'ledger.wages': 'Salários',
@@ -314,6 +334,7 @@ export const pt: Record<TranslationKey, string> = {
   'welcome.featureFinance': 'Equilibre as contas — bilheteria, salários e o banco.',
   'welcome.featureClimb': 'Suba da Divisão 3 até o topo, um acesso de cada vez.',
   'welcome.featureCup': 'Busque a glória na Copa Nacional.',
+  'welcome.managerName': 'Seu nome',
 
   // News feed
   'news.title': 'Notícias',
@@ -335,4 +356,21 @@ export const pt: Record<TranslationKey, string> = {
   'news.cupWinner': '{club} vence a Copa',
   'news.promoted': '{club} é promovido',
   'news.relegated': '{club} é rebaixado',
+  'news.managerSacked': '{club} demite o técnico {manager}',
+  'news.managerHired': '{manager} assume o comando do {club}',
+  'news.userSacked': 'Você foi demitido pelo {club}',
+  'news.userHired': 'Você é o novo técnico do {club}',
+  'news.jobOffer': 'O {club} quer você como técnico',
+
+  // Club screen
+  'club.header': 'Clube',
+  'club.position': '{position}º na Divisão {division}',
+  'club.manager': 'Técnico',
+  'club.fanMood': 'Humor da torcida',
+  'club.capacity': 'Estádio',
+  'club.squadPanel': 'Elenco',
+  'club.back': 'Voltar',
+  'club.statusOut': 'Fora {n}sem',
+  'club.statusBan': 'Suspenso',
+  'club.statusFit': '—',
 }

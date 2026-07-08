@@ -263,6 +263,18 @@ describe('backlog semantics', () => {
 })
 
 describe('newSeason', () => {
+  it('newSeason carries career state through the rollover', () => {
+    let state = newGame(17)
+    while (state.round <= totalRounds(state)) state = advanceRound(state)
+    const next = newSeason(state)
+    expect(next.manager).toBeDefined()
+    expect(next.unemployedPool).toBeDefined()
+    expect(next.teams.every(t => typeof t.manager === 'string')).toBe(true)
+    expect(next.history[next.history.length - 1].club).toBe(
+      state.teams.find(t => t.id === state.userTeamId)!.name,
+    )
+  })
+
   it('resets the calendar, bumps the season, and ages squads', () => {
     let s = newGame(7)
     // fund the club so a bankruptcy can't halt the season early — this test is about rollover, not survival
@@ -295,9 +307,9 @@ describe('all-time scorers', () => {
     expect([...s2.allTimeScorers].sort((a, b) => b.goals - a.goals)).toEqual(s2.allTimeScorers)
     // a second season accumulates onto existing entries
     let s3 = s2
-    for (let i = 0; i < totalRounds(s3) && !s3.gameOver; i++) s3 = advanceRound(s3)
+    for (let i = 0; i < totalRounds(s3); i++) s3 = advanceRound(s3)
     const repeatId = s3.allTimeScorers?.[0]?.playerId
-    const s4 = newSeason({ ...s3, gameOver: false })
+    const s4 = newSeason(s3)
     if (repeatId !== undefined && s4.players[repeatId]) {
       const before = s2.allTimeScorers.find(e => e.playerId === repeatId)?.goals ?? 0
       const after = s4.allTimeScorers.find(e => e.playerId === repeatId)?.goals ?? 0
@@ -308,9 +320,10 @@ describe('all-time scorers', () => {
 })
 
 describe('advanceRound — market and money', () => {
-  it('no-ops when the game is over', () => {
-    const s = { ...newGame(1), gameOver: true }
-    expect(advanceRound(s)).toEqual(s)
+  it('still advances when the manager is unemployed (nothing sacks yet — Task 6 wires that)', () => {
+    const base = newGame(1)
+    const s = { ...base, manager: { ...base.manager, employed: false } }
+    expect(advanceRound(s).round).toBe(s.round + 1)
   })
 
   it('moves money every round', () => {
@@ -341,9 +354,10 @@ describe('newSeason — money and contracts', () => {
 })
 
 describe('newSeason — the long game', () => {
-  it('no-ops when the game is over', () => {
-    const s = { ...newGame(1), gameOver: true }
-    expect(newSeason(s)).toBe(s)
+  it('still rolls over when the manager is unemployed (nothing sacks yet — Task 6 wires that)', () => {
+    const s = playSeason(1)
+    const unemployed = { ...s, manager: { ...s.manager, employed: false } }
+    expect(newSeason(unemployed).season).toBe(s.season + 1)
   })
 
   it('pays division-scaled prizes and applies promotion and relegation', () => {
@@ -407,6 +421,45 @@ describe('newSeason — the long game', () => {
     expect(s2.players[expiring[1]]).toBeDefined()
     expect(s2.players[expiring[0]].contractSeasons).toBeGreaterThanOrEqual(1)
     expect(userAfter.playerIds.length).toBeGreaterThanOrEqual(MIN_SQUAD)
+  })
+})
+
+describe('spectator gates', () => {
+  it('an unemployed manager spectates: world advances, old club runs itself', () => {
+    const base = newGame(23)
+    const state = { ...base, manager: { ...base.manager, employed: false } }
+    let s = state
+    for (let i = 0; i < 8; i++) s = advanceRound(s)
+    expect(s.round).toBe(9) // the world kept moving
+    expect(s.finances).toEqual([]) // no ledger for a club you don't run
+    expect(s.brokeRounds).toBe(0)
+    expect(s.incomingOffers).toEqual([])
+    const badTypes = ['userSigned', 'userSold', 'starterInjured', 'boardWarning', 'offerReceived']
+    expect(s.news.filter(n => badTypes.includes(n.type))).toEqual([])
+  })
+
+  it('at rollover an unmanaged club auto-renews its expiring contracts', () => {
+    let state = newGame(29)
+    state = { ...state, manager: { ...state.manager, employed: false } }
+    const user = state.teams.find(t => t.id === state.userTeamId)!
+    const players = { ...state.players }
+    for (const id of user.playerIds) players[id] = { ...players[id], contractSeasons: 1 }
+    state = { ...state, players, round: totalRounds(state) + 1 }
+    const next = newSeason(state)
+    const after = next.teams.find(t => t.id === state.userTeamId)!
+    // retirees may still leave, but nobody walks over an expired deal: survivors are all renewed
+    expect(after.playerIds.length).toBeGreaterThanOrEqual(14)
+    for (const id of after.playerIds) expect(next.players[id].contractSeasons).toBeGreaterThanOrEqual(1)
+  })
+
+  // found during self-review: newSeason's own prize-money and cup-prize addEntry calls wrote to
+  // state.finances keyed only on teamId === userTeamId, without checking employment — a club a
+  // spectating user doesn't run would still get a phantom ledger line for winning the league or cup.
+  it('season-end prize money and cup prizes never touch the ledger for an unmanaged club', () => {
+    let state = newGame(29)
+    state = { ...state, manager: { ...state.manager, employed: false }, round: totalRounds(state) + 1 }
+    const next = newSeason(state)
+    expect(next.finances).toEqual([])
   })
 })
 

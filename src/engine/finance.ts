@@ -38,7 +38,7 @@ export const TICKET_PRICE = 15
 const DEPOSIT_INTEREST = 0.005
 const LOAN_INTEREST = 0.02
 const OVERDRAFT_INTEREST = 0.02
-const BROKE_ROUNDS_LIMIT = 8
+export const BROKE_ROUNDS_LIMIT = 8
 const LEDGER_CAP = 300
 
 export function wageBill(teamId: number, state: GameState): number {
@@ -73,7 +73,7 @@ export function runWeeklyFinances(state: GameState, rand: () => number): GameSta
   }
 
   const teams = state.teams.map(team => {
-    const user = team.id === state.userTeamId
+    const user = state.manager.employed && team.id === state.userTeamId
     const wages = wageBill(team.id, state)
     let cash = team.cash - wages
     if (user) addEntry('Wages', -wages)
@@ -121,8 +121,8 @@ export function runWeeklyFinances(state: GameState, rand: () => number): GameSta
   })
 
   const cashAfter = teams.find(t => t.id === state.userTeamId)!.cash
-  const brokeRounds = cashAfter < 0 ? state.brokeRounds + 1 : 0
-  let result: GameState = { ...state, teams, finances, brokeRounds, gameOver: state.gameOver || brokeRounds >= BROKE_ROUNDS_LIMIT }
+  const brokeRounds = state.manager.employed && cashAfter < 0 ? state.brokeRounds + 1 : 0
+  let result: GameState = { ...state, teams, finances, brokeRounds }
   if (brokeRounds >= 6 && state.brokeRounds < 6) {
     result = pushNews(result, 'boardWarning', { n: brokeRounds })
   }
@@ -130,7 +130,7 @@ export function runWeeklyFinances(state: GameState, rand: () => number): GameSta
 }
 
 export function borrow(state: GameState, amount: number): GameState {
-  if (state.gameOver || amount <= 0 || state.loanBalance + amount > LOAN_CAP) return state
+  if (!state.manager.employed || amount <= 0 || state.loanBalance + amount > LOAN_CAP) return state
   return {
     ...state,
     loanBalance: state.loanBalance + amount,
@@ -141,7 +141,7 @@ export function borrow(state: GameState, amount: number): GameState {
 
 export function repayLoan(state: GameState, amount: number): GameState {
   const repay = Math.min(amount, state.loanBalance)
-  if (state.gameOver || repay <= 0) return state
+  if (!state.manager.employed || repay <= 0) return state
   return {
     ...state,
     loanBalance: state.loanBalance - repay,

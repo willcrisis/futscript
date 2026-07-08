@@ -51,7 +51,7 @@ describe('save/load', () => {
     expect(load(storage)).toBeNull()
   })
 
-  it('migrates a v1 save all the way to v6', () => {
+  it('migrates a v1 save all the way to v7', () => {
     const storage = fakeStorage()
     const v1 = {
       version: 1, seed: 1, rngState: 1, season: 1, round: 5, userTeamId: 0,
@@ -61,22 +61,24 @@ describe('save/load', () => {
     }
     storage.setItem('futscript-save', JSON.stringify(v1))
     const state = load(storage)
-    expect(state!.version).toBe(6)
+    expect(state!.version).toBe(7)
     expect(state!.players[1]).toMatchObject({
       form: 0, fitness: 100, yellowCards: 0, salary: salaryFor(50), contractSeasons: 2, seasonGoals: 0,
     })
     expect(state!.teams[0]).toMatchObject({
       tactic: 'normal', trainingStyle: 'normal', cash: 1_000_000, division: 1,
-      capacity: 25_000, ticketPrice: 15, fanMood: 50,
+      capacity: 25_000, ticketPrice: 15, fanMood: 50, managerHiredSeason: 0,
     })
+    expect(typeof state!.teams[0].manager).toBe('string')
     expect(state!.transferList).toEqual([])
-    expect(state!.gameOver).toBe(false)
+    expect(state!.manager).toMatchObject({ reputation: 30, confidence: 60, employed: true, hiredSeason: 0, jobOffers: [] })
+    expect(state!.unemployedPool).toEqual([])
     expect(state!.construction).toBeNull()
     expect(state!.allTimeScorers).toEqual([])
     expect(state!.news).toEqual([])
   })
 
-  it('migrates a v2 save to v6', () => {
+  it('migrates a v2 save to v7', () => {
     const storage = fakeStorage()
     const v2 = {
       version: 2, seed: 1, rngState: 1, season: 1, round: 5, userTeamId: 0,
@@ -89,16 +91,18 @@ describe('save/load', () => {
     }
     storage.setItem('futscript-save', JSON.stringify(v2))
     const state = load(storage)
-    expect(state!.version).toBe(6)
+    expect(state!.version).toBe(7)
     expect(state!.players[1]).toMatchObject({ form: 1, fitness: 80, salary: salaryFor(50), contractSeasons: 2 })
     expect(state!.teams[0]).toMatchObject({ tactic: 'attacking', cash: 1_000_000, capacity: 25_000, ticketPrice: 15, fanMood: 50 })
     expect(state!.loanBalance).toBe(0)
+    expect(state!.manager.employed).toBe(true)
+    expect(state!.unemployedPool).toEqual([])
     expect(state!.construction).toBeNull()
     expect(state!.allTimeScorers).toEqual([])
     expect(state!.news).toEqual([])
   })
 
-  it('migrates a v3 save to v6', () => {
+  it('migrates a v3 save to v7', () => {
     const storage = fakeStorage()
     const v3 = {
       version: 3, seed: 1, rngState: 1, season: 2, round: 9, userTeamId: 0,
@@ -113,7 +117,7 @@ describe('save/load', () => {
     }
     storage.setItem('futscript-save', JSON.stringify(v3))
     const state = load(storage)
-    expect(state!.version).toBe(6)
+    expect(state!.version).toBe(7)
     expect(state!.season).toBe(2) // progress preserved
     expect(state!.round).toBe(9)
     expect(state!.loanBalance).toBe(100_000)
@@ -123,12 +127,14 @@ describe('save/load', () => {
     expect(state!.cupFixtures).toEqual([])
     expect(state!.history).toEqual([])
     expect(state!.playFriendlies).toBe(false)
+    expect(state!.manager.employed).toBe(true)
+    expect(state!.unemployedPool).toEqual([])
     expect(state!.construction).toBeNull()
     expect(state!.allTimeScorers).toEqual([])
     expect(state!.news).toEqual([])
   })
 
-  it('migrates a v4 save to v6', () => {
+  it('migrates a v4 save to v7', () => {
     const storage = fakeStorage()
     const v4 = {
       version: 4, seed: 1, rngState: 1, season: 3, round: 12, userTeamId: 0,
@@ -146,25 +152,62 @@ describe('save/load', () => {
     }
     storage.setItem('futscript-save', JSON.stringify(v4))
     const state = load(storage)
-    expect(state!.version).toBe(6)
+    expect(state!.version).toBe(7)
     expect(state!.season).toBe(3) // progress preserved
     expect(state!.playFriendlies).toBe(true)
     expect(state!.teams[0]).toMatchObject({ capacity: 9_000, ticketPrice: 15, fanMood: 50 }) // division 3
     expect(state!.teams[1]).toMatchObject({ capacity: 25_000 }) // division 1
+    expect(state!.manager.employed).toBe(true)
+    expect(state!.unemployedPool).toEqual([])
     expect(state!.construction).toBeNull()
     expect(state!.allTimeScorers).toEqual([])
     expect(state!.news).toEqual([])
   })
 
-  it('migrates a v5 save to v6 with an empty news feed', () => {
+  it('migrates a v5 save to v7 with an empty news feed', () => {
     const storage = fakeStorage()
     const v5 = { ...JSON.parse(JSON.stringify(newGame(3))), version: 5 } as Record<string, unknown>
     delete v5.news
     storage.setItem('futscript-save', JSON.stringify(v5))
     const state = load(storage)
-    expect(state!.version).toBe(6)
+    expect(state!.version).toBe(7)
     expect(state!.news).toEqual([])
     expect(state!.season).toBe(1)
+  })
+
+  it('migrates a v6 save to v7 with managers everywhere', () => {
+    const storage = fakeStorage()
+    const v6 = { ...JSON.parse(JSON.stringify(newGame(3))), version: 6, gameOver: false } as Record<string, unknown>
+    delete v6.manager
+    delete v6.unemployedPool
+    ;(v6.teams as Record<string, unknown>[]).forEach(t => { delete t.manager; delete t.managerHiredSeason })
+    storage.setItem('futscript-save', JSON.stringify(v6))
+    const state = load(storage)!
+    expect(state.version).toBe(7)
+    expect(state.manager).toMatchObject({ reputation: 30, confidence: 60, employed: true, hiredSeason: 0, jobOffers: [] })
+    expect(state.unemployedPool).toEqual([])
+    for (const team of state.teams) expect(typeof team.manager).toBe('string')
+    expect('gameOver' in state).toBe(false)
+  })
+
+  it('migrates a game-over v6 save into unemployment instead of a dead end', () => {
+    const storage = fakeStorage()
+    const v6 = { ...JSON.parse(JSON.stringify(newGame(3))), version: 6, gameOver: true } as Record<string, unknown>
+    delete v6.manager
+    storage.setItem('futscript-save', JSON.stringify(v6))
+    expect(load(storage)!.manager.employed).toBe(false)
+  })
+
+  it('migration stamps old history rows with the current club', () => {
+    const storage = fakeStorage()
+    const base = newGame(3)
+    const clubName = base.teams.find(t => t.id === base.userTeamId)!.name
+    const v6 = {
+      ...JSON.parse(JSON.stringify(base)), version: 6, gameOver: false,
+      history: [{ season: 1, champions: ['X'], cupWinner: 'Y', topScorer: { player: 'P', team: 'T', goals: 9 }, userDivision: 3, userPosition: 4 }],
+    } as Record<string, unknown>
+    storage.setItem('futscript-save', JSON.stringify(v6))
+    expect(load(storage)!.history[0].club).toBe(clubName)
   })
 
   it('a migrated 16-team world expands to three divisions at its first rollover', () => {
@@ -200,7 +243,7 @@ describe('save/load', () => {
     }
     storage.setItem('futscript-save', JSON.stringify(v3ish))
     const migrated = load(storage)!
-    expect(migrated.version).toBe(6)
+    expect(migrated.version).toBe(7)
     expect(migrated.teams).toHaveLength(16)
     expect(migrated.teams.every(t => t.division === 1)).toBe(true)
     // give it played fixtures so standings/prizes are meaningful, then roll over
@@ -267,7 +310,7 @@ describe('save slots', () => {
     })
     const imported = importSave(JSON.stringify(v3ish))
     expect(imported).not.toBeNull()
-    expect(imported!.version).toBe(6)
+    expect(imported!.version).toBe(7)
     expect(importSave('not json at all')).toBeNull()
     expect(importSave('{"version": 999}')).toBeNull()
     expect(importSave('{"version": 5}')).toBeNull()

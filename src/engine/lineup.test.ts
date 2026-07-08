@@ -24,6 +24,7 @@ function makeSquad(): { team: Team; players: Record<number, Player> } {
     id: 0, name: 'Test FC', playerIds, formation: '4-4-2', lineup: [],
     tactic: 'normal', trainingStyle: 'normal', cash: 1_000_000, division: 1,
     capacity: 9_000, ticketPrice: 15, fanMood: 50,
+    manager: 'AI Manager', managerHiredSeason: 0,
   }
   return { team, players }
 }

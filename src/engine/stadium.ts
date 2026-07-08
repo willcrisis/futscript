@@ -12,7 +12,7 @@ export function clampMood(mood: number): number {
 
 export function expandStadium(state: GameState): GameState {
   const user = state.teams.find(t => t.id === state.userTeamId)!
-  if (state.gameOver || state.construction !== null || user.cash < EXPANSION.cost) return state
+  if (!state.manager.employed || state.construction !== null || user.cash < EXPANSION.cost) return state
   return {
     ...state,
     construction: { addedCapacity: EXPANSION.seats, weeksLeft: EXPANSION.weeks },

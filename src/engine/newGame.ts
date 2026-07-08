@@ -53,6 +53,8 @@ export function newGame(seed: number): GameState {
       capacity: INITIAL_CAPACITY[division],
       ticketPrice: 15,
       fanMood: 50,
+      manager: randomName(rand),
+      managerHiredSeason: 0,
     })
   }
 
@@ -63,16 +65,20 @@ export function newGame(seed: number): GameState {
   )
   const cupFixtures = drawFirstCupRound(teams, rand)
 
+  // The user's own manager name is drawn here, AFTER every world-shaping draw above
+  // (teams/players/fixtures/cup) and BEFORE the user-club draw below.
+  const managerName = randomName(rand)
+
   // Random Division 3 starting club, drawn with the world's own rand AFTER every other
-  // draw above (teams/players/fixtures/cup) so the world itself is unaffected by this
-  // pick for a given seed — only userTeamId and the captured rngState below differ.
+  // draw above (teams/players/fixtures/cup/manager name) so the world itself is unaffected
+  // by this pick for a given seed — only userTeamId and the captured rngState below differ.
   // This MUST stay the very last rand consumption before rngState is captured, or
   // determinism breaks (rngState would no longer reflect "one draw past this point").
   const divisionThree = teams.filter(t => t.division === 3)
   const userTeamId = divisionThree[randInt(rand, 0, divisionThree.length - 1)].id
 
   return {
-    version: 6,
+    version: 7,
     seed,
     rngState: randInt(rand, 1, 2 ** 31 - 1),
     season: 1,
@@ -88,10 +94,11 @@ export function newGame(seed: number): GameState {
     incomingOffers: [],
     loanBalance: 0,
     brokeRounds: 0,
-    gameOver: false,
     finances: [],
     construction: null,
     allTimeScorers: [],
     news: [],
+    manager: { name: managerName, reputation: 30, confidence: 60, employed: true, hiredSeason: 0, jobOffers: [] },
+    unemployedPool: [],
   }
 }

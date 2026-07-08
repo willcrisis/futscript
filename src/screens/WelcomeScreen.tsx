@@ -1,4 +1,4 @@
-import { useEffect, useRef } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import type { FC } from 'react'
 import type { GameState } from '../engine/types'
 import { t, useLang } from '../i18n'
@@ -14,15 +14,20 @@ const FEATURES: { icon: FC<{ className?: string }>; key: TranslationKey }[] = [
   { icon: CupIcon, key: 'welcome.featureCup' },
 ]
 
-export default function WelcomeScreen({ state, onDismiss }: { state: GameState; onDismiss: () => void }) {
+export default function WelcomeScreen({ state, onDismiss }: { state: GameState; onDismiss: (managerName: string) => void }) {
   useLang()
   const dialogRef = useRef<HTMLDivElement>(null)
   const user = state.teams.find(t => t.id === state.userTeamId)!
+  const [managerName, setManagerName] = useState(state.manager.name)
+  // Escape fires from a listener captured at mount, so it can't close over each
+  // keystroke — a ref mirrors the latest value for it to read instead.
+  const nameRef = useRef(managerName)
+  nameRef.current = managerName
 
   useEffect(() => {
     // move focus into the takeover (the primary button), mirroring Shell's More-sheet pattern
     dialogRef.current?.querySelector('button')?.focus()
-    const onKey = (e: KeyboardEvent) => { if (e.key === 'Escape') onDismiss() }
+    const onKey = (e: KeyboardEvent) => { if (e.key === 'Escape') onDismiss(nameRef.current) }
     window.addEventListener('keydown', onKey)
     return () => window.removeEventListener('keydown', onKey)
   }, [onDismiss])
@@ -51,7 +56,17 @@ export default function WelcomeScreen({ state, onDismiss }: { state: GameState; 
             </li>
           ))}
         </ul>
-        <Button variant="primary" className="w-full" onClick={onDismiss}>
+        <label className="flex flex-col gap-1 border-t border-rule pt-5">
+          <span className="text-[10px] font-semibold uppercase tracking-wider text-ink-faint">{t('welcome.managerName')}</span>
+          <input
+            type="text"
+            value={managerName}
+            onChange={e => setManagerName(e.target.value)}
+            maxLength={40}
+            className="rounded-md border border-rule bg-surface-raised px-2 py-1.5 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent"
+          />
+        </label>
+        <Button variant="primary" className="w-full" onClick={() => onDismiss(managerName)}>
           {t('welcome.start')}
         </Button>
       </div>

@@ -17,6 +17,7 @@ export const en = {
   'shell.newSeason': 'New Season',
   'shell.theme': 'Theme',
   'shell.seasonWeek': 'S{season} W{week}',
+  'shell.unemployed': 'Unemployed',
 
   // Shared across screens
   'common.weeksShort': '{n}w',
@@ -30,6 +31,8 @@ export const en = {
   'common.age': 'Age',
   'common.level': 'Lvl',
   'common.division': 'Division',
+  'common.position': 'Pos',
+  'common.status': 'Status',
   'common.vs': 'vs',
   'common.switchToLight': 'Switch to light theme',
   'common.switchToDark': 'Switch to dark theme',
@@ -61,6 +64,13 @@ export const en = {
   'home.boardPatience': 'Board patience {n}/8',
   'home.cupTieThisWeek': 'Cup tie this week',
   'home.allQuiet': 'All quiet at the club.',
+  'home.boardConfidence': 'Board confidence',
+  'home.confidenceAttention': 'The board is uneasy — confidence {n}/100',
+  'home.poachPanel': 'They want you',
+  'home.poachOffer': '{club} (Division {division}) want you as their manager',
+  'home.poachDetails': 'Cash {cash} · Wages {wages}/wk · Loan after takeover {loan}',
+  'home.poachAccept': 'Take the job',
+  'home.poachDecline': 'Decline',
 
   // Table screen
   'table.header': 'DIVISION {division}',
@@ -185,6 +195,8 @@ export const en = {
   'history.emptyState': "No completed seasons yet — history is written at each season's end.",
   'history.d1Titles': 'D1 titles',
   'history.cups': 'Cups',
+  'history.clubColumn': 'Club',
+  'history.reputation': 'Reputation',
 
   // Saves screen
   'saves.header': 'CAREERS',
@@ -203,6 +215,7 @@ export const en = {
   'saves.importNote': 'Importing replaces the active slot. Deleting slot {slot} (the active one) keeps your in-memory game until the next autosave.',
   'saves.invalidFile': 'That file is not a valid futscript save.',
   'saves.settings': 'Settings',
+  'saves.managerName': 'Manager name',
   'saves.language': 'Language',
   'saves.languageEnglish': 'English',
   'saves.languagePortuguese': 'Português',
@@ -222,12 +235,19 @@ export const en = {
   'match.inProgress': 'The match is under way…',
 
   // App chrome
-  'app.sackedHeader': 'THE BOARD HAS DECIDED',
-  'app.sackedTitle': 'Sacked!',
-  'app.sackedMessage': '{team} spent too long in the red. The board has shown you the door after {n} season(s).',
-  'app.newCareerButton': 'Start a new career',
   'app.championMessage': '🏆 {name} are the Division {division} champions!',
   'app.contractsExpireWarning': '⚠ {n} contract(s) expire — unrenewed players leave (cheapest are kept automatically if the squad would drop below 14)',
+
+  // Unemployed screen
+  'unemployed.header': 'Awaiting offers',
+  'unemployed.message': 'You were sacked. The league plays on — advance the weeks and the offers will come.',
+  'unemployed.reputation': 'Reputation',
+  'unemployed.offersPanel': 'Job offers',
+  'unemployed.noOffers': 'No offers this week. Keep advancing — someone always gets sacked.',
+  'unemployed.offerRow': '{club} — Division {division}, {position} place, {squad} players',
+  'unemployed.offerFinances': 'Cash {cash} · Wages {wages}/wk · Loan after takeover {loan}',
+  'unemployed.accept': 'Take the job',
+  'unemployed.decline': 'Decline',
 
   // Ledger labels (display-time translation of canonical engine strings)
   'ledger.wages': 'Wages',
@@ -312,6 +332,7 @@ export const en = {
   'welcome.featureFinance': 'Balance the books — gate receipts, wages, and the bank.',
   'welcome.featureClimb': 'Climb from Division 3 to the summit, one promotion at a time.',
   'welcome.featureCup': 'Chase glory in the National Cup.',
+  'welcome.managerName': 'Your name',
 
   // News feed
   'news.title': 'News',
@@ -333,6 +354,23 @@ export const en = {
   'news.cupWinner': '{club} win the Cup',
   'news.promoted': '{club} promoted',
   'news.relegated': '{club} relegated',
+  'news.managerSacked': '{club} part ways with manager {manager}',
+  'news.managerHired': '{manager} takes over at {club}',
+  'news.userSacked': 'You have been sacked by {club}',
+  'news.userHired': 'You are the new manager of {club}',
+  'news.jobOffer': '{club} want you as their manager',
+
+  // Club screen
+  'club.header': 'Club',
+  'club.position': '{position} in Division {division}',
+  'club.manager': 'Manager',
+  'club.fanMood': 'Fan mood',
+  'club.capacity': 'Stadium',
+  'club.squadPanel': 'Squad',
+  'club.back': 'Back',
+  'club.statusOut': 'Out {n}w',
+  'club.statusBan': 'Suspended',
+  'club.statusFit': '—',
 } as const
 
 export type TranslationKey = keyof typeof en

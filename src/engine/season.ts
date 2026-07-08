@@ -1,3 +1,4 @@
+import { runCareerSeasonEnd, runCareerWeek } from './career'
 import { cupWinner, drawFirstCupRound, drawNextCupRound } from './cup'
 import { CUP_WEEKS, generateDivisionFixtures } from './fixtures'
 import { adjustCash, DIVISION_FACTOR, runWeeklyFinances, TICKET_PRICE, userLedger } from './finance'
@@ -11,6 +12,7 @@ import { standings } from './standings'
 import { ageSquads, applyWeeklyUpdates } from './training'
 import { MIN_SQUAD, renewalSalary, runTransfers } from './transfers'
 import type { GameState, MatchEvent, Player } from './types'
+import { isManaged } from './types'
 
 export function totalRounds(state: GameState): number {
   return Math.max(
@@ -47,7 +49,7 @@ export function applyMatchConsequences(
 }
 
 export function advanceRound(state: GameState): GameState {
-  if (state.gameOver || state.round > totalRounds(state)) return state
+  if (state.round > totalRounds(state)) return state
   const rand = mulberry32(state.rngState)
   const week = state.round
 
@@ -59,7 +61,7 @@ export function advanceRound(state: GameState): GameState {
 
   // an idle user on a cup week can host a friendly (user setting)
   let friendly: { homeId: number; awayId: number } | null = null
-  if (state.playFriendlies && cupToday.length > 0 && !playingIds.has(state.userTeamId)) {
+  if (state.manager.employed && state.playFriendlies && cupToday.length > 0 && !playingIds.has(state.userTeamId)) {
     const idle = state.teams.filter(t => t.id !== state.userTeamId && !playingIds.has(t.id))
     if (idle.length > 0) {
       friendly = { homeId: state.userTeamId, awayId: idle[Math.floor(rand() * idle.length)].id }
@@ -71,7 +73,7 @@ export function advanceRound(state: GameState): GameState {
   // refresh lineups only for clubs that play this week
   const teams = state.teams.map(t =>
     playingIds.has(t.id)
-      ? { ...t, lineup: t.id === state.userTeamId ? patchLineup(t, state.players) : autoPick(t, state.players) }
+      ? { ...t, lineup: isManaged(state, t.id) ? patchLineup(t, state.players) : autoPick(t, state.players) }
       : t,
   )
   const byId = new Map(teams.map(t => [t.id, t]))
@@ -149,14 +151,17 @@ export function advanceRound(state: GameState): GameState {
   s = runTransfers(s, rand)
   s = runWeeklyFinances(s, rand)
   s = tickConstruction(s)
+  s = runCareerWeek(s, rand)
 
   // the week's stories
   const userDivision = byId.get(state.userTeamId)!.division
-  const userLineup = new Set(byId.get(state.userTeamId)!.lineup)
-  for (const e of roundEvents) {
-    if (e.type === 'injury' && userLineup.has(e.playerId)) {
-      const hurt = s.players[e.playerId]
-      if (hurt) s = pushNews(s, 'starterInjured', { player: hurt.name, weeks: hurt.injuredForRounds })
+  if (state.manager.employed) {
+    const userLineup = new Set(byId.get(state.userTeamId)!.lineup)
+    for (const e of roundEvents) {
+      if (e.type === 'injury' && userLineup.has(e.playerId)) {
+        const hurt = s.players[e.playerId]
+        if (hurt) s = pushNews(s, 'starterInjured', { player: hurt.name, weeks: hurt.injuredForRounds })
+      }
     }
   }
   for (const f of fixtures.filter(f => f.round === week && f.homeGoals !== null)) {
@@ -194,7 +199,6 @@ export function advanceRound(state: GameState): GameState {
 }
 
 export function newSeason(state: GameState): GameState {
-  if (state.gameOver) return state
   const rand = mulberry32(state.rngState)
 
   // the season's story is written before anything moves
@@ -213,6 +217,10 @@ export function newSeason(state: GameState): GameState {
     newsAcc = pushNews(newsAcc, 'cupWinner', { club: state.teams.find(t => t.id === champId)!.name }, seasonEnd)
   }
 
+  // AI boards react to the final table (relegated/flop sackings) before anything else moves
+  const careered = runCareerSeasonEnd(newsAcc, rand, seasonEnd)
+  let storyAcc = careered
+
   // the record books remember every goal, even after retirement
   const scorers = new Map(state.allTimeScorers.map(e => [e.playerId, { ...e }]))
   for (const p of Object.values(state.players)) {
@@ -228,7 +236,7 @@ export function newSeason(state: GameState): GameState {
   }
   const allTimeScorers = [...scorers.values()].sort((a, b) => b.goals - a.goals).slice(0, 50)
 
-  let teams = state.teams
+  let teams = careered.teams
   let finances = state.finances
   const addEntry = (label: string, amount: number) => {
     finances = [...finances, { season: state.season, round: totalRounds(state), label, amount }].slice(-300)
@@ -239,7 +247,7 @@ export function newSeason(state: GameState): GameState {
     standings(state, division).forEach((row, i) => {
       const prize = Math.round((1_500_000 - i * 75_000) * (DIVISION_FACTOR[division] ?? 1))
       teams = adjustCash(teams, row.teamId, prize)
-      if (row.teamId === state.userTeamId) addEntry(`Prize money (finished ${i + 1} in Division ${division})`, prize)
+      if (isManaged(careered, row.teamId)) addEntry(`Prize money (finished ${i + 1} in Division ${division})`, prize)
     })
   }
 
@@ -250,8 +258,8 @@ export function newSeason(state: GameState): GameState {
       const runnerUp = final.winnerId === final.homeId ? final.awayId : final.homeId
       teams = adjustCash(teams, final.winnerId, 1_000_000)
       teams = adjustCash(teams, runnerUp, 400_000)
-      if (final.winnerId === state.userTeamId) addEntry('Cup winners prize', 1_000_000)
-      if (runnerUp === state.userTeamId) addEntry('Cup runners-up prize', 400_000)
+      if (isManaged(careered, final.winnerId)) addEntry('Cup winners prize', 1_000_000)
+      if (isManaged(careered, runnerUp)) addEntry('Cup runners-up prize', 400_000)
     }
   }
 
@@ -261,7 +269,7 @@ export function newSeason(state: GameState): GameState {
     const before = state.teams.find(x => x.id === t.id)!.division
     if (before === t.division) continue
     if (before !== userDivisionPre && t.division !== userDivisionPre) continue
-    newsAcc = pushNews(newsAcc, t.division < before ? 'promoted' : 'relegated', { club: t.name }, seasonEnd)
+    storyAcc = pushNews(storyAcc, t.division < before ? 'promoted' : 'relegated', { club: t.name }, seasonEnd)
   }
   teams = rolloverMood(state, teams)
 
@@ -272,7 +280,9 @@ export function newSeason(state: GameState): GameState {
   // contracts: one season shorter; AI auto-renews; unrenewed user players walk,
   // but never below MIN_SQUAD — the cheapest expiring contracts force-renew first
   const userTeamNow = teams.find(t => t.id === state.userTeamId)!
-  const expiring = userTeamNow.playerIds.filter(id => players[id].contractSeasons - 1 <= 0)
+  const expiring = careered.manager.employed
+    ? userTeamNow.playerIds.filter(id => players[id].contractSeasons - 1 <= 0)
+    : []
   const mustKeep = Math.max(0, MIN_SQUAD - (userTeamNow.playerIds.length - expiring.length))
   const forceRenewed = new Set(
     [...expiring].sort((a, b) => players[a].salary - players[b].salary).slice(0, mustKeep),
@@ -283,7 +293,7 @@ export function newSeason(state: GameState): GameState {
       const remaining = p.contractSeasons - 1
       if (remaining > 0) {
         players[id] = { ...p, contractSeasons: remaining }
-      } else if (team.id !== state.userTeamId || forceRenewed.has(id)) {
+      } else if (!isManaged(careered, team.id) || forceRenewed.has(id)) {
         players[id] = { ...p, contractSeasons: randInt(rand, 1, 3), salary: renewalSalary(p) }
       } else {
         delete players[id]
@@ -300,7 +310,7 @@ export function newSeason(state: GameState): GameState {
   // pre-rollover max, so retirements/departures pruning the working record never free up
   // a low id that collides with a still-referenced (pre-rollover) player of the same id
   const idFloor = Math.max(0, ...Object.keys(state.players).map(Number))
-  ;({ players, teams } = youthIntake(players, teams, rand, state.userTeamId, idFloor))
+  ;({ players, teams } = youthIntake(players, teams, rand, idFloor))
   ;({ players, teams } = ensureThreeDivisions(players, teams, rand, idFloor))
 
   players = ageSquads(players, rand)
@@ -324,6 +334,8 @@ export function newSeason(state: GameState): GameState {
     incomingOffers: [],
     brokeRounds: 0,
     rngState: randInt(rand, 1, 2 ** 31 - 1),
-    news: newsAcc.news,
+    manager: storyAcc.manager,
+    unemployedPool: storyAcc.unemployedPool,
+    news: storyAcc.news,
   }
 }

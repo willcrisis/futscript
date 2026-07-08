@@ -7,7 +7,7 @@ import { randInt } from './rng'
 import { clampMood, INITIAL_CAPACITY } from './stadium'
 import { standings } from './standings'
 import { MIN_SQUAD } from './transfers'
-import type { GameState, Player, Position, SeasonRecord, Team } from './types'
+import { isManaged, type GameState, type Player, type Position, type SeasonRecord, type Team } from './types'
 
 // bottom three of each upper division swap with the top three below it
 export function applyPromotionRelegation(state: GameState, teams: Team[]): Team[] {
@@ -63,34 +63,37 @@ function nextFreeId(players: Record<number, Player>, idFloor = 0): number {
   return Math.max(idFloor, 0, ...Object.keys(players).map(Number)) + 1
 }
 
+export function makeRookie(rand: () => number, id: number): Player {
+  const level = randInt(rand, 22, 45)
+  return {
+    id,
+    name: randomName(rand),
+    age: randInt(rand, 16, 18),
+    position: YOUTH_POSITIONS[randInt(rand, 0, YOUTH_POSITIONS.length - 1)],
+    level,
+    form: 0, fitness: 100, injuredForRounds: 0, suspendedForRounds: 0, yellowCards: 0,
+    salary: salaryFor(level),
+    contractSeasons: 3,
+    seasonGoals: 0,
+  }
+}
+
 export function youthIntake(
   players: Record<number, Player>,
   teams: Team[],
   rand: () => number,
-  userTeamId?: number,
   idFloor = 0,
 ): { players: Record<number, Player>; teams: Team[] } {
   const nextPlayers = { ...players }
   let nextId = nextFreeId(players, idFloor)
   const nextTeams = teams.map(team => {
+    // every club is floored at MIN_SQUAD — an inheritable club can always field a team and still sell
     let count = team.playerIds.length >= 20 ? 0 : team.playerIds.length < 16 ? 2 : 1
-    // retirement can never leave the user below the floor; AI clubs use the normal thresholds
-    if (team.id === userTeamId) count = Math.max(count, MIN_SQUAD - team.playerIds.length)
+    count = Math.max(count, MIN_SQUAD - team.playerIds.length)
     if (count === 0) return team
     const ids: number[] = []
     for (let i = 0; i < count; i++) {
-      const level = randInt(rand, 22, 45)
-      const rookie: Player = {
-        id: nextId++,
-        name: randomName(rand),
-        age: randInt(rand, 16, 18),
-        position: YOUTH_POSITIONS[randInt(rand, 0, YOUTH_POSITIONS.length - 1)],
-        level,
-        form: 0, fitness: 100, injuredForRounds: 0, suspendedForRounds: 0, yellowCards: 0,
-        salary: salaryFor(level),
-        contractSeasons: 3,
-        seasonGoals: 0,
-      }
+      const rookie = makeRookie(rand, nextId++)
       nextPlayers[rookie.id] = rookie
       ids.push(rookie.id)
     }
@@ -149,6 +152,8 @@ export function ensureThreeDivisions(
         capacity: INITIAL_CAPACITY[division],
         ticketPrice: 15,
         fanMood: 50,
+        manager: randomName(rand),
+        managerHiredSeason: 0,
       }
       team.lineup = autoPick(team, nextPlayers)
       nextTeams.push(team)
@@ -175,6 +180,7 @@ export function seasonRecord(state: GameState): SeasonRecord {
     topScorer: { player: top.name, team: topTeam?.name ?? 'free agent', goals: top.seasonGoals },
     userDivision,
     userPosition: standings(state, userDivision).findIndex(r => r.teamId === state.userTeamId) + 1,
+    club: isManaged(state, state.userTeamId) ? state.teams.find(t => t.id === state.userTeamId)!.name : '—',
   }
 }
 
