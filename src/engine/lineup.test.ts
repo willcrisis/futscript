@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { autoPick, isAvailable, patchLineup, swapIn } from './lineup'
+import { autoPick, isAvailable, managedMatchLineup, patchLineup, toggleStarter } from './lineup'
 import { FORMATIONS, type Player, type Position, type Team } from './types'
 
 // 18-player squad: 2 GK, 6 DF, 6 MF, 4 FW — levels descend within each group
@@ -52,35 +52,46 @@ describe('autoPick', () => {
   })
 })
 
-describe('swapIn', () => {
-  it('replaces the weakest starter of the same position', () => {
-    const { team, players } = makeSquad()
-    const lineup = autoPick(team, players)
-    const t = { ...team, lineup }
-    // GK 2 (level 89) is benched; swapping in replaces GK 1
-    const next = swapIn(t, players, 2)
-    expect(next).toContain(2)
-    expect(next).not.toContain(1)
-    expect(next).toHaveLength(11)
+describe('toggleStarter', () => {
+  it('appends a benched player to the lineup', () => {
+    const { team } = makeSquad()
+    expect(toggleStarter({ ...team, lineup: [1, 2, 3] }, 4)).toEqual([1, 2, 3, 4])
   })
 
-  it('replaces the weakest starter overall when the lineup has no player of the bench player position', () => {
+  it('removes a starting player from the lineup', () => {
+    const { team } = makeSquad()
+    expect(toggleStarter({ ...team, lineup: [1, 2, 3] }, 2)).toEqual([1, 3])
+  })
+
+  it('imposes no formation shape — a lopsided XI is allowed', () => {
+    const { team } = makeSquad()
+    // five forwards (15,16,17,18 + toggling in nobody new) — just prove add works past shape
+    const lineup = [15, 16, 17, 18]
+    expect(toggleStarter({ ...team, lineup }, 14)).toEqual([15, 16, 17, 18, 14])
+  })
+})
+
+describe('managedMatchLineup', () => {
+  it('keeps a valid 11-player lineup verbatim, ignoring formation shape', () => {
     const { team, players } = makeSquad()
-    // both GKs injured — autoPick back-fills the hole with an outfielder
+    // 1 GK + 4 DF + 2 MF + 4 FW = 11, all available — not a 4-4-2
+    const lineup = [1, 3, 4, 5, 6, 9, 10, 15, 16, 17, 18]
+    expect(managedMatchLineup({ ...team, lineup }, players)).toEqual(lineup)
+  })
+
+  it('falls back to autoPick when the lineup is not exactly 11', () => {
+    const { team, players } = makeSquad()
+    const result = managedMatchLineup({ ...team, lineup: [1, 3, 4] }, players)
+    expect(result).toHaveLength(11)
+  })
+
+  it('falls back to autoPick when a selected player is unavailable', () => {
+    const { team, players } = makeSquad()
+    const lineup = [1, 3, 4, 5, 6, 9, 10, 15, 16, 17, 18]
     players[1] = { ...players[1], injuredForRounds: 2 }
-    players[2] = { ...players[2], injuredForRounds: 2 }
-    const lineup = autoPick(team, players)
-    expect(lineup.some(id => players[id].position === 'GK')).toBe(false)
-    const t = { ...team, lineup }
-    // GK 2 recovers and the user clicks his Start button
-    const recovered: Record<number, Player> = { ...players, 2: { ...players[2], injuredForRounds: 0 } }
-    let next: number[] = []
-    expect(() => {
-      next = swapIn(t, recovered, 2)
-    }).not.toThrow()
-    expect(next).toHaveLength(11)
-    expect(next).toContain(2)
-    expect(new Set(next).size).toBe(11)
+    const result = managedMatchLineup({ ...team, lineup }, players)
+    expect(result).not.toEqual(lineup)
+    expect(result.every(id => isAvailable(players[id]))).toBe(true)
   })
 })
 

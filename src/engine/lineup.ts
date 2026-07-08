@@ -104,16 +104,18 @@ export function patchLineup(team: Team, players: Record<number, Player>): number
   return reshapeToFormation(lineup, bench, players, formation)
 }
 
-// ponytail: bench player always replaces the WEAKEST same-position starter;
-// if the lineup holds none of that position (a back-filled hole), replace the
-// weakest starter overall instead so a recovered player can always come on.
-// Free slot-choice UI can come later if this annoys anyone.
-export function swapIn(team: Team, players: Record<number, Player>, benchPlayerId: number): number[] {
-  const bench = players[benchPlayerId]
-  const starters = team.lineup.map(id => players[id])
-  const samePosition = starters.filter(p => p.position === bench.position).sort((a, b) => a.level - b.level)
-  const weakest = samePosition[0] ?? [...starters].sort((a, b) => a.level - b.level)[0]
-  return team.lineup.map(id => (id === weakest.id ? benchPlayerId : id))
+export function toggleStarter(team: Team, playerId: number): number[] {
+  return team.lineup.includes(playerId)
+    ? team.lineup.filter(id => id !== playerId)
+    : [...team.lineup, playerId]
+}
+
+// The managed team's XI is user-curated (formation is only a suggestion). Trust it
+// verbatim when it's a legal 11; the advance gate + post-matchday cleanup keep it so.
+// autoPick is the safety net for a degraded or half-built lineup that slips through.
+export function managedMatchLineup(team: Team, players: Record<number, Player>): number[] {
+  const valid = team.lineup.length === 11 && team.lineup.every(id => isAvailable(players[id]))
+  return valid ? team.lineup : autoPick(team, players)
 }
 
 export function updateTeam(state: GameState, teamId: number, patch: Partial<Team>): GameState {
