@@ -32,24 +32,29 @@ function clubIdOf(item: NewsItem, state: GameState): number | null {
   return null
 }
 
+export function isPastWeek(item: NewsItem, latest: { season: number; week: number }): boolean {
+  return item.season < latest.season || (item.season === latest.season && item.week < latest.week)
+}
+
 export default function NewsRail({ state, limit, onShowClub }: { state: GameState; limit?: number; onShowClub?: (teamId: number) => void }) {
   useLang()
   const items = [...state.news].reverse().slice(0, limit)
   if (items.length === 0) return <EmptyState>{t('news.empty')}</EmptyState>
+  const latest = { season: items[0].season, week: items[0].week }
   return (
     <ol className="flex flex-col">
       {items.map((item, i) => (
-        <NewsRow key={`${state.news.length - i}`} item={item} state={state} onShowClub={onShowClub} />
+        <NewsRow key={`${state.news.length - i}`} item={item} state={state} onShowClub={onShowClub} past={isPastWeek(item, latest)} />
       ))}
     </ol>
   )
 }
 
-function NewsRow({ item, state, onShowClub }: { item: NewsItem; state: GameState; onShowClub?: (teamId: number) => void }) {
+function NewsRow({ item, state, onShowClub, past }: { item: NewsItem; state: GameState; onShowClub?: (teamId: number) => void; past: boolean }) {
   const RowIcon = ICONS[item.type]
   const clubId = onShowClub ? clubIdOf(item, state) : null
   return (
-    <li className={`flex items-baseline gap-2 border-b border-rule/60 py-2 text-sm ${toneOf(item.type)}`}>
+    <li className={`flex items-baseline gap-2 border-b border-rule/60 py-2 text-sm ${toneOf(item.type)} ${past ? 'opacity-60' : ''}`}>
       <span className="translate-y-0.5 text-ink-faint"><RowIcon /></span>
       {onShowClub && clubId !== null ? (
         <button
