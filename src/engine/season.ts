@@ -1,8 +1,9 @@
-import { drawFirstCupRound, drawNextCupRound } from './cup'
+import { cupWinner, drawFirstCupRound, drawNextCupRound } from './cup'
 import { CUP_WEEKS, generateDivisionFixtures } from './fixtures'
 import { adjustCash, DIVISION_FACTOR, runWeeklyFinances, TICKET_PRICE, userLedger } from './finance'
 import { autoPick, patchLineup } from './lineup'
 import { simulateMatch } from './match'
+import { pushNews } from './news'
 import { mulberry32, randInt } from './rng'
 import { applyPromotionRelegation, ensureThreeDivisions, retirePlayers, rolloverMood, seasonRecord, youthIntake } from './rollover'
 import { clampMood, tickConstruction } from './stadium'
@@ -149,10 +150,44 @@ export function advanceRound(state: GameState): GameState {
   s = runWeeklyFinances(s, rand)
   s = tickConstruction(s)
 
+  // the week's stories
+  const userDivision = byId.get(state.userTeamId)!.division
+  const userLineup = new Set(byId.get(state.userTeamId)!.lineup)
+  for (const e of roundEvents) {
+    if (e.type === 'injury' && userLineup.has(e.playerId)) {
+      const hurt = s.players[e.playerId]
+      if (hurt) s = pushNews(s, 'starterInjured', { player: hurt.name, weeks: hurt.injuredForRounds })
+    }
+  }
+  for (const f of fixtures.filter(f => f.round === week && f.homeGoals !== null)) {
+    const margin = Math.abs(f.homeGoals! - f.awayGoals!)
+    if (margin < 4) continue
+    const home = byId.get(f.homeId)!
+    if (home.division !== userDivision) continue
+    const away = byId.get(f.awayId)!
+    const homeWon = f.homeGoals! > f.awayGoals!
+    s = pushNews(s, 'heavyWin', {
+      winner: homeWon ? home.name : away.name,
+      loser: homeWon ? away.name : home.name,
+      score: homeWon ? `${f.homeGoals}-${f.awayGoals}` : `${f.awayGoals}-${f.homeGoals}`,
+    })
+  }
+
   // once a cup week fully resolves, the next round is drawn
   if (cupToday.length > 0) {
     const next = drawNextCupRound(s, rand)
-    if (next.length > 0) s = { ...s, cupFixtures: [...s.cupFixtures, ...next] }
+    if (next.length > 0) {
+      s = { ...s, cupFixtures: [...s.cupFixtures, ...next] }
+      if (next[0].cupRound >= 4) {
+        for (const tie of next) {
+          for (const id of [tie.homeId, tie.awayId]) {
+            if (id === state.userTeamId) continue
+            const club = byId.get(id)!
+            if (club.division === userDivision) s = pushNews(s, 'cupRun', { club: club.name, round: tie.cupRound })
+          }
+        }
+      }
+    }
   }
 
   return { ...s, round: week + 1, rngState: randInt(rand, 1, 2 ** 31 - 1) }
@@ -164,6 +199,19 @@ export function newSeason(state: GameState): GameState {
 
   // the season's story is written before anything moves
   const history = [...state.history, seasonRecord(state)]
+
+  // season verdicts for the feed (week-stamped at season end)
+  const seasonEnd = totalRounds(state)
+  let newsAcc: GameState = state
+  const userDivisionPre = state.teams.find(t => t.id === state.userTeamId)!.division
+  for (const division of [...new Set(state.teams.map(t => t.division))].sort()) {
+    const top = standings(state, division)[0]
+    if (top) newsAcc = pushNews(newsAcc, 'champions', { club: state.teams.find(t => t.id === top.teamId)!.name, division }, seasonEnd)
+  }
+  const champId = cupWinner(state)
+  if (champId !== null) {
+    newsAcc = pushNews(newsAcc, 'cupWinner', { club: state.teams.find(t => t.id === champId)!.name }, seasonEnd)
+  }
 
   // the record books remember every goal, even after retirement
   const scorers = new Map(state.allTimeScorers.map(e => [e.playerId, { ...e }]))
@@ -209,6 +257,12 @@ export function newSeason(state: GameState): GameState {
 
   // up and down the pyramid, judged on the final tables
   teams = applyPromotionRelegation(state, teams)
+  for (const t of teams) {
+    const before = state.teams.find(x => x.id === t.id)!.division
+    if (before === t.division) continue
+    if (before !== userDivisionPre && t.division !== userDivisionPre) continue
+    newsAcc = pushNews(newsAcc, t.division < before ? 'promoted' : 'relegated', { club: t.name }, seasonEnd)
+  }
   teams = rolloverMood(state, teams)
 
   // retirements
@@ -270,5 +324,6 @@ export function newSeason(state: GameState): GameState {
     incomingOffers: [],
     brokeRounds: 0,
     rngState: randInt(rand, 1, 2 ** 31 - 1),
+    news: newsAcc.news,
   }
 }
