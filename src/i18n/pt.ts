@@ -305,11 +305,6 @@ export const pt: Record<TranslationKey, string> = {
   'event.injurySub': '{player} se machuca — {sub} entra em campo',
   'event.injuryNoSub': '{player} se machuca — sem substituto disponível!',
 
-  // Toasts
-  'toast.offer': '{bidder} oferece {amount} por {player}',
-  'toast.boardPatience': 'Paciência da diretoria acabando: {n}/8 semanas no vermelho',
-  'toast.outbid': 'Você foi superado no lance por {player}',
-
   // Welcome screen
   'welcome.title': 'Bem-vindo ao banco de reservas',
   'welcome.yourClub': 'Você assume o comando do {club}, recém-nomeado na Divisão {division}.',

@@ -303,11 +303,6 @@ export const en = {
   'event.injurySub': '{player} goes down injured — {sub} comes on',
   'event.injuryNoSub': '{player} goes down injured — no substitute left!',
 
-  // Toasts
-  'toast.offer': '{bidder} offer {amount} for {player}',
-  'toast.boardPatience': 'Board patience running out: {n}/8 weeks in the red',
-  'toast.outbid': 'You have been outbid on {player}',
-
   // Welcome screen
   'welcome.title': 'Welcome to the dugout',
   'welcome.yourClub': 'You take charge of {club}, newly appointed in Division {division}.',
