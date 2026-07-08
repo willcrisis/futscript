@@ -17,6 +17,7 @@ export const en = {
   'shell.newSeason': 'New Season',
   'shell.theme': 'Theme',
   'shell.seasonWeek': 'S{season} W{week}',
+  'shell.unemployed': 'Unemployed',
 
   // Shared across screens
   'common.weeksShort': '{n}w',
@@ -229,12 +230,19 @@ export const en = {
   'match.inProgress': 'The match is under way…',
 
   // App chrome
-  'app.sackedHeader': 'THE BOARD HAS DECIDED',
-  'app.sackedTitle': 'Sacked!',
-  'app.sackedMessage': '{team} spent too long in the red. The board has shown you the door after {n} season(s).',
-  'app.newCareerButton': 'Start a new career',
   'app.championMessage': '🏆 {name} are the Division {division} champions!',
   'app.contractsExpireWarning': '⚠ {n} contract(s) expire — unrenewed players leave (cheapest are kept automatically if the squad would drop below 14)',
+
+  // Unemployed screen
+  'unemployed.header': 'Awaiting offers',
+  'unemployed.message': 'You were sacked. The league plays on — advance the weeks and the offers will come.',
+  'unemployed.reputation': 'Reputation',
+  'unemployed.offersPanel': 'Job offers',
+  'unemployed.noOffers': 'No offers this week. Keep advancing — someone always gets sacked.',
+  'unemployed.offerRow': '{club} — Division {division}, {position} place, {squad} players',
+  'unemployed.offerFinances': 'Cash {cash} · Wages {wages}/wk · Loan after takeover {loan}',
+  'unemployed.accept': 'Take the job',
+  'unemployed.decline': 'Decline',
 
   // Ledger labels (display-time translation of canonical engine strings)
   'ledger.wages': 'Wages',

@@ -6,9 +6,7 @@ import { advanceRound, newSeason, totalRounds } from './engine/season'
 import { standings } from './engine/standings'
 import type { GameState } from './engine/types'
 import { t, useLang } from './i18n'
-import Button from './ui/Button'
 import Panel from './ui/Panel'
-import SectionLabel from './ui/SectionLabel'
 import Shell from './ui/Shell'
 import type { ScreenId } from './ui/Shell'
 import { ToastProvider, useToasts } from './ui/Toast'
@@ -26,6 +24,7 @@ import SquadScreen from './screens/SquadScreen'
 import StatsScreen from './screens/StatsScreen'
 import TableScreen from './screens/TableScreen'
 import TransfersScreen from './screens/TransfersScreen'
+import UnemployedScreen from './screens/UnemployedScreen'
 
 export default function App() {
   return (
@@ -58,6 +57,10 @@ function Game() {
   const userTeam = state.teams.find(t => t.id === state.userTeamId)!
   const total = totalRounds(state)
   const seasonOver = state.round > total
+  const employed = state.manager.employed
+  useEffect(() => {
+    if (!employed && ['squad', 'transfers', 'finance'].includes(screen)) setScreen('home')
+  }, [employed, screen])
 
   const advance = () => {
     if (advancingRef.current) return
@@ -90,26 +93,11 @@ function Game() {
     return <MatchScreen fixture={replay} state={state} onClose={() => setReplay(null)} />
   }
 
-  if (!state.manager.employed) {
-    return (
-      <div className="flex min-h-dvh flex-col items-center justify-center gap-3 p-6 text-center">
-        <SectionLabel>{t('app.sackedHeader')}</SectionLabel>
-        <h1 className="font-mono text-4xl font-bold">{t('app.sackedTitle')}</h1>
-        <p className="max-w-md text-ink-muted">
-          {t('app.sackedMessage', { team: userTeam.name, n: state.season })}
-        </p>
-        <Button variant="primary" onClick={startNewCareer}>
-          {t('app.newCareerButton')}
-        </Button>
-      </div>
-    )
-  }
-
   const champion = seasonOver
     ? state.teams.find(t => t.id === standings(state, userTeam.division)[0].teamId)!
     : null
   const cupChampId = seasonOver ? cupWinner(state) : null
-  const expiringCount = seasonOver
+  const expiringCount = seasonOver && employed
     ? userTeam.playerIds.filter(id => state.players[id].contractSeasons <= 1).length
     : 0
 
@@ -135,7 +123,9 @@ function Game() {
           )}
         </Panel>
       )}
-      {screen === 'home' && <HomeScreen state={state} setState={setState} onAdvance={advance} onNavigate={setScreen} onShowTeam={goToTeam} />}
+      {screen === 'home' && (employed
+        ? <HomeScreen state={state} setState={setState} onAdvance={advance} onNavigate={setScreen} onShowTeam={goToTeam} />
+        : <UnemployedScreen state={state} setState={setState} onAdvance={advance} />)}
       {screen === 'squad' && <SquadScreen state={state} setState={setState} />}
       {screen === 'table' && (
         <TableScreen

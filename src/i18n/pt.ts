@@ -19,6 +19,7 @@ export const pt: Record<TranslationKey, string> = {
   'shell.newSeason': 'Nova temporada',
   'shell.theme': 'Tema',
   'shell.seasonWeek': 'T{season} S{week}',
+  'shell.unemployed': 'Desempregado',
 
   // Shared across screens
   'common.weeksShort': '{n}sem',
@@ -231,12 +232,19 @@ export const pt: Record<TranslationKey, string> = {
   'match.inProgress': 'A partida está em andamento…',
 
   // App chrome
-  'app.sackedHeader': 'A DIRETORIA DECIDIU',
-  'app.sackedTitle': 'Demitido!',
-  'app.sackedMessage': '{team} passou tempo demais no vermelho. A diretoria te mostrou a porta depois de {n} temporada(s).',
-  'app.newCareerButton': 'Começar uma nova carreira',
   'app.championMessage': '🏆 {name} é o campeão da Divisão {division}!',
   'app.contractsExpireWarning': '⚠ {n} contrato(s) vence(m) — jogadores não renovados saem (os mais baratos são mantidos automaticamente se o elenco cair abaixo de 14)',
+
+  // Unemployed screen
+  'unemployed.header': 'Aguardando propostas',
+  'unemployed.message': 'Você foi demitido. O campeonato continua — avance as semanas e as propostas virão.',
+  'unemployed.reputation': 'Reputação',
+  'unemployed.offersPanel': 'Propostas de emprego',
+  'unemployed.noOffers': 'Nenhuma proposta esta semana. Continue avançando — sempre demitem alguém.',
+  'unemployed.offerRow': '{club} — Divisão {division}, {position}º lugar, {squad} jogadores',
+  'unemployed.offerFinances': 'Caixa {cash} · Salários {wages}/sem · Empréstimo após assumir {loan}',
+  'unemployed.accept': 'Aceitar o cargo',
+  'unemployed.decline': 'Recusar',
 
   // Ledger labels (display-time translation of canonical engine strings)
   'ledger.wages': 'Salários',

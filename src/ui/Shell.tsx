@@ -32,6 +32,7 @@ export const NAV: { id: ScreenId; labelKey: TranslationKey; icon: FC<{ className
 ]
 
 const MOBILE_PRIMARY: ScreenId[] = ['home', 'squad', 'table', 'finance']
+const HIDDEN_WHEN_UNEMPLOYED: ScreenId[] = ['squad', 'transfers', 'finance']
 
 interface Props {
   screen: ScreenId
@@ -55,6 +56,7 @@ export default function Shell({ screen, onNavigate, state, advanceLabel, onAdvan
   const sheetRef = useRef<HTMLDivElement>(null)
   const user = state.teams.find(t => t.id === state.userTeamId)!
   const week = Math.min(state.round, totalRounds(state))
+  const employed = state.manager.employed
 
   const closeMore = () => {
     setMoreOpen(false)
@@ -97,7 +99,7 @@ export default function Shell({ screen, onNavigate, state, advanceLabel, onAdvan
       <aside className="fixed inset-y-0 left-0 hidden w-52 flex-col border-r border-rule bg-surface-raised p-3 md:flex">
         <div className="px-2 py-1 font-mono text-sm font-bold tracking-tight">FUT_</div>
         <nav className="mt-4 flex flex-1 flex-col gap-0.5" aria-label={t('nav.sections')}>
-          {NAV.map(({ id, labelKey, icon: NavIcon }) => (
+          {NAV.filter(n => employed || !HIDDEN_WHEN_UNEMPLOYED.includes(n.id)).map(({ id, labelKey, icon: NavIcon }) => (
             <button
               key={id}
               onClick={() => navigate(id)}
@@ -115,9 +117,10 @@ export default function Shell({ screen, onNavigate, state, advanceLabel, onAdvan
         <div className="mt-4 border-t border-rule pt-3 text-sm">
           <div className="flex items-center justify-between gap-2 px-2">
             <div className="min-w-0">
-              <div className="truncate font-medium">{user.name}</div>
+              <div className="truncate font-medium">{employed ? user.name : state.manager.name}</div>
               <div className="font-mono text-xs tabular-nums text-ink-muted">
-                <MoneyText amount={user.cash} size="sm" /> · {t('shell.seasonWeek', { season: state.season, week })}
+                {employed ? <MoneyText amount={user.cash} size="sm" /> : t('shell.unemployed')} ·{' '}
+                {t('shell.seasonWeek', { season: state.season, week })}
               </div>
             </div>
             <ThemeToggle />
@@ -132,9 +135,10 @@ export default function Shell({ screen, onNavigate, state, advanceLabel, onAdvan
       <main className="mx-auto w-full max-w-4xl px-4 pb-28 pt-6 md:ml-52 md:pb-10 xl:mr-72">
         {/* mobile vitals line */}
         <div className="mb-4 flex items-center justify-between text-xs text-ink-muted md:hidden">
-          <span className="font-medium text-ink">{user.name}</span>
+          <span className="font-medium text-ink">{employed ? user.name : state.manager.name}</span>
           <span className="font-mono tabular-nums">
-            <MoneyText amount={user.cash} size="sm" /> · {t('shell.seasonWeek', { season: state.season, week })}
+            {employed ? <MoneyText amount={user.cash} size="sm" /> : t('shell.unemployed')} ·{' '}
+            {t('shell.seasonWeek', { season: state.season, week })}
           </span>
         </div>
         {children}
@@ -156,7 +160,7 @@ export default function Shell({ screen, onNavigate, state, advanceLabel, onAdvan
         <Button variant="primary" onClick={onAdvance}>{advanceLabel}</Button>
       </div>
       <nav aria-label={t('nav.sections')} className="fixed inset-x-0 bottom-0 z-40 flex border-t border-rule bg-surface-raised pb-[env(safe-area-inset-bottom)] md:hidden">
-        {MOBILE_PRIMARY.map(id => {
+        {MOBILE_PRIMARY.filter(id => employed || !HIDDEN_WHEN_UNEMPLOYED.includes(id)).map(id => {
           const item = NAV.find(n => n.id === id)!
           const NavIcon = item.icon
           return (
@@ -193,7 +197,7 @@ export default function Shell({ screen, onNavigate, state, advanceLabel, onAdvan
           <div className="absolute inset-0 bg-ink/30" onClick={closeMore} />
           <div ref={sheetRef} className="absolute inset-x-0 bottom-0 rounded-t-xl border-t border-rule bg-surface p-4">
             <div className="grid grid-cols-3 gap-2">
-              {NAV.filter(n => !MOBILE_PRIMARY.includes(n.id)).map(({ id, labelKey, icon: NavIcon }) => (
+              {NAV.filter(n => !MOBILE_PRIMARY.includes(n.id) && (employed || !HIDDEN_WHEN_UNEMPLOYED.includes(n.id))).map(({ id, labelKey, icon: NavIcon }) => (
                 <button
                   key={id}
                   onClick={() => navigate(id)}
