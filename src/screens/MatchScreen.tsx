@@ -12,6 +12,7 @@ export interface MatchLike {
   homeGoals: number | null
   awayGoals: number | null
   winnerId?: number | null
+  attendance?: number
   events?: MatchEvent[]
 }
 
@@ -74,6 +75,11 @@ export default function MatchScreen({ fixture, state, onClose }: Props) {
         <div className="flex-1 font-medium">{name(fixture.awayId)}</div>
       </div>
       <div className="mt-1 font-mono text-sm tabular-nums text-ink-muted">{Math.min(minute, 90)}'</div>
+      {fixture.attendance != null && (
+        <div className="mt-1 font-mono text-xs tabular-nums text-ink-faint">
+          {t('match.attendance', { n: fixture.attendance.toLocaleString('en-US') })}
+        </div>
+      )}
       {done && fixture.winnerId != null && homeGoals === awayGoals && (
         <div className="mt-1 text-sm text-ink-muted">
           {t('match.penaltyWin', { name: name(fixture.winnerId) })}

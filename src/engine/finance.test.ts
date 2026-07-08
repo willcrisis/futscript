@@ -2,8 +2,8 @@ import { describe, expect, it } from 'vitest'
 import { mulberry32 } from './rng'
 import { newGame } from './newGame'
 import {
-  adjustCash, borrow, DIVISION_FACTOR, formatMoney, marketValue, LOAN_CAP, repayLoan, runWeeklyFinances, salaryFor,
-  severanceFor, STARTING_CASH, wageBill, SPONSOR_BASE, MAINTENANCE_PER_SEAT,
+  adjustCash, attendanceFor, borrow, DIVISION_FACTOR, formatMoney, marketValue, LOAN_CAP, repayLoan,
+  runWeeklyFinances, salaryFor, severanceFor, STARTING_CASH, wageBill, SPONSOR_BASE, MAINTENANCE_PER_SEAT,
 } from './finance'
 import type { GameState, Player } from './types'
 import { CUP_WEEKS } from './fixtures'
@@ -201,5 +201,33 @@ describe('stadium finances', () => {
 
   it('lower divisions draw proportionally smaller crowds', () => {
     expect(DIVISION_FACTOR).toEqual({ 1: 1, 2: 0.8, 3: 0.6 })
+  })
+})
+
+describe('attendance', () => {
+  it('attendanceFor is deterministic and bounded by capacity', () => {
+    const team = newGame(1).teams.find(t => t.id === newGame(1).userTeamId)!
+    const a = attendanceFor(team, 1, mulberry32(5))
+    const b = attendanceFor(team, 1, mulberry32(5))
+    expect(a).toBe(b)
+    expect(a).toBeGreaterThanOrEqual(0)
+    expect(a).toBeLessThanOrEqual(team.capacity)
+  })
+
+  it('stamps user home attendance equal to the gate ledger fans', () => {
+    let s = newGame(1)
+    let checked = false
+    for (let i = 0; i < 12 && !checked; i++) {
+      const round = s.round
+      s = advanceRound(s)
+      const home = s.fixtures.find(f => f.round === round && f.homeId === s.userTeamId && f.attendance != null)
+      if (home) {
+        const gate = s.finances.find(e => e.round === round && e.label.startsWith('Gate receipts'))
+        expect(gate).toBeDefined()
+        expect(gate!.label).toContain(`(${home.attendance} fans)`)
+        checked = true
+      }
+    }
+    expect(checked).toBe(true)
   })
 })

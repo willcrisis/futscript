@@ -11,6 +11,16 @@ export const LOAN_CAP = 2_000_000
 // scales fan interest and league prizes down the pyramid
 export const DIVISION_FACTOR: Record<number, number> = { 1: 1, 2: 0.8, 3: 0.6 }
 
+// ponytail: gate attendance depends only on capacity, price, mood, league position, jitter —
+// not the result. Computed once here; stamped on the fixture so the match screen and the
+// ledger show the same number.
+export function attendanceFor(team: Team, position: number, rand: () => number): number {
+  const interest = Math.round((9_000 + 900 * (16 - position)) * (DIVISION_FACTOR[team.division] ?? 1))
+  const priceFactor = (15 / team.ticketPrice) ** 1.5
+  const moodFactor = 0.8 + (team.fanMood / 100) * 0.3
+  return Math.max(0, Math.min(team.capacity, Math.round(interest * priceFactor * moodFactor) + randInt(rand, -500, 500)))
+}
+
 export const MAINTENANCE_PER_SEAT = 1.2
 // ponytail: sponsor money — retune here and nowhere else
 export const SPONSOR_BASE: Record<number, number> = { 1: 40_000, 2: 24_000, 3: 15_000 }
@@ -71,6 +81,7 @@ export function runWeeklyFinances(state: GameState, rand: () => number): GameSta
   const addEntry = (label: string, amount: number) => {
     finances = [...finances, { season: state.season, round: state.round, label, amount }].slice(-LEDGER_CAP)
   }
+  const attendanceByHome = new Map<number, number>()
 
   const teams = state.teams.map(team => {
     const user = state.manager.employed && team.id === state.userTeamId
@@ -87,15 +98,8 @@ export function runWeeklyFinances(state: GameState, rand: () => number): GameSta
     if (user) addEntry('Sponsors', sponsors)
 
     if (homeThisRound.has(team.id)) {
-      const interest = Math.round(
-        (9_000 + 900 * (16 - position.get(team.id)!)) * (DIVISION_FACTOR[team.division] ?? 1),
-      )
-      const priceFactor = (15 / team.ticketPrice) ** 1.5
-      const moodFactor = 0.8 + (team.fanMood / 100) * 0.3 // ponytail: floor softened so a losing streak dents gates without a death spiral
-      const attendance = Math.max(
-        0,
-        Math.min(team.capacity, Math.round(interest * priceFactor * moodFactor) + randInt(rand, -500, 500)),
-      )
+      const attendance = attendanceFor(team, position.get(team.id)!, rand)
+      attendanceByHome.set(team.id, attendance)
       const gate = attendance * team.ticketPrice
       cash += gate
       if (user) addEntry(`Gate receipts (${attendance} fans)`, gate)
@@ -120,9 +124,20 @@ export function runWeeklyFinances(state: GameState, rand: () => number): GameSta
     return { ...team, cash }
   })
 
+  const fixtures = state.fixtures.map(f =>
+    f.round === state.round && attendanceByHome.has(f.homeId)
+      ? { ...f, attendance: attendanceByHome.get(f.homeId)! }
+      : f,
+  )
+  const cupFixtures = state.cupFixtures.map(f =>
+    f.week === state.round && attendanceByHome.has(f.homeId)
+      ? { ...f, attendance: attendanceByHome.get(f.homeId)! }
+      : f,
+  )
+
   const cashAfter = teams.find(t => t.id === state.userTeamId)!.cash
   const brokeRounds = state.manager.employed && cashAfter < 0 ? state.brokeRounds + 1 : 0
-  let result: GameState = { ...state, teams, finances, brokeRounds }
+  let result: GameState = { ...state, teams, finances, brokeRounds, fixtures, cupFixtures }
   if (brokeRounds >= 6 && state.brokeRounds < 6) {
     result = pushNews(result, 'boardWarning', { n: brokeRounds })
   }

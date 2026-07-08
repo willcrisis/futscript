@@ -233,6 +233,7 @@ export const en = {
   'match.continueButton': 'Continue',
   'match.penaltyWin': '({name} win on penalties)',
   'match.inProgress': 'The match is under way…',
+  'match.attendance': '{n} in attendance',
 
   // App chrome
   'app.championMessage': '🏆 {name} are the Division {division} champions!',

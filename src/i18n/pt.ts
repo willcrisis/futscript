@@ -235,6 +235,7 @@ export const pt: Record<TranslationKey, string> = {
   'match.continueButton': 'Continuar',
   'match.penaltyWin': '({name} vence nos pênaltis)',
   'match.inProgress': 'A partida está em andamento…',
+  'match.attendance': '{n} presentes',
 
   // App chrome
   'app.championMessage': '🏆 {name} é o campeão da Divisão {division}!',

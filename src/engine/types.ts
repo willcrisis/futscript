@@ -84,6 +84,7 @@ export interface Fixture {
   awayId: number
   homeGoals: number | null // null = not played yet
   awayGoals: number | null
+  attendance?: number // home gate crowd, stamped when the match is settled
   events?: MatchEvent[]
 }
 
@@ -95,6 +96,7 @@ export interface CupFixture {
   homeGoals: number | null
   awayGoals: number | null
   winnerId: number | null // set when played; a drawn tie is decided on penalties
+  attendance?: number // home gate crowd, stamped when the match is settled
   events?: MatchEvent[]
 }
 
