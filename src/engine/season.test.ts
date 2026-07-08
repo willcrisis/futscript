@@ -263,6 +263,18 @@ describe('backlog semantics', () => {
 })
 
 describe('newSeason', () => {
+  it('newSeason carries career state through the rollover', () => {
+    let state = newGame(17)
+    while (state.round <= totalRounds(state)) state = advanceRound(state)
+    const next = newSeason(state)
+    expect(next.manager).toBeDefined()
+    expect(next.unemployedPool).toBeDefined()
+    expect(next.teams.every(t => typeof t.manager === 'string')).toBe(true)
+    expect(next.history[next.history.length - 1].club).toBe(
+      state.teams.find(t => t.id === state.userTeamId)!.name,
+    )
+  })
+
   it('resets the calendar, bumps the season, and ages squads', () => {
     let s = newGame(7)
     // fund the club so a bankruptcy can't halt the season early — this test is about rollover, not survival

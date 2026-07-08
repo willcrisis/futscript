@@ -16,6 +16,8 @@ export const POOL_HIRE_CHANCE = 0.7
 export const AI_SACK_WEEKLY = 0.08
 export const AI_SACK_FROM_WEEK = 8
 export const AI_SACK_GAP = 5
+export const AI_SACK_RELEGATED = 0.7
+export const AI_SACK_FLOP = 0.4
 
 export function teamStrength(team: Team, players: Record<number, Player>): number {
   const levels = team.playerIds.map(id => players[id].level).sort((a, b) => b - a)
@@ -79,4 +81,20 @@ function runAiSackings(state: GameState, rand: () => number): GameState {
 // The weekly career tick. Extended by later tasks (confidence, sackings, job market).
 export function runCareerWeek(state: GameState, rand: () => number): GameState {
   return runAiSackings(state, rand)
+}
+
+// Season-end carousel: boards react to the final table. Extended in Task 6 with the user's verdict.
+export function runCareerSeasonEnd(state: GameState, rand: () => number, week: number): GameState {
+  let s = state
+  for (const team of state.teams) {
+    if (isManaged(s, team.id)) continue
+    if (team.managerHiredSeason === s.season) continue
+    const pos = positionOf(s, team.id)
+    const size = s.teams.filter(t => t.division === team.division).length
+    const relegated = team.division < 3 && pos > size - 3
+    const flop = pos - expectedRank(s, team.id) >= AI_SACK_GAP
+    const p = relegated ? AI_SACK_RELEGATED : flop ? AI_SACK_FLOP : 0
+    if (p > 0 && rand() < p) s = sackAiManager(s, team.id, rand, week)
+  }
+  return s
 }

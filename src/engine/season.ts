@@ -1,4 +1,4 @@
-import { runCareerWeek } from './career'
+import { runCareerSeasonEnd, runCareerWeek } from './career'
 import { cupWinner, drawFirstCupRound, drawNextCupRound } from './cup'
 import { CUP_WEEKS, generateDivisionFixtures } from './fixtures'
 import { adjustCash, DIVISION_FACTOR, runWeeklyFinances, TICKET_PRICE, userLedger } from './finance'
@@ -214,6 +214,10 @@ export function newSeason(state: GameState): GameState {
     newsAcc = pushNews(newsAcc, 'cupWinner', { club: state.teams.find(t => t.id === champId)!.name }, seasonEnd)
   }
 
+  // AI boards react to the final table (relegated/flop sackings) before anything else moves
+  const careered = runCareerSeasonEnd(newsAcc, rand, seasonEnd)
+  let storyAcc = careered
+
   // the record books remember every goal, even after retirement
   const scorers = new Map(state.allTimeScorers.map(e => [e.playerId, { ...e }]))
   for (const p of Object.values(state.players)) {
@@ -229,7 +233,7 @@ export function newSeason(state: GameState): GameState {
   }
   const allTimeScorers = [...scorers.values()].sort((a, b) => b.goals - a.goals).slice(0, 50)
 
-  let teams = state.teams
+  let teams = careered.teams
   let finances = state.finances
   const addEntry = (label: string, amount: number) => {
     finances = [...finances, { season: state.season, round: totalRounds(state), label, amount }].slice(-300)
@@ -262,7 +266,7 @@ export function newSeason(state: GameState): GameState {
     const before = state.teams.find(x => x.id === t.id)!.division
     if (before === t.division) continue
     if (before !== userDivisionPre && t.division !== userDivisionPre) continue
-    newsAcc = pushNews(newsAcc, t.division < before ? 'promoted' : 'relegated', { club: t.name }, seasonEnd)
+    storyAcc = pushNews(storyAcc, t.division < before ? 'promoted' : 'relegated', { club: t.name }, seasonEnd)
   }
   teams = rolloverMood(state, teams)
 
@@ -325,6 +329,8 @@ export function newSeason(state: GameState): GameState {
     incomingOffers: [],
     brokeRounds: 0,
     rngState: randInt(rand, 1, 2 ** 31 - 1),
-    news: newsAcc.news,
+    manager: storyAcc.manager,
+    unemployedPool: storyAcc.unemployedPool,
+    news: storyAcc.news,
   }
 }

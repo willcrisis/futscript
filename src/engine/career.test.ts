@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { expectedRank, hireManager, runCareerWeek, sackAiManager, teamStrength } from './career'
+import { expectedRank, hireManager, runCareerSeasonEnd, runCareerWeek, sackAiManager, teamStrength } from './career'
 import { newGame } from './newGame'
 
 describe('expectation', () => {
@@ -86,5 +86,43 @@ describe('AI manager carousel', () => {
     expect(sacked.teams.find(t => t.id === rival.id)!.manager).not.toBe(rival.manager)
     const spared = runCareerWeek(state, never)
     expect(spared.teams.find(t => t.id === rival.id)!.manager).toBe(rival.manager)
+  })
+})
+
+describe('season-end carousel', () => {
+  // helper: a state where `rival` finished bottom of the user's division.
+  // newGame() always starts the user in Division 3, which has no relegation below it, so the
+  // relegated-sacking branch (division < 3) would never be reachable for a rival sharing the
+  // user's division — reassign the user up to Division 2 so the scenario is actually testable.
+  function bottomedOut(seed: number) {
+    const base = newGame(seed)
+    const userTeamId = base.teams.find(t => t.division === 2)!.id
+    const withUser = { ...base, userTeamId }
+    const userDivision = 2
+    const rival = withUser.teams.find(t => t.id !== withUser.userTeamId && t.division === userDivision)!
+    const opponents = withUser.teams.filter(t => t.division === userDivision && t.id !== rival.id)
+    const fixtures = opponents.map((opp, i) => ({
+      round: i + 1, homeId: rival.id, awayId: opp.id, homeGoals: 0, awayGoals: 3,
+    }))
+    return { state: { ...withUser, fixtures, round: 31 }, rival }
+  }
+
+  it('relegated clubs sack with high probability, week-stamped at season end', () => {
+    const { state, rival } = bottomedOut(13)
+    const out = runCareerSeasonEnd(state, always, 36)
+    expect(out.teams.find(t => t.id === rival.id)!.manager).not.toBe(rival.manager)
+    const item = out.news.find(n => n.type === 'managerSacked')!
+    expect(item.week).toBe(36)
+    expect(runCareerSeasonEnd(state, never, 36).teams.find(t => t.id === rival.id)!.manager).toBe(rival.manager)
+  })
+
+  it('a manager hired this season survives even relegation', () => {
+    const { state, rival } = bottomedOut(13)
+    const grace = {
+      ...state,
+      teams: state.teams.map(t => (t.id === rival.id ? { ...t, managerHiredSeason: state.season } : t)),
+    }
+    const out = runCareerSeasonEnd(grace, always, 36)
+    expect(out.teams.find(t => t.id === rival.id)!.manager).toBe(rival.manager)
   })
 })
