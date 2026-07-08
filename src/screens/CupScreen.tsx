@@ -90,7 +90,7 @@ export default function CupScreen({ state, onShowClub }: { state: GameState; onS
       </div>
     )
   }
-  const rounds = [...new Set(state.cupFixtures.map(f => f.cupRound))].sort((a, b) => a - b)
+  const rounds = [...new Set(state.cupFixtures.map(f => f.cupRound))].sort((a, b) => b - a)
   const final = state.cupFixtures.reduce((a, b) => (b.cupRound > a.cupRound ? b : a))
   const champion =
     final.cupRound === CUP_WEEKS.length && final.winnerId !== null ? name(final.winnerId) : null
