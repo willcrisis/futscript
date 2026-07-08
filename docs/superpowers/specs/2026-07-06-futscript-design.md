@@ -106,13 +106,34 @@ A persistent, translated news feed living in the save (structured `{key, params}
 - **Sources**: the user's club (signings, sales, renewals, injuries to starters, board warnings, construction, outbid notices); division rivals (completed transfers, heavy wins, cup runs); season structure (promotion/relegation verdicts, champions, cup winner). Career mode (Phase 7) later adds sackings and manager moves to the same feed.
 **Done when:** a season tells its story in the rail without opening other screens.
 
-### Phase 7 — Career Mode *(added 2026-07-07)*
+### Phase 7 — Career Mode *(added 2026-07-07; expanded 2026-07-08)*
 Being a manager, not a club.
+
+**The manager**
+- **Manager name**: the user has a name. New careers type it on the Welcome screen (input, defaults to a generated name); existing careers get a random name at migration, editable via an input on the Saves screen. Shown in news and on the club page.
 - **Board confidence** (visible meter, 0–100, starts 60): moves weekly on results vs *expectations*, where expectation derives from the squad's strength rank within its division (a weak squad in 10th is fine; a strong squad in 10th is not). Relegation-zone streaks and relegation drain it hard; promotion and silverware fill it. At 0: sacked for performance. The financial rule (8 broke weeks) remains a separate instant sacking.
-- **Manager reputation** (career-long, survives sackings): raised by overperforming expectations, promotions, titles, cups; dented by sackings. It is what the job market sees.
-- **Unemployment replaces game over**: sacked → "awaiting offers." The world keeps simulating while the manager spectates (weeks advance freely); job offers arrive probabilistically, weighted by reputation — high reputation attracts Division 1 benches, low reputation gets Division 3 strugglers. Accepting takes over that club as-is (their squad, their books); the old club reverts to AI. A career ends only by choice (reset).
-- **Poaching while employed**: overperforming managers receive offers from richer clubs — mostly at season end, occasionally mid-season; declining carries no penalty.
-- **Manager-centric history**: each season row records which club was managed; honours accumulate across clubs.
+- **Manager reputation** (career-long, survives sackings, 0–100, starts 30): raised by season-end results — promotion +8, title +10, cup +6, finishing well above expectation +4; sacking −12. It is what the job market sees. All career tuning constants live in one place, like the economy constants.
+- **Honeymoon (gains-only grace)**: from a mid-season hiring until the first season rollover, confidence can rise but never fall, and the arrival season's end-of-season verdict (including relegation) doesn't drain it. Judgment starts with the first full season. Applies to AI managers too (see below).
+
+**AI managers** *(Elifoot-style flavor — no effect on match results)*
+- Every AI club has a named manager. When a club sacks, the name joins a small **unemployed pool** (capped ~20); new hires draw from the pool (~70%) or a fresh generated name, so familiar faces orbit the league.
+- **Sack triggers** reuse the expectation function: weekly (from ~week 8) a club sitting 5+ places below its expected rank has a small (~8%) sack chance; at season end, relegated clubs sack with high probability (~70%) and big underperformers ~40%. A club sacks **at most once per season** — managers hired this season are immune (the AI honeymoon).
+- **News**: `managerSacked` / `managerHired` entries (club + manager name), filtered to the user's division like other rival news; season-end ones week-stamped like the promotion/relegation verdicts.
+
+**Unemployment replaces game over**
+- Sacked → "awaiting offers." The old club reverts to AI (hires from the pool — news entry) and its loan is written off. The world keeps simulating while the manager spectates: a stripped Home shows "awaiting offers" and current job offers; Table, Fixtures, Cup, Stats, History and News stay browsable read-only; Squad/Transfers/Finance are hidden. Weeks advance freely. A career ends only by choice (reset).
+- **Job offers** arrive probabilistically, weighted by reputation — high reputation attracts Division 1 benches (~65+), low reputation gets Division 3 strugglers. Each offer shows the club's finances up front: cash, wage bill, and what the loan would be after restructuring — taking a basket case is an informed gamble.
+- **Takeover package** (accepting any job): the incumbent AI manager is sacked into the pool (news); negative cash converts into a bank loan (existing loan mechanic), floored at 0 cash, anything beyond the 2M loan cap written off; if the squad is under 16 players the academy tops it up to 16 (rollover youth-intake logic), so there's always sellable headroom above the 14-player floor. The honeymoon applies.
+- **Squad floor, league-wide**: the rollover youth intake guarantees every club (not just the user's) at least 14 players, closing the retirement leak — any club you inherit can field a team and still sell.
+
+**Poaching while employed**: overperforming managers receive offers from richer clubs — mostly at season end, occasionally mid-season; declining carries no penalty.
+
+**Club details page**: clicking a club in the Table, a cup tie, a news item, or Home's next-match panel opens a club page — name, division + position, manager, fan mood, stadium capacity, and the squad list (same data the transfer market exposes). Club cash stays private. News clicks resolve club names to teams by name lookup (names are unique); an unresolvable name isn't clickable.
+
+**Manager-centric history**: each season row records which club was managed; honours accumulate across clubs.
+
+**Migration (v6 → v7)**: existing careers get confidence 60, reputation 30 (no retroactive credit), a generated manager name per AI club, a generated user manager name (editable on Saves), and an empty unemployed pool.
+
 **Done when:** getting sacked in Division 1 and rebuilding a reputation from a Division 3 bench feels like a story, not a game over.
 
 ### Phase 8 — 2D Match Visualization *(kept from the original optional list)*
