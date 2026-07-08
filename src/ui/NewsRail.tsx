@@ -3,19 +3,19 @@ import type { GameState, NewsItem, NewsType } from '../engine/types'
 import { t, useLang } from '../i18n'
 import { newsText } from '../i18n/news'
 import EmptyState from './EmptyState'
-import { CupIcon, FinanceIcon, MoreIcon, SquadIcon, TableIcon, TransfersIcon } from './icons'
+import { CupIcon, FinanceIcon, SquadIcon, TableIcon, TransfersIcon } from './icons'
 
-// ponytail: career news types (managerSacked etc.) get real icons in Task 3/6/7 — MoreIcon fallback until then
-const ICONS: Partial<Record<NewsType, FC<{ className?: string }>>> = {
+const ICONS: Record<NewsType, FC<{ className?: string }>> = {
   userSigned: TransfersIcon, userSold: TransfersIcon, userRenewed: SquadIcon, userOutbid: TransfersIcon,
   offerReceived: TransfersIcon, rivalTransfer: TransfersIcon,
   starterInjured: SquadIcon, boardWarning: FinanceIcon, constructionDone: FinanceIcon,
   heavyWin: TableIcon, champions: TableIcon, promoted: TableIcon, relegated: TableIcon,
   cupRun: CupIcon, cupWinner: CupIcon,
+  managerSacked: SquadIcon, managerHired: SquadIcon, userSacked: SquadIcon, userHired: SquadIcon, jobOffer: SquadIcon,
 }
 
 function toneOf(type: NewsType): string {
-  if (type === 'starterInjured') return 'text-danger'
+  if (type === 'starterInjured' || type === 'userSacked') return 'text-danger'
   if (type === 'boardWarning' || type === 'relegated') return 'text-warn'
   return 'text-ink'
 }
@@ -34,7 +34,7 @@ export default function NewsRail({ state, limit }: { state: GameState; limit?: n
 }
 
 function NewsRow({ item }: { item: NewsItem }) {
-  const RowIcon = ICONS[item.type] ?? MoreIcon
+  const RowIcon = ICONS[item.type]
   return (
     <li className={`flex items-baseline gap-2 border-b border-rule/60 py-2 text-sm ${toneOf(item.type)}`}>
       <span className="translate-y-0.5 text-ink-faint"><RowIcon /></span>

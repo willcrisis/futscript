@@ -335,4 +335,9 @@ export const pt: Record<TranslationKey, string> = {
   'news.cupWinner': '{club} vence a Copa',
   'news.promoted': '{club} é promovido',
   'news.relegated': '{club} é rebaixado',
+  'news.managerSacked': '{club} demite o técnico {manager}',
+  'news.managerHired': '{manager} assume o comando do {club}',
+  'news.userSacked': 'Você foi demitido pelo {club}',
+  'news.userHired': 'Você é o novo técnico do {club}',
+  'news.jobOffer': 'O {club} quer você como técnico',
 }

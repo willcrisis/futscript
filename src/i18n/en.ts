@@ -333,6 +333,11 @@ export const en = {
   'news.cupWinner': '{club} win the Cup',
   'news.promoted': '{club} promoted',
   'news.relegated': '{club} relegated',
+  'news.managerSacked': '{club} part ways with manager {manager}',
+  'news.managerHired': '{manager} takes over at {club}',
+  'news.userSacked': 'You have been sacked by {club}',
+  'news.userHired': 'You are the new manager of {club}',
+  'news.jobOffer': '{club} want you as their manager',
 } as const
 
 export type TranslationKey = keyof typeof en

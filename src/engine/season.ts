@@ -1,3 +1,4 @@
+import { runCareerWeek } from './career'
 import { cupWinner, drawFirstCupRound, drawNextCupRound } from './cup'
 import { CUP_WEEKS, generateDivisionFixtures } from './fixtures'
 import { adjustCash, DIVISION_FACTOR, runWeeklyFinances, TICKET_PRICE, userLedger } from './finance'
@@ -149,6 +150,7 @@ export function advanceRound(state: GameState): GameState {
   s = runTransfers(s, rand)
   s = runWeeklyFinances(s, rand)
   s = tickConstruction(s)
+  s = runCareerWeek(s, rand)
 
   // the week's stories
   const userDivision = byId.get(state.userTeamId)!.division

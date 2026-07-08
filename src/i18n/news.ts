@@ -2,8 +2,7 @@ import type { NewsItem, NewsType } from '../engine/types'
 import { t } from './index'
 import type { TranslationKey } from './index'
 
-// ponytail: career news types (managerSacked etc.) get real copy in Task 3/6/7 — the type key falls back to itself until then
-const NEWS_KEYS: Partial<Record<NewsType, TranslationKey>> = {
+const NEWS_KEYS: Record<NewsType, TranslationKey> = {
   userSigned: 'news.userSigned',
   userSold: 'news.userSold',
   userRenewed: 'news.userRenewed',
@@ -19,12 +18,16 @@ const NEWS_KEYS: Partial<Record<NewsType, TranslationKey>> = {
   cupWinner: 'news.cupWinner',
   promoted: 'news.promoted',
   relegated: 'news.relegated',
+  managerSacked: 'news.managerSacked',
+  managerHired: 'news.managerHired',
+  userSacked: 'news.userSacked',
+  userHired: 'news.userHired',
+  jobOffer: 'news.jobOffer',
 }
 
 export function newsText(item: NewsItem): string {
   const params: Record<string, string | number> = { ...item.params }
   if (typeof params.amount === 'number') params.amount = `$${params.amount.toLocaleString('en-US')}`
   if (typeof params.salary === 'number') params.salary = `$${params.salary.toLocaleString('en-US')}`
-  const key = NEWS_KEYS[item.type]
-  return key ? t(key, params) : item.type
+  return t(NEWS_KEYS[item.type], params)
 }
