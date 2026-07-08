@@ -66,12 +66,12 @@ Nine post-playtest refinements. Mostly UI + i18n; three small, contained engine 
 
 **Problem:** The Squad status column uses text badges (`Inj 2w`, `Ban 1w`, `2 cards`).
 
-**Design:** Replace `statusBadge` in `SquadScreen.tsx` with pictograms:
+**Design:** Replace `statusBadge` in `SquadScreen.tsx` with pictograms (per the user's answer):
 - **Yellow cards** → yellow card pictogram (small rounded rect, yellow fill) with the count.
-- **Suspension** → red card pictogram + weeks (`{n}w`).
-- **Injury** → red **"+"** (medical cross) icon + weeks (`{n}w`).
+- **Injury** → red **"+"** icon + weeks (`{n}w`).
+- **Suspension** → **"−"** icon (warn-toned) + weeks (`{n}w`).
 
-Add the card/cross pictograms to `src/ui/icons.tsx` (inline SVG, currentColor where sensible; the card fills are fixed yellow/red). Retire the `squad.cards` text key; keep injury/suspension week formatting via a small suffix key (e.g. reuse `common.weeksShort` → `"{n}w"`). Precedence stays: injury > suspension > yellow cards > nothing.
+Add the pictograms to `src/ui/icons.tsx` (the `+`/`−` use the shared stroke `Icon`; the yellow card is a standalone filled SVG). The retired-from-display text keys `squad.injured`/`squad.banned`/`squad.cards` are kept as `title`/aria text for accessibility; week counts reuse `common.weeksShort` (`"{n}w"`). Precedence stays: injury > suspension > yellow cards > nothing.
 
 **Test focus:** each status renders its icon + week/count; precedence holds when multiple could apply.
 
@@ -113,13 +113,11 @@ Add the card/cross pictograms to `src/ui/icons.tsx` (inline SVG, currentColor wh
 
 **Problem:** Attendance is computed inside `runWeeklyFinances` (`interest × priceFactor × moodFactor + jitter±500`, capped at capacity) and survives only as text in the ledger label `"Gate receipts (N fans)"`. The match screen can't show it. Attendance is outcome-independent (depends only on the home club's capacity, ticket price, fan mood, division interest, + jitter).
 
-**Design — single source of truth on the fixture:**
+**Design — single source of truth, stamped from finance (no RNG change):**
 - Add optional `attendance?: number` to `Fixture` and `CupFixture` (`types.ts`). Additive, no migration — fixtures regenerate each season.
-- Compute attendance **at match-simulation time** in `season.ts advanceRound` for each played fixture (league + cup), using the **home** team, and store it on the fixture. Extract the attendance formula (currently inline in `finance.ts`) into a shared pure helper, e.g. `attendanceFor(team, rand): number` in `finance.ts`, called from both places so the formula lives once.
-- `runWeeklyFinances` **reads** `fixture.attendance` for the gate when present, falling back to computing it (via the same helper) when absent (old saves' already-played fixtures). This keeps the match-screen number and the "Gate receipts (N fans)" ledger line identical.
-- **Match screen** (`MatchScreen.tsx`): show attendance under the scoreline throughout the match, for home, away, and replays — a static figure (`{n} in attendance`), rendered only when the fixture carries the field. New i18n key `match.attendance` → `"{n} in attendance"`.
-
-**RNG note (accepted):** moving the attendance `rand()` draw from finance-time to match-time shifts the seeded RNG stream, so a fresh game plays out differently than before this change. Still fully deterministic; invisible to players. Called out only because this project treats the RNG stream as load-bearing.
+- Extract the attendance formula (currently inline in `runWeeklyFinances`) into a pure helper `attendanceFor(team, position, rand): number` in `finance.ts`. `position` is the home club's league standing (1–16), which the formula already uses.
+- Keep the computation **where it is** — inside `runWeeklyFinances`, in the same per-team order — and additionally **stamp** the result onto this round's played home fixtures (`fixture.attendance`), returning the stamped `fixtures`/`cupFixtures` in the new state. Because the `rand()` draw stays in the exact same call position, the seeded RNG stream is **unchanged** — a fresh game plays out identically. The match screen and the "Gate receipts (N fans)" ledger line read the same number by construction.
+- **Match screen** (`MatchScreen.tsx`): show attendance under the scoreline throughout the match, for home, away, and replays — a static figure (`{n} in attendance`), rendered only when the fixture carries the field (old saves' already-played fixtures simply omit it). New i18n key `match.attendance` → `"{n} in attendance"`.
 
 **Test focus:** `attendanceFor` deterministic for fixed rand + team; `advanceRound` stamps `attendance` on played home/away fixtures; finance reads the stored value (ledger fans == fixture attendance) and falls back when absent; match screen renders the figure when present and omits it when absent.
 
@@ -129,12 +127,12 @@ Add the card/cross pictograms to `src/ui/icons.tsx` (inline SVG, currentColor wh
 
 | # | Engine | UI / i18n |
 |---|--------|-----------|
-| 1 | `lineup.ts` (`toggleStarter`, drop `swapIn`), `season.ts` (managed lineup verbatim + fallback) | `SquadScreen` toggle, `HomeScreen` advance gate, `squad.selectElevenHint` |
+| 1 | `lineup.ts` (`toggleStarter`, `managedMatchLineup`, drop `swapIn`), `season.ts` (managed lineup verbatim) | `SquadScreen` toggle, `App`/`Shell`/`HomeScreen` advance gate, `squad.selectElevenHint` |
 | 2 | — | `SquadScreen` dot, retire `squad.xiBadge` |
 | 3 | — | `NewsRail` age fade |
 | 4 | `season.ts` (drop unavailable from user lineup post-matchday) | — |
-| 5 | — | `SquadScreen` status pictograms, `icons.tsx`, retire `squad.cards` |
+| 5 | — | `SquadScreen` status pictograms (yellow card / `+` / `−`), `icons.tsx` |
 | 6 | — | `App.tsx` match-close → Home |
 | 7 | — | `CupScreen` reverse rounds |
 | 8 | `transfers.ts` (`delistPlayer`) | `SquadScreen` delist button, `icons.tsx` |
-| 9 | `types.ts` (`attendance?`), `finance.ts` (`attendanceFor` helper + read from fixture), `season.ts` (stamp attendance) | `MatchScreen` attendance line, `match.attendance` |
+| 9 | `types.ts` (`attendance?`), `finance.ts` (`attendanceFor` helper + stamp fixtures) | `MatchScreen` attendance line, `match.attendance` |
