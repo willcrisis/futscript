@@ -32,11 +32,6 @@ interface LedgerRow {
   amount: number
 }
 
-const ledgerColumns: Column<LedgerRow>[] = [
-  { key: 'item', label: 'Item', render: r => describeLedger(r.label).text },
-  { key: 'amount', label: 'Amount', align: 'right', render: r => <MoneyText amount={r.amount} signed /> },
-]
-
 const CATEGORY_KEYS: Record<LedgerCategory, TranslationKey> = {
   gate: 'category.gate',
   sponsors: 'category.sponsors',
@@ -76,6 +71,10 @@ export default function FinanceScreen({ state, setState }: Props) {
   const user = state.teams.find(t => t.id === state.userTeamId)!
   const ledgerRows: LedgerRow[] = state.finances.slice(-50).reverse().map((e, i) => ({ ...e, key: i }))
   const [showLedger, setShowLedger] = useState(false)
+  const ledgerColumns: Column<LedgerRow>[] = [
+    { key: 'item', label: t('finance.itemColumn'), render: r => describeLedger(r.label).text },
+    { key: 'amount', label: t('finance.amountColumn'), align: 'right', render: r => <MoneyText amount={r.amount} signed /> },
+  ]
 
   // "This week" = the last played week's entries, matching HomeScreen's weekDelta scoping.
   const lastWeekPlayed = state.round - 1
@@ -92,7 +91,7 @@ export default function FinanceScreen({ state, setState }: Props) {
 
   return (
     <div>
-      <ScreenHeader label="THE BOOKS" title="Finance" />
+      <ScreenHeader label={t('finance.header')} title={t('finance.title')} />
 
       <Panel label={t('finance.thisWeek')} className="mb-4">
         {weekEntries.length === 0 ? (
@@ -126,12 +125,16 @@ export default function FinanceScreen({ state, setState }: Props) {
       </Panel>
 
       <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
-        <StatChip label="Cash" value={<MoneyText amount={user.cash} />} />
-        <StatChip label="Weekly wages" value={formatMoney(wageBill(user.id, state))} />
-        <StatChip label="Loan" value={formatMoney(state.loanBalance)} hint={`cap ${formatMoney(LOAN_CAP)}`} />
+        <StatChip label={t('finance.cash')} value={<MoneyText amount={user.cash} />} />
+        <StatChip label={t('finance.weeklyWages')} value={formatMoney(wageBill(user.id, state))} />
+        <StatChip
+          label={t('finance.loan')}
+          value={formatMoney(state.loanBalance)}
+          hint={t('finance.loanCapHint', { amount: formatMoney(LOAN_CAP) })}
+        />
         {state.brokeRounds > 0 && (
           <StatChip
-            label="Board patience"
+            label={t('finance.boardPatience')}
             value={
               state.brokeRounds >= 6
                 ? <span className="text-danger">{state.brokeRounds}/8</span>
@@ -147,22 +150,24 @@ export default function FinanceScreen({ state, setState }: Props) {
           disabled={state.loanBalance + STEP > LOAN_CAP}
           onClick={() => setState(s => borrow(s, STEP))}
         >
-          Borrow {formatMoney(STEP)}
+          {t('finance.borrowButton', { amount: formatMoney(STEP) })}
         </Button>
         <Button variant="ghost" disabled={state.loanBalance === 0} onClick={() => setState(s => repayLoan(s, STEP))}>
-          Repay {formatMoney(STEP)}
+          {t('finance.repayButton', { amount: formatMoney(STEP) })}
         </Button>
       </div>
 
       <div className="mt-4 flex flex-col gap-4">
-        <Panel label="Stadium">
+        <Panel label={t('finance.stadium')}>
           <div className="flex flex-col gap-3 text-sm">
             <div className="flex items-center justify-between">
-              <span className="text-ink-muted">Capacity</span>
-              <span className="font-mono text-xs tabular-nums">{user.capacity.toLocaleString('en-US')} seats</span>
+              <span className="text-ink-muted">{t('finance.capacity')}</span>
+              <span className="font-mono text-xs tabular-nums">
+                {t('finance.seatsValue', { n: user.capacity.toLocaleString('en-US') })}
+              </span>
             </div>
             <div className="flex items-center justify-between">
-              <span className="text-ink-muted">Fan mood</span>
+              <span className="text-ink-muted">{t('finance.fanMood')}</span>
               <div className="flex items-center gap-2">
                 <div className="h-1.5 w-24 overflow-hidden rounded-full bg-rule">
                   <div className="h-full bg-accent" style={{ width: `${user.fanMood}%` }} />
@@ -171,14 +176,14 @@ export default function FinanceScreen({ state, setState }: Props) {
               </div>
             </div>
             <div className="flex items-center justify-between">
-              <span className="text-ink-muted">Maintenance</span>
+              <span className="text-ink-muted">{t('finance.maintenance')}</span>
               <span className="font-mono text-xs tabular-nums">
-                {formatMoney(Math.round(user.capacity * MAINTENANCE_PER_SEAT))}/wk
+                {formatMoney(Math.round(user.capacity * MAINTENANCE_PER_SEAT))}{t('finance.perWeekSuffix')}
               </span>
             </div>
             <div className="flex items-center justify-between border-t border-rule pt-3">
               <label htmlFor="ticket-price" className="text-ink-muted">
-                Ticket price
+                {t('finance.ticketPrice')}
               </label>
               <input
                 id="ticket-price"
@@ -193,18 +198,19 @@ export default function FinanceScreen({ state, setState }: Props) {
             <div className="flex items-center justify-between gap-3 border-t border-rule pt-3">
               {state.construction ? (
                 <span className="text-sm text-ink-muted">
-                  🏗 +{state.construction.addedCapacity.toLocaleString('en-US')} seats ready in{' '}
-                  {state.construction.weeksLeft} week{state.construction.weeksLeft > 1 ? 's' : ''}
+                  {t('finance.constructionReady', {
+                    seats: state.construction.addedCapacity.toLocaleString('en-US'),
+                    weeks: state.construction.weeksLeft,
+                  })}
                 </span>
               ) : (
                 <ConfirmButton
-                  label={
-                    <>
-                      Expand +{EXPANSION.seats.toLocaleString('en-US')} seats ({formatMoney(EXPANSION.cost)},{' '}
-                      {EXPANSION.weeks} wks)
-                    </>
-                  }
-                  confirmLabel={`Confirm ${formatMoney(EXPANSION.cost)}`}
+                  label={t('finance.expandButton', {
+                    seats: EXPANSION.seats.toLocaleString('en-US'),
+                    cost: formatMoney(EXPANSION.cost),
+                    weeks: EXPANSION.weeks,
+                  })}
+                  confirmLabel={t('finance.expandConfirm', { amount: formatMoney(EXPANSION.cost) })}
                   onConfirm={() => setState(s => expandStadium(s))}
                   disabled={user.cash < EXPANSION.cost}
                 />
@@ -231,8 +237,8 @@ export default function FinanceScreen({ state, setState }: Props) {
               columns={ledgerColumns}
               rows={ledgerRows}
               rowKey={r => r.key}
-              groupLabel={r => `S${r.season} · W${r.round}`}
-              empty={<EmptyState>No transactions yet.</EmptyState>}
+              groupLabel={r => t('shell.seasonWeek', { season: r.season, week: r.round })}
+              empty={<EmptyState>{t('finance.noTransactions')}</EmptyState>}
             />
           )}
         </Panel>

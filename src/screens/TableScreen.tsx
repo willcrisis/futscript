@@ -112,7 +112,7 @@ export default function TableScreen({ state, focusTeamId, onFocusConsumed }: Pro
                 <span className="text-[10px] font-semibold uppercase tracking-wider text-ink-faint">{t('common.division')}</span>
                 <select
                   value={division}
-                  onChange={e => { setDivision(Number(e.target.value)); setHighlightId(null) }}
+                  onChange={e => { setDivision(Number(e.target.value)); setHighlightId(null); setQuery('') }}
                   className="rounded-md border border-rule bg-surface-raised px-2 py-1.5 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 focus-visible:ring-offset-surface"
                 >
                   {divisions.map(d => <option key={d} value={d}>{d}</option>)}

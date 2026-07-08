@@ -207,6 +207,7 @@ export const en = {
   'saves.languageEnglish': 'English',
   'saves.languagePortuguese': 'Português',
   'saves.newCareer': 'New career',
+  'saves.newCareerHint': 'Start over at a random Division 3 club',
   'saves.newCareerConfirm': 'Confirm — replaces the active slot',
 
   // Match screen
@@ -249,6 +250,8 @@ export const en = {
   'ledger.stadiumExpansionComplete': 'Stadium expansion complete (+{n} seats)',
 
   // Finance screen
+  'finance.header': 'THE BOOKS',
+  'finance.title': 'Finance',
   'finance.thisWeek': 'This week',
   'finance.noWeekYet': 'No week played yet — advance to see a summary.',
   'finance.income': 'Income',
@@ -259,6 +262,26 @@ export const en = {
   'finance.hideDetails': 'Hide details',
   'finance.gateHint': 'earned at home matches',
   'finance.awayWeek': 'away week — no gate receipts',
+  'finance.cash': 'Cash',
+  'finance.weeklyWages': 'Weekly wages',
+  'finance.loan': 'Loan',
+  'finance.loanCapHint': 'cap {amount}',
+  'finance.boardPatience': 'Board patience',
+  'finance.borrowButton': 'Borrow {amount}',
+  'finance.repayButton': 'Repay {amount}',
+  'finance.stadium': 'Stadium',
+  'finance.capacity': 'Capacity',
+  'finance.seatsValue': '{n} seats',
+  'finance.fanMood': 'Fan mood',
+  'finance.maintenance': 'Maintenance',
+  'finance.perWeekSuffix': '/wk',
+  'finance.ticketPrice': 'Ticket price',
+  'finance.constructionReady': '🏗 +{seats} seats ready in {weeks} week(s)',
+  'finance.expandButton': 'Expand +{seats} seats ({cost}, {weeks} wks)',
+  'finance.expandConfirm': 'Confirm {amount}',
+  'finance.itemColumn': 'Item',
+  'finance.amountColumn': 'Amount',
+  'finance.noTransactions': 'No transactions yet.',
 
   // Ledger categories (finance summary breakdown)
   'category.gate': 'Gate receipts',

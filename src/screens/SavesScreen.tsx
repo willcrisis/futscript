@@ -141,7 +141,7 @@ export default function SavesScreen({ state, setState, onNewCareer }: Props) {
           </select>
         </div>
         <div className="mt-3 flex items-center justify-between gap-3 text-sm">
-          <span className="text-ink-muted">{t('saves.newCareer')}</span>
+          <span className="text-ink-muted">{t('saves.newCareerHint')}</span>
           <ConfirmButton
             label={t('saves.newCareer')}
             confirmLabel={t('saves.newCareerConfirm')}

@@ -209,6 +209,7 @@ export const pt: Record<TranslationKey, string> = {
   'saves.languageEnglish': 'English',
   'saves.languagePortuguese': 'Português',
   'saves.newCareer': 'Nova carreira',
+  'saves.newCareerHint': 'Recomeçar em um clube aleatório da Divisão 3',
   'saves.newCareerConfirm': 'Confirmar — substitui o jogo salvo ativo',
 
   // Match screen
@@ -227,7 +228,7 @@ export const pt: Record<TranslationKey, string> = {
   'app.sackedTitle': 'Demitido!',
   'app.sackedMessage': '{team} passou tempo demais no vermelho. A diretoria te mostrou a porta depois de {n} temporada(s).',
   'app.newCareerButton': 'Começar uma nova carreira',
-  'app.championMessage': '🏆 {name} são os campeões da Divisão {division}!',
+  'app.championMessage': '🏆 {name} é o campeão da Divisão {division}!',
   'app.contractsExpireWarning': '⚠ {n} contrato(s) vence(m) — jogadores não renovados saem (os mais baratos são mantidos automaticamente se o elenco cair abaixo de 14)',
 
   // Ledger labels (display-time translation of canonical engine strings)
@@ -251,6 +252,8 @@ export const pt: Record<TranslationKey, string> = {
   'ledger.stadiumExpansionComplete': 'Ampliação do estádio concluída (+{n} lugares)',
 
   // Finance screen
+  'finance.header': 'AS CONTAS',
+  'finance.title': 'Finanças',
   'finance.thisWeek': 'Esta semana',
   'finance.noWeekYet': 'Nenhuma semana jogada ainda — avance para ver um resumo.',
   'finance.income': 'Receitas',
@@ -261,6 +264,26 @@ export const pt: Record<TranslationKey, string> = {
   'finance.hideDetails': 'Ocultar detalhes',
   'finance.gateHint': 'arrecadado em jogos em casa',
   'finance.awayWeek': 'semana fora — sem bilheteria',
+  'finance.cash': 'Caixa',
+  'finance.weeklyWages': 'Salários semanais',
+  'finance.loan': 'Empréstimo',
+  'finance.loanCapHint': 'teto {amount}',
+  'finance.boardPatience': 'Paciência da diretoria',
+  'finance.borrowButton': 'Pegar {amount} emprestado',
+  'finance.repayButton': 'Pagar {amount}',
+  'finance.stadium': 'Estádio',
+  'finance.capacity': 'Capacidade',
+  'finance.seatsValue': '{n} lugares',
+  'finance.fanMood': 'Humor da torcida',
+  'finance.maintenance': 'Manutenção',
+  'finance.perWeekSuffix': '/sem',
+  'finance.ticketPrice': 'Preço do ingresso',
+  'finance.constructionReady': '🏗 +{seats} lugares prontos em {weeks} semana(s)',
+  'finance.expandButton': 'Ampliar +{seats} lugares ({cost}, {weeks} sem)',
+  'finance.expandConfirm': 'Confirmar {amount}',
+  'finance.itemColumn': 'Item',
+  'finance.amountColumn': 'Valor',
+  'finance.noTransactions': 'Nenhuma transação ainda.',
 
   // Ledger categories (finance summary breakdown)
   'category.gate': 'Bilheteria',

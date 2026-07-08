@@ -53,7 +53,7 @@ function Game() {
   useEffect(() => { save(state) }, [state])
 
   const goToTeam = (teamId: number) => { setTableFocus(teamId); setScreen('table') }
-  const startNewCareer = () => { setState(newGame(Date.now() % 2147483647)); setShowWelcome(true) }
+  const startNewCareer = () => { setState(newGame(Date.now() % 2147483647)); setShowWelcome(true); setScreen('home') }
 
   const userTeam = state.teams.find(t => t.id === state.userTeamId)!
   const total = totalRounds(state)
