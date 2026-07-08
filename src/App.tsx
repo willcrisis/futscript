@@ -90,7 +90,7 @@ function Game() {
     return <MatchScreen fixture={replay} state={state} onClose={() => setReplay(null)} />
   }
 
-  if (state.gameOver) {
+  if (!state.manager.employed) {
     return (
       <div className="flex min-h-dvh flex-col items-center justify-center gap-3 p-6 text-center">
         <SectionLabel>{t('app.sackedHeader')}</SectionLabel>

@@ -295,9 +295,9 @@ describe('all-time scorers', () => {
     expect([...s2.allTimeScorers].sort((a, b) => b.goals - a.goals)).toEqual(s2.allTimeScorers)
     // a second season accumulates onto existing entries
     let s3 = s2
-    for (let i = 0; i < totalRounds(s3) && !s3.gameOver; i++) s3 = advanceRound(s3)
+    for (let i = 0; i < totalRounds(s3); i++) s3 = advanceRound(s3)
     const repeatId = s3.allTimeScorers?.[0]?.playerId
-    const s4 = newSeason({ ...s3, gameOver: false })
+    const s4 = newSeason(s3)
     if (repeatId !== undefined && s4.players[repeatId]) {
       const before = s2.allTimeScorers.find(e => e.playerId === repeatId)?.goals ?? 0
       const after = s4.allTimeScorers.find(e => e.playerId === repeatId)?.goals ?? 0
@@ -308,9 +308,10 @@ describe('all-time scorers', () => {
 })
 
 describe('advanceRound — market and money', () => {
-  it('no-ops when the game is over', () => {
-    const s = { ...newGame(1), gameOver: true }
-    expect(advanceRound(s)).toEqual(s)
+  it('still advances when the manager is unemployed (nothing sacks yet — Task 6 wires that)', () => {
+    const base = newGame(1)
+    const s = { ...base, manager: { ...base.manager, employed: false } }
+    expect(advanceRound(s).round).toBe(s.round + 1)
   })
 
   it('moves money every round', () => {
@@ -341,9 +342,10 @@ describe('newSeason — money and contracts', () => {
 })
 
 describe('newSeason — the long game', () => {
-  it('no-ops when the game is over', () => {
-    const s = { ...newGame(1), gameOver: true }
-    expect(newSeason(s)).toBe(s)
+  it('still rolls over when the manager is unemployed (nothing sacks yet — Task 6 wires that)', () => {
+    const s = playSeason(1)
+    const unemployed = { ...s, manager: { ...s.manager, employed: false } }
+    expect(newSeason(unemployed).season).toBe(s.season + 1)
   })
 
   it('pays division-scaled prizes and applies promotion and relegation', () => {

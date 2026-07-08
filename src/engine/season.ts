@@ -47,7 +47,7 @@ export function applyMatchConsequences(
 }
 
 export function advanceRound(state: GameState): GameState {
-  if (state.gameOver || state.round > totalRounds(state)) return state
+  if (state.round > totalRounds(state)) return state
   const rand = mulberry32(state.rngState)
   const week = state.round
 
@@ -194,7 +194,6 @@ export function advanceRound(state: GameState): GameState {
 }
 
 export function newSeason(state: GameState): GameState {
-  if (state.gameOver) return state
   const rand = mulberry32(state.rngState)
 
   // the season's story is written before anything moves

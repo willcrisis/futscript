@@ -1,4 +1,6 @@
 import { salaryFor } from './finance'
+import { randomName } from './names'
+import { mulberry32 } from './rng'
 import { INITIAL_CAPACITY } from './stadium'
 import type { GameState } from './types'
 
@@ -16,7 +18,8 @@ export function migrateToCurrent(raw: unknown): GameState | null {
     if (state?.version === 3) state = migrateV3(state)
     if (state?.version === 4) state = migrateV4(state)
     if (state?.version === 5) state = migrateV5(state)
-    if (state?.version !== 6) return null
+    if (state?.version === 6) state = migrateV6(state)
+    if (state?.version !== 7) return null
     const shaped =
       Array.isArray(state.teams) &&
       state.players !== null &&
@@ -164,10 +167,31 @@ function migrateV4(s: any): any {
   }
 }
 
-function migrateV5(s: any): GameState {
+function migrateV5(s: any): any {
   return {
     ...s,
     version: 6,
     news: [],
+  }
+}
+
+function migrateV6(s: any): GameState {
+  const rand = mulberry32(s.seed >>> 0 || 1) // deterministic names for a given save
+  const { gameOver, ...rest } = s
+  const clubName = s.teams.find((t: any) => t.id === s.userTeamId)?.name ?? '—'
+  return {
+    ...rest,
+    version: 7,
+    teams: s.teams.map((t: any) => ({ ...t, manager: randomName(rand), managerHiredSeason: 0 })),
+    manager: {
+      name: randomName(rand),
+      reputation: 30,
+      confidence: 60,
+      employed: !gameOver, // a dead save comes back as an unemployed manager
+      hiredSeason: 0,
+      jobOffers: [],
+    },
+    unemployedPool: [],
+    history: (s.history ?? []).map((h: any) => ({ ...h, club: h.club ?? clubName })),
   }
 }

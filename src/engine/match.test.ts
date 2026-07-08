@@ -29,6 +29,7 @@ function makeTeam(
   return {
     id, name: `T${id}`, playerIds, formation: '4-4-2', lineup, tactic: 'normal', trainingStyle, cash: 1_000_000, division: 1,
     capacity: 9_000, ticketPrice: 15, fanMood: 50,
+    manager: 'AI Manager', managerHiredSeason: 0,
   }
 }
 
@@ -145,6 +146,7 @@ describe('simulateMatch', () => {
       return {
         id, name: `T${id}`, playerIds: [pid], formation: '4-4-2', lineup: [pid], tactic: 'normal', trainingStyle: 'normal', cash: 1_000_000, division: 1,
         capacity: 9_000, ticketPrice: 15, fanMood: 50,
+        manager: 'AI Manager', managerHiredSeason: 0,
       }
     }
     const a = solo(1)

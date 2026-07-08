@@ -7,14 +7,17 @@ function makeState(fixtures: Fixture[]): GameState {
     id, name: `T${id}`, playerIds: [], formation: '4-4-2', lineup: [],
     tactic: 'normal', trainingStyle: 'normal', cash: 1_000_000, division: 1,
     capacity: 9_000, ticketPrice: 15, fanMood: 50,
+    manager: `AI Manager ${id}`, managerHiredSeason: 0,
   }))
   return {
-    version: 6, seed: 1, rngState: 1, season: 1, round: 1,
+    version: 7, seed: 1, rngState: 1, season: 1, round: 1,
     userTeamId: 0, players: {}, teams, fixtures,
     cupFixtures: [], history: [], playFriendlies: false,
     transferList: [], incomingOffers: [], loanBalance: 0,
-    brokeRounds: 0, gameOver: false, finances: [],
+    brokeRounds: 0, finances: [],
     construction: null, allTimeScorers: [], news: [],
+    manager: { name: 'User Manager', reputation: 30, confidence: 60, employed: true, hiredSeason: 0, jobOffers: [] },
+    unemployedPool: [],
   }
 }
 

@@ -7,7 +7,7 @@ import { randInt } from './rng'
 import { clampMood, INITIAL_CAPACITY } from './stadium'
 import { standings } from './standings'
 import { MIN_SQUAD } from './transfers'
-import type { GameState, Player, Position, SeasonRecord, Team } from './types'
+import { isManaged, type GameState, type Player, type Position, type SeasonRecord, type Team } from './types'
 
 // bottom three of each upper division swap with the top three below it
 export function applyPromotionRelegation(state: GameState, teams: Team[]): Team[] {
@@ -149,6 +149,8 @@ export function ensureThreeDivisions(
         capacity: INITIAL_CAPACITY[division],
         ticketPrice: 15,
         fanMood: 50,
+        manager: randomName(rand),
+        managerHiredSeason: 0,
       }
       team.lineup = autoPick(team, nextPlayers)
       nextTeams.push(team)
@@ -175,6 +177,7 @@ export function seasonRecord(state: GameState): SeasonRecord {
     topScorer: { player: top.name, team: topTeam?.name ?? 'free agent', goals: top.seasonGoals },
     userDivision,
     userPosition: standings(state, userDivision).findIndex(r => r.teamId === state.userTeamId) + 1,
+    club: isManaged(state, state.userTeamId) ? state.teams.find(t => t.id === state.userTeamId)!.name : '—',
   }
 }
 
