@@ -1,3 +1,5 @@
+import { cupWinner } from './cup'
+import { BROKE_ROUNDS_LIMIT } from './finance'
 import { randomName } from './names'
 import { pushNews } from './news'
 import { randInt } from './rng'
@@ -18,6 +20,14 @@ export const AI_SACK_FROM_WEEK = 8
 export const AI_SACK_GAP = 5
 export const AI_SACK_RELEGATED = 0.7
 export const AI_SACK_FLOP = 0.4
+export const CONFIDENCE_FROM_WEEK = 4
+export const REP_SACKED = -12
+export const REP_TITLE = 10
+export const REP_PROMOTION = 8
+export const REP_CUP = 6
+export const REP_OVERPERFORM = 4
+
+const clamp = (n: number) => Math.max(0, Math.min(100, n))
 
 export function teamStrength(team: Team, players: Record<number, Player>): number {
   const levels = team.playerIds.map(id => players[id].level).sort((a, b) => b - a)
@@ -43,6 +53,26 @@ function userDivision(state: GameState): number {
   return state.teams.find(t => t.id === state.userTeamId)!.division
 }
 
+function weeklyDelta(gap: number): number {
+  if (gap >= 3) return 2
+  if (gap >= 1) return 1
+  if (gap <= -5) return -3
+  if (gap <= -3) return -2
+  if (gap <= -1) return -1
+  return 0
+}
+
+function updateConfidence(state: GameState): GameState {
+  if (state.round < CONFIDENCE_FROM_WEEK) return state // early tables are noise
+  const pos = positionOf(state, state.userTeamId)
+  const division = userDivision(state)
+  const size = state.teams.filter(t => t.division === division).length
+  let delta = weeklyDelta(expectedRank(state, state.userTeamId) - pos)
+  if (division < 3 && pos > size - 3) delta -= 1 // the drop zone stings extra
+  if (state.manager.hiredSeason === state.season) delta = Math.max(0, delta) // honeymoon: gains only
+  return { ...state, manager: { ...state.manager, confidence: clamp(state.manager.confidence + delta) } }
+}
+
 export function hireManager(state: GameState, teamId: number, rand: () => number, week?: number): GameState {
   const pool = [...state.unemployedPool]
   const fromPool = pool.length > 0 && rand() < POOL_HIRE_CHANCE
@@ -66,6 +96,24 @@ export function sackAiManager(state: GameState, teamId: number, rand: () => numb
   return { ...s, unemployedPool: [...s.unemployedPool, club.manager].slice(-POOL_CAP) }
 }
 
+export function sackUser(state: GameState, rand: () => number, week?: number): GameState {
+  const club = state.teams.find(t => t.id === state.userTeamId)!
+  let s = pushNews(state, 'userSacked', { club: club.name }, week)
+  s = {
+    ...s,
+    manager: {
+      ...s.manager,
+      employed: false,
+      reputation: clamp(s.manager.reputation + REP_SACKED),
+      jobOffers: [],
+    },
+    loanBalance: 0, // the debt stays with the club's board, not the manager
+    brokeRounds: 0,
+    construction: null, // ponytail: an in-flight expansion is abandoned with the job
+  }
+  return hireManager(s, s.userTeamId, rand, week)
+}
+
 function runAiSackings(state: GameState, rand: () => number): GameState {
   if (state.round < AI_SACK_FROM_WEEK) return state // early tables are noise
   let s = state
@@ -78,12 +126,16 @@ function runAiSackings(state: GameState, rand: () => number): GameState {
   return s
 }
 
-// The weekly career tick. Extended by later tasks (confidence, sackings, job market).
+// The weekly career tick. Extended by later tasks (job market).
 export function runCareerWeek(state: GameState, rand: () => number): GameState {
-  return runAiSackings(state, rand)
+  let s = runAiSackings(state, rand)
+  if (!s.manager.employed) return s
+  s = updateConfidence(s)
+  if (s.manager.confidence <= 0 || s.brokeRounds >= BROKE_ROUNDS_LIMIT) return sackUser(s, rand)
+  return s
 }
 
-// Season-end carousel: boards react to the final table. Extended in Task 6 with the user's verdict.
+// Season-end carousel: boards react to the final table, including the user's own verdict.
 export function runCareerSeasonEnd(state: GameState, rand: () => number, week: number): GameState {
   let s = state
   for (const team of state.teams) {
@@ -96,5 +148,31 @@ export function runCareerSeasonEnd(state: GameState, rand: () => number, week: n
     const p = relegated ? AI_SACK_RELEGATED : flop ? AI_SACK_FLOP : 0
     if (p > 0 && rand() < p) s = sackAiManager(s, team.id, rand, week)
   }
+
+  if (!s.manager.employed) return s
+  const user = s.teams.find(t => t.id === s.userTeamId)!
+  const pos = positionOf(s, s.userTeamId)
+  const size = s.teams.filter(t => t.division === user.division).length
+  const gap = expectedRank(s, s.userTeamId) - pos
+  const honeymoon = s.manager.hiredSeason === s.season
+  let conf = 0
+  let rep = 0
+  if (pos === 1 && user.division === 1) { conf += 20; rep += REP_TITLE }
+  if (user.division > 1 && pos <= 3) { conf += 15; rep += REP_PROMOTION }
+  if (cupWinner(s) === s.userTeamId) { conf += 15; rep += REP_CUP }
+  if (gap >= 3) { conf += 10; rep += REP_OVERPERFORM }
+  if (!honeymoon) {
+    if (user.division < 3 && pos > size - 3) conf -= 25 // relegation
+    else if (gap <= -5) conf -= 10 // flop
+  }
+  s = {
+    ...s,
+    manager: {
+      ...s.manager,
+      confidence: clamp(s.manager.confidence + conf),
+      reputation: clamp(s.manager.reputation + rep),
+    },
+  }
+  if (s.manager.confidence <= 0) s = sackUser(s, rand, week)
   return s
 }

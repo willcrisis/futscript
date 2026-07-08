@@ -38,7 +38,7 @@ export const TICKET_PRICE = 15
 const DEPOSIT_INTEREST = 0.005
 const LOAN_INTEREST = 0.02
 const OVERDRAFT_INTEREST = 0.02
-// ponytail: brokeRounds still counts, but nothing acts on it until Task 6 wires sackUser
+export const BROKE_ROUNDS_LIMIT = 8
 const LEDGER_CAP = 300
 
 export function wageBill(teamId: number, state: GameState): number {
