@@ -1,8 +1,8 @@
 import { useState } from 'react'
 import type { Dispatch, SetStateAction } from 'react'
 import { formatMoney, marketValue, severanceFor } from '../engine/finance'
-import { autoPick, isAvailable, swapIn, updateTeam } from '../engine/lineup'
-import { listPlayer, releasePlayer, renewalSalary, renewContract } from '../engine/transfers'
+import { autoPick, isAvailable, toggleStarter, updateTeam } from '../engine/lineup'
+import { delistPlayer, listPlayer, releasePlayer, renewalSalary, renewContract } from '../engine/transfers'
 import {
   FORMATIONS,
   type FormationName,
@@ -13,12 +13,11 @@ import {
 } from '../engine/types'
 import { t, useLang } from '../i18n'
 import type { TranslationKey } from '../i18n'
-import Badge from '../ui/Badge'
 import Button from '../ui/Button'
 import ConfirmButton from '../ui/ConfirmButton'
 import DataTable from '../ui/DataTable'
 import type { Column } from '../ui/DataTable'
-import { ExitIcon, PlayIcon, RenewIcon, TagIcon } from '../ui/icons'
+import { DelistIcon, ExitIcon, MinusIcon, PlayIcon, PlusIcon, RenewIcon, TagIcon, YellowCardIcon } from '../ui/icons'
 import MoneyText from '../ui/MoneyText'
 import ScreenHeader from '../ui/ScreenHeader'
 
@@ -40,10 +39,30 @@ const TRAINING_LABEL_KEYS: Record<TrainingStyle, TranslationKey> = {
 
 const SELECT_CLASS = 'rounded-md border border-rule bg-surface-raised px-2 py-1.5 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 focus-visible:ring-offset-surface'
 
-function statusBadge(p: Player) {
-  if (p.injuredForRounds > 0) return <Badge tone="danger">{t('squad.injured', { n: p.injuredForRounds })}</Badge>
-  if (p.suspendedForRounds > 0) return <Badge tone="warn">{t('squad.banned', { n: p.suspendedForRounds })}</Badge>
-  if (p.yellowCards > 0) return <Badge tone="muted">{t('squad.cards', { n: p.yellowCards })}</Badge>
+export function statusKind(p: Player): 'injured' | 'suspended' | 'cards' | null {
+  if (p.injuredForRounds > 0) return 'injured'
+  if (p.suspendedForRounds > 0) return 'suspended'
+  if (p.yellowCards > 0) return 'cards'
+  return null
+}
+
+function statusCell(p: Player) {
+  const kind = statusKind(p)
+  if (kind === 'injured') return (
+    <span className="inline-flex items-center gap-1 text-danger" title={t('squad.injured', { n: p.injuredForRounds })}>
+      <PlusIcon className="size-3.5" />{t('common.weeksShort', { n: p.injuredForRounds })}
+    </span>
+  )
+  if (kind === 'suspended') return (
+    <span className="inline-flex items-center gap-1 text-warn" title={t('squad.banned', { n: p.suspendedForRounds })}>
+      <MinusIcon className="size-3.5" />{t('common.weeksShort', { n: p.suspendedForRounds })}
+    </span>
+  )
+  if (kind === 'cards') return (
+    <span className="inline-flex items-center gap-1" title={t('squad.cards', { n: p.yellowCards })}>
+      <YellowCardIcon />{p.yellowCards}
+    </span>
+  )
   return null
 }
 
@@ -77,7 +96,9 @@ export default function SquadScreen({ state, setState }: Props) {
       render: p => (
         <span className="inline-flex items-center gap-2">
           {p.name}
-          {team.lineup.includes(p.id) && <Badge tone="accent">{t('squad.xiBadge')}</Badge>}
+          {team.lineup.includes(p.id) && (
+            <span className="size-2 shrink-0 rounded-full bg-accent" aria-label={t('squad.startingXi')} title={t('squad.startingXi')} />
+          )}
         </span>
       ),
     },
@@ -91,7 +112,7 @@ export default function SquadScreen({ state, setState }: Props) {
       hideOnMobile: true,
       render: p => <span className={p.fitness < 70 ? 'text-warn' : ''}>{p.fitness}%</span>,
     },
-    { key: 'status', label: t('squad.statusColumn'), render: p => statusBadge(p) },
+    { key: 'status', label: t('squad.statusColumn'), render: p => statusCell(p) },
     {
       key: 'salary',
       label: t('squad.salaryColumn'),
@@ -149,22 +170,28 @@ export default function SquadScreen({ state, setState }: Props) {
         }
         return (
           <div className="flex flex-wrap items-center gap-1.5">
-            {starting ? (
-              <span className="text-xs text-ink-faint">{t('squad.startingTag')}</span>
-            ) : (
+            <Button
+              variant="ghost"
+              size="sm"
+              aria-pressed={starting}
+              disabled={!starting && !isAvailable(p)}
+              aria-label={starting ? t('squad.bench') : t('squad.start')}
+              title={starting ? t('squad.bench') : t('squad.start')}
+              className={starting ? 'border-accent! text-accent-strong!' : ''}
+              onClick={() => withUserTeam((s, t) => updateTeam(s, t.id, { lineup: toggleStarter(t, p.id) }))}
+            >
+              <PlayIcon />
+            </Button>
+            {listed ? (
               <Button
                 variant="ghost"
                 size="sm"
-                disabled={!isAvailable(p)}
-                aria-label={t('squad.start')}
-                title={t('squad.start')}
-                onClick={() => withUserTeam((s, t) => updateTeam(s, t.id, { lineup: swapIn(t, s.players, p.id) }))}
+                aria-label={t('squad.delist')}
+                title={t('squad.delist')}
+                onClick={() => setState(s => delistPlayer(s, p.id))}
               >
-                <PlayIcon />
+                <DelistIcon />
               </Button>
-            )}
-            {listed ? (
-              <Badge tone="muted">{t('squad.listedBadge')}</Badge>
             ) : (
               <Button
                 variant="ghost"

@@ -57,3 +57,21 @@ export const ExitIcon = ({ className }: { className?: string }) => (
 export const RenewIcon = ({ className }: { className?: string }) => (
   <Icon className={className}><path d="M20 6v5h-5M4 18v-5h5" /><path d="M19.5 11a8 8 0 0 0-14-4M4.5 13a8 8 0 0 0 14 4" /></Icon>
 )
+// ponytail: literal football-card colors — a card reads yellow/red in any theme, not a token.
+export const YellowCardIcon = ({ className }: { className?: string }) => (
+  <svg width="11" height="15" viewBox="0 0 11 15" className={className} aria-hidden>
+    <rect x="0.5" y="0.5" width="10" height="14" rx="1.5" fill="#eab308" />
+  </svg>
+)
+export const PlusIcon = ({ className }: { className?: string }) => (
+  <Icon className={className}><path d="M12 5v14M5 12h14" /></Icon>
+)
+export const MinusIcon = ({ className }: { className?: string }) => (
+  <Icon className={className}><path d="M5 12h14" /></Icon>
+)
+// slashed tag = cancel listing
+export const DelistIcon = ({ className }: { className?: string }) => (
+  <Icon className={className}>
+    <path d="M9 5H6a2 2 0 0 0-2 2v3l7 7 3-3" /><circle cx="8" cy="9" r="1" /><path d="M4 4l16 16" />
+  </Icon>
+)
