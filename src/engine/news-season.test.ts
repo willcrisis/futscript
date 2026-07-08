@@ -16,6 +16,7 @@ describe('matchday news', () => {
     // structural checks: every heavyWin names two clubs from the user's division and a valid margin
     const userDivision = s.teams.find(t => t.id === s.userTeamId)!.division
     const clubsInDivision = new Set(s.teams.filter(t => t.division === userDivision).map(t => t.name))
+    expect(s.news.some(n => n.type === 'heavyWin')).toBe(true) // guard against the loops below going vacuous
     for (const n of s.news.filter(n => n.type === 'heavyWin')) {
       expect(clubsInDivision.has(String(n.params.winner))).toBe(true)
       const [a, b] = String(n.params.score).split('-').map(Number)
@@ -46,5 +47,7 @@ describe('season news', () => {
     expect(moves.length).toBeLessThanOrEqual(6) // only moves touching the user's division
     // week stamp is season end
     expect(champions[0].week).toBe(totalRounds(s))
+    // news survives rollover
+    expect(s2.news.some(n => n.season === 1 && n.type === 'heavyWin')).toBe(true)
   })
 })
