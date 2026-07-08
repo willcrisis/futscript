@@ -37,6 +37,12 @@ describe('expectation', () => {
 
 const always = () => 0 // rand that always fires probabilistic gates and picks index 0
 const never = () => 0.999999
+// rand that replays a fixed sequence, holding the last value once exhausted — for driving
+// a specific randInt pick past the "always picks index 0" default.
+const sequence = (...values: number[]) => {
+  let i = 0
+  return () => values[Math.min(i++, values.length - 1)]
+}
 
 describe('AI manager carousel', () => {
   it('sacking recycles the name through the pool into the next hire', () => {
@@ -240,10 +246,25 @@ describe('job market', () => {
       aging = runCareerWeek({ ...aging, manager: { ...aging.manager, jobOffers: aging.manager.jobOffers.slice(0, 1) } }, never)
     }
     expect(aging.manager.jobOffers).toHaveLength(0)
+  })
 
+  it('mid reputation tier (45-64) offers Division 2 or 3, never Division 1', () => {
+    const midRep = { ...unemployed(43), round: 5, manager: { ...unemployed(43).manager, employed: false, reputation: 50 } }
+    const out = runCareerWeek(midRep, always) // always → offer fires, picks index 0 of the candidate pool
+    const division = out.teams.find(t => t.id === out.manager.jobOffers[0].teamId)!.division
+    expect([2, 3]).toContain(division)
+    expect(division).not.toBe(1)
+  })
+
+  it('high reputation tier (>=65) reaches all the way to Division 1', () => {
     const famous = { ...unemployed(43), round: 5, manager: { ...unemployed(43).manager, employed: false, reputation: 80 } }
-    const rich = runCareerWeek(famous, always)
-    expect([1, 2, 3]).toContain(rich.teams.find(t => t.id === rich.manager.jobOffers[0].teamId)!.division)
+    // candidates are ordered Division 3, then 2, then 1 (ascending team id); pass the offer-chance
+    // gate with the first draw, then push randInt to the pool's last (Division 1) struggler
+    const forceLastCandidate = sequence(0, 0.999999)
+    const out = runCareerWeek(famous, forceLastCandidate)
+    expect(out.manager.jobOffers).toHaveLength(1)
+    const division = out.teams.find(t => t.id === out.manager.jobOffers[0].teamId)!.division
+    expect(division).toBe(1)
   })
 
   it('acceptJob: restructure, top-up, incumbent to pool, honeymoon on', () => {
@@ -301,5 +322,25 @@ describe('job market', () => {
     // season end fires more reliably
     const seasonOut = runCareerSeasonEnd(flying, always, 36)
     expect(seasonOut.manager.jobOffers.length).toBeGreaterThan(0)
+  })
+
+  it('season-end poach never duplicates an existing offer', () => {
+    // a weekly poach can already hold an offer from the division above when season end re-rolls;
+    // the re-roll must not offer that same club a second time
+    const base = newGame(59)
+    const user = base.teams.find(t => t.id === base.userTeamId)!
+    const opponents = base.teams.filter(t => t.division === user.division && t.id !== user.id).slice(0, 10)
+    const fixtures = opponents.map((opp, i) => ({
+      round: i + 1, homeId: user.id, awayId: opp.id, homeGoals: 3, awayGoals: 0,
+    }))
+    const flying = { ...base, fixtures, round: 11 }
+    const existingOffer = flying.teams.find(t => t.division === user.division - 1)!
+    const withOffer = {
+      ...flying,
+      manager: { ...flying.manager, jobOffers: [{ teamId: existingOffer.id, roundsLeft: 1 }] },
+    }
+    const out = runCareerSeasonEnd(withOffer, always, 36)
+    const teamIds = out.manager.jobOffers.map(o => o.teamId)
+    expect(new Set(teamIds).size).toBe(teamIds.length)
   })
 })

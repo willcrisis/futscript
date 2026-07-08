@@ -48,7 +48,6 @@ function Game() {
   const [state, setState] = useState<GameState>(boot.state)
   const [screen, setScreen] = useState<ScreenId>('home')
   const [replay, setReplay] = useState<MatchLike | null>(null)
-  const [tableFocus, setTableFocus] = useState<number | null>(null)
   const [showWelcome, setShowWelcome] = useState(boot.fresh)
   const [clubView, setClubView] = useState<{ teamId: number; from: ScreenId } | null>(null)
   const advancingRef = useRef(false)
@@ -135,13 +134,7 @@ function Game() {
         : <UnemployedScreen state={state} setState={setState} onAdvance={advance} />)}
       {screen === 'squad' && <SquadScreen state={state} setState={setState} />}
       {screen === 'table' && (
-        <TableScreen
-          key={state.season}
-          state={state}
-          focusTeamId={tableFocus ?? undefined}
-          onFocusConsumed={() => setTableFocus(null)}
-          onShowClub={openClub}
-        />
+        <TableScreen key={state.season} state={state} onShowClub={openClub} />
       )}
       {screen === 'fixtures' && <FixturesScreen key={state.season} state={state} />}
       {screen === 'cup' && <CupScreen key={state.season} state={state} onShowClub={openClub} />}

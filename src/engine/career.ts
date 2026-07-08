@@ -298,8 +298,9 @@ export function runCareerSeasonEnd(state: GameState, rand: () => number, week: n
   }
   if (s.manager.confidence <= 0) s = sackUser(s, rand, week)
   if (s.manager.employed && gap >= 3 && user.division > 1 && rand() < POACH_SEASON_END) {
-    const richer = s.teams.filter(t => t.division === user.division - 1)
-    s = pushJobOffer(s, richer[randInt(rand, 0, richer.length - 1)].id, week)
+    const offering = new Set(s.manager.jobOffers.map(o => o.teamId))
+    const richer = s.teams.filter(t => t.division === user.division - 1 && !offering.has(t.id))
+    if (richer.length > 0) s = pushJobOffer(s, richer[randInt(rand, 0, richer.length - 1)].id, week)
   }
   return s
 }
