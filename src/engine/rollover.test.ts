@@ -82,19 +82,17 @@ describe('youthIntake', () => {
     expect(rookie.seasonGoals).toBe(0)
   })
 
-  it('tops the user squad back up to MIN_SQUAD after heavy retirement', () => {
-    const s = newGame(3)
-    const trimmed = s.teams.map(t => (t.id === s.userTeamId ? { ...t, playerIds: t.playerIds.slice(0, 11), lineup: [] } : t))
-    const out = youthIntake(s.players, trimmed, mulberry32(4), s.userTeamId)
-    const user = out.teams.find(t => t.id === s.userTeamId)!
-    expect(user.playerIds.length).toBeGreaterThanOrEqual(14) // MIN_SQUAD
-  })
-
-  it('AI clubs keep the normal intake thresholds', () => {
-    const s = newGame(3)
-    const trimmed = s.teams.map(t => (t.id === 5 ? { ...t, playerIds: t.playerIds.slice(0, 11), lineup: [] } : t))
-    const out = youthIntake(s.players, trimmed, mulberry32(4), s.userTeamId)
-    expect(out.teams.find(t => t.id === 5)!.playerIds).toHaveLength(13) // 11 + 2, no user floor
+  it('youth intake floors EVERY club at MIN_SQUAD', () => {
+    const state = newGame(5)
+    const rand = mulberry32(9)
+    const victim = state.teams.find(t => t.id !== state.userTeamId)!
+    const keep = victim.playerIds.slice(0, 11)
+    const players = Object.fromEntries(
+      Object.values(state.players).filter(p => !victim.playerIds.includes(p.id) || keep.includes(p.id)).map(p => [p.id, p]),
+    )
+    const teams = state.teams.map(t => (t.id === victim.id ? { ...t, playerIds: keep, lineup: [] } : t))
+    const out = youthIntake(players, teams, rand)
+    expect(out.teams.find(t => t.id === victim.id)!.playerIds.length).toBeGreaterThanOrEqual(14)
   })
 })
 
