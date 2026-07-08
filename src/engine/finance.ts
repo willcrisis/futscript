@@ -17,7 +17,7 @@ export const DIVISION_FACTOR: Record<number, number> = { 1: 1, 2: 0.8, 3: 0.6 }
 export function attendanceFor(team: Team, position: number, rand: () => number): number {
   const interest = Math.round((9_000 + 900 * (16 - position)) * (DIVISION_FACTOR[team.division] ?? 1))
   const priceFactor = (15 / team.ticketPrice) ** 1.5
-  const moodFactor = 0.8 + (team.fanMood / 100) * 0.3
+  const moodFactor = 0.8 + (team.fanMood / 100) * 0.3 // ponytail: floor softened so a losing streak dents gates without a death spiral
   return Math.max(0, Math.min(team.capacity, Math.round(interest * priceFactor * moodFactor) + randInt(rand, -500, 500)))
 }
 
