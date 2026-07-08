@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from 'react'
+import { renameManager } from './engine/career'
 import { cupWinner } from './engine/cup'
 import { newGame } from './engine/newGame'
 import { load, save } from './engine/save'
@@ -91,7 +92,7 @@ function Game() {
   }
 
   if (showWelcome) {
-    return <WelcomeScreen state={state} onDismiss={() => setShowWelcome(false)} />
+    return <WelcomeScreen state={state} onDismiss={name => { setState(s => renameManager(s, name)); setShowWelcome(false) }} />
   }
 
   if (replay) {

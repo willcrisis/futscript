@@ -195,6 +195,8 @@ export const en = {
   'history.emptyState': "No completed seasons yet — history is written at each season's end.",
   'history.d1Titles': 'D1 titles',
   'history.cups': 'Cups',
+  'history.clubColumn': 'Club',
+  'history.reputation': 'Reputation',
 
   // Saves screen
   'saves.header': 'CAREERS',
@@ -213,6 +215,7 @@ export const en = {
   'saves.importNote': 'Importing replaces the active slot. Deleting slot {slot} (the active one) keeps your in-memory game until the next autosave.',
   'saves.invalidFile': 'That file is not a valid futscript save.',
   'saves.settings': 'Settings',
+  'saves.managerName': 'Manager name',
   'saves.language': 'Language',
   'saves.languageEnglish': 'English',
   'saves.languagePortuguese': 'Português',
@@ -329,6 +332,7 @@ export const en = {
   'welcome.featureFinance': 'Balance the books — gate receipts, wages, and the bank.',
   'welcome.featureClimb': 'Climb from Division 3 to the summit, one promotion at a time.',
   'welcome.featureCup': 'Chase glory in the National Cup.',
+  'welcome.managerName': 'Your name',
 
   // News feed
   'news.title': 'News',

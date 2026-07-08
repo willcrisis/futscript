@@ -197,6 +197,8 @@ export const pt: Record<TranslationKey, string> = {
   'history.emptyState': 'Nenhuma temporada concluída ainda — a história é escrita ao final de cada temporada.',
   'history.d1Titles': 'Títulos D1',
   'history.cups': 'Copas',
+  'history.clubColumn': 'Clube',
+  'history.reputation': 'Reputação',
 
   // Saves screen
   'saves.header': 'CARREIRAS',
@@ -215,6 +217,7 @@ export const pt: Record<TranslationKey, string> = {
   'saves.importNote': 'Importar substitui o slot ativo. Excluir o slot {slot} (o ativo) mantém seu jogo em memória até o próximo salvamento automático.',
   'saves.invalidFile': 'Esse arquivo não é um save válido do futscript.',
   'saves.settings': 'Configurações',
+  'saves.managerName': 'Nome do técnico',
   'saves.language': 'Idioma',
   'saves.languageEnglish': 'English',
   'saves.languagePortuguese': 'Português',
@@ -331,6 +334,7 @@ export const pt: Record<TranslationKey, string> = {
   'welcome.featureFinance': 'Equilibre as contas — bilheteria, salários e o banco.',
   'welcome.featureClimb': 'Suba da Divisão 3 até o topo, um acesso de cada vez.',
   'welcome.featureCup': 'Busque a glória na Copa Nacional.',
+  'welcome.managerName': 'Seu nome',
 
   // News feed
   'news.title': 'Notícias',
