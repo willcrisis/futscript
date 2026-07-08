@@ -11,6 +11,7 @@ import Shell from './ui/Shell'
 import type { ScreenId } from './ui/Shell'
 import { ToastProvider, useToasts } from './ui/Toast'
 import { detectToasts } from './ui/toastEvents'
+import ClubScreen from './screens/ClubScreen'
 import CupScreen from './screens/CupScreen'
 import WelcomeScreen from './screens/WelcomeScreen'
 import FinanceScreen from './screens/FinanceScreen'
@@ -48,10 +49,14 @@ function Game() {
   const [replay, setReplay] = useState<MatchLike | null>(null)
   const [tableFocus, setTableFocus] = useState<number | null>(null)
   const [showWelcome, setShowWelcome] = useState(boot.fresh)
+  const [clubView, setClubView] = useState<{ teamId: number; from: ScreenId } | null>(null)
   const advancingRef = useRef(false)
   useEffect(() => { save(state) }, [state])
 
-  const goToTeam = (teamId: number) => { setTableFocus(teamId); setScreen('table') }
+  const openClub = (teamId: number) => {
+    setClubView({ teamId, from: screen === 'club' ? (clubView?.from ?? 'home') : screen })
+    setScreen('club')
+  }
   const startNewCareer = () => { setState(newGame(Date.now() % 2147483647)); setShowWelcome(true); setScreen('home') }
 
   const userTeam = state.teams.find(t => t.id === state.userTeamId)!
@@ -108,6 +113,7 @@ function Game() {
       state={state}
       advanceLabel={seasonOver ? t('shell.newSeason') : t('shell.advanceWeek')}
       onAdvance={advance}
+      onShowClub={openClub}
     >
       {champion && (
         <Panel className="mb-4 border-accent/40!">
@@ -124,7 +130,7 @@ function Game() {
         </Panel>
       )}
       {screen === 'home' && (employed
-        ? <HomeScreen state={state} setState={setState} onAdvance={advance} onNavigate={setScreen} onShowTeam={goToTeam} />
+        ? <HomeScreen state={state} setState={setState} onAdvance={advance} onNavigate={setScreen} onShowClub={openClub} />
         : <UnemployedScreen state={state} setState={setState} onAdvance={advance} />)}
       {screen === 'squad' && <SquadScreen state={state} setState={setState} />}
       {screen === 'table' && (
@@ -133,15 +139,19 @@ function Game() {
           state={state}
           focusTeamId={tableFocus ?? undefined}
           onFocusConsumed={() => setTableFocus(null)}
+          onShowClub={openClub}
         />
       )}
       {screen === 'fixtures' && <FixturesScreen key={state.season} state={state} />}
-      {screen === 'cup' && <CupScreen key={state.season} state={state} />}
+      {screen === 'cup' && <CupScreen key={state.season} state={state} onShowClub={openClub} />}
       {screen === 'stats' && <StatsScreen state={state} />}
       {screen === 'transfers' && <TransfersScreen state={state} setState={setState} />}
       {screen === 'finance' && <FinanceScreen state={state} setState={setState} />}
       {screen === 'history' && <HistoryScreen state={state} />}
       {screen === 'saves' && <SavesScreen state={state} setState={setState} onNewCareer={startNewCareer} />}
+      {screen === 'club' && clubView && (
+        <ClubScreen state={state} teamId={clubView.teamId} onBack={() => setScreen(clubView.from)} />
+      )}
     </Shell>
   )
 }

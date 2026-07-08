@@ -33,6 +33,8 @@ export const pt: Record<TranslationKey, string> = {
   'common.age': 'Idade',
   'common.level': 'Nív',
   'common.division': 'Divisão',
+  'common.position': 'Pos',
+  'common.status': 'Situação',
   'common.vs': 'x',
   'common.switchToLight': 'Mudar para tema claro',
   'common.switchToDark': 'Mudar para tema escuro',
@@ -355,4 +357,16 @@ export const pt: Record<TranslationKey, string> = {
   'news.userSacked': 'Você foi demitido pelo {club}',
   'news.userHired': 'Você é o novo técnico do {club}',
   'news.jobOffer': 'O {club} quer você como técnico',
+
+  // Club screen
+  'club.header': 'Clube',
+  'club.position': '{position}º na Divisão {division}',
+  'club.manager': 'Técnico',
+  'club.fanMood': 'Humor da torcida',
+  'club.capacity': 'Estádio',
+  'club.squadPanel': 'Elenco',
+  'club.back': 'Voltar',
+  'club.statusOut': 'Fora {n}sem',
+  'club.statusBan': 'Suspenso',
+  'club.statusFit': '—',
 }

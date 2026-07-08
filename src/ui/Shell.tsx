@@ -16,7 +16,7 @@ import {
 
 export type ScreenId =
   | 'home' | 'squad' | 'table' | 'fixtures' | 'cup'
-  | 'stats' | 'transfers' | 'finance' | 'history' | 'saves'
+  | 'stats' | 'transfers' | 'finance' | 'history' | 'saves' | 'club'
 
 export const NAV: { id: ScreenId; labelKey: TranslationKey; icon: FC<{ className?: string }> }[] = [
   { id: 'home', labelKey: 'nav.home', icon: HomeIcon },
@@ -40,6 +40,7 @@ interface Props {
   state: GameState
   advanceLabel: string
   onAdvance: () => void
+  onShowClub?: (teamId: number) => void
   children: ReactNode
 }
 
@@ -49,7 +50,7 @@ function attentionFor(id: ScreenId, state: GameState): boolean {
   return false
 }
 
-export default function Shell({ screen, onNavigate, state, advanceLabel, onAdvance, children }: Props) {
+export default function Shell({ screen, onNavigate, state, advanceLabel, onAdvance, onShowClub, children }: Props) {
   useLang() // subscribes Shell to language changes; re-renders nav/labels below
   const [moreOpen, setMoreOpen] = useState(false)
   const moreButtonRef = useRef<HTMLButtonElement>(null)
@@ -151,7 +152,7 @@ export default function Shell({ screen, onNavigate, state, advanceLabel, onAdvan
       >
         <SectionLabel>{t('news.title')}</SectionLabel>
         <div className="mt-2">
-          <NewsRail state={state} />
+          <NewsRail state={state} onShowClub={onShowClub} />
         </div>
       </aside>
 

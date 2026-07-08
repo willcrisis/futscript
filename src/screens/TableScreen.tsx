@@ -25,9 +25,10 @@ interface Props {
   state: GameState
   focusTeamId?: number
   onFocusConsumed?: () => void
+  onShowClub?: (teamId: number) => void
 }
 
-export default function TableScreen({ state, focusTeamId, onFocusConsumed }: Props) {
+export default function TableScreen({ state, focusTeamId, onFocusConsumed, onShowClub }: Props) {
   useLang()
   const userDivision = state.teams.find(t => t.id === state.userTeamId)!.division
   const focusTeam = focusTeamId !== undefined ? state.teams.find(t => t.id === focusTeamId) : undefined
@@ -131,6 +132,7 @@ export default function TableScreen({ state, focusTeamId, onFocusConsumed }: Pro
         rowKey={r => r.teamId}
         rowAccent={rowAccent}
         rowClass={r => (r.teamId === highlightId ? 'ring-1 ring-accent' : undefined)}
+        onRowClick={onShowClub ? r => onShowClub(r.teamId) : undefined}
       />
     </div>
   )

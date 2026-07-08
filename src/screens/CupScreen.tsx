@@ -17,57 +17,67 @@ const ROUND_NAME_KEYS: TranslationKey[] = [
 const ROW = 'grid w-full grid-cols-[1fr_auto_1fr] items-center gap-3 rounded-lg border border-rule bg-surface-raised px-3 py-2'
 const SPINE = 'shadow-[inset_3px_0_0_0_var(--accent)]'
 
-function ClubName({ name, division }: { name: string; division: number }) {
-  return (
+function ClubName({ name, division, onClick }: { name: string; division: number; onClick?: () => void }) {
+  const content = (
     <span>
       {name} <span className="text-ink-faint">· D{division}</span>
     </span>
   )
+  if (!onClick) return content
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      className="rounded-sm underline-offset-2 hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent"
+    >
+      {content}
+    </button>
+  )
 }
 
 function TieRow({
-  f, name, divisionOf, isUser, onToggle,
+  f, name, divisionOf, isUser, onToggle, onShowClub,
 }: {
   f: CupFixture
   name: (id: number) => string
   divisionOf: (id: number) => number
   isUser: boolean
   onToggle: () => void
+  onShowClub?: (teamId: number) => void
 }) {
   const played = f.homeGoals !== null
   const penalties = f.winnerId !== null && f.homeGoals === f.awayGoals
   const loser = (id: number) => f.winnerId !== null && f.winnerId !== id
   const rowClass = `${ROW} ${isUser ? SPINE : ''}`
-  const content = (
-    <>
+  return (
+    <div className={rowClass}>
       <div className={`flex items-center justify-end gap-2 text-right ${loser(f.homeId) ? 'text-ink-faint' : ''}`}>
         {f.winnerId === f.homeId && <Badge tone="accent">{t('cup.through')}</Badge>}
-        <ClubName name={name(f.homeId)} division={divisionOf(f.homeId)} />
+        <ClubName name={name(f.homeId)} division={divisionOf(f.homeId)} onClick={onShowClub ? () => onShowClub(f.homeId) : undefined} />
       </div>
       <div className="text-center font-mono text-sm tabular-nums">
-        {played ? `${f.homeGoals} – ${f.awayGoals}` : <span className="text-ink-muted">{t('common.vs')}</span>}
+        {played ? (
+          <button
+            type="button"
+            className="rounded-sm transition-colors hover:opacity-90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 focus-visible:ring-offset-surface"
+            onClick={onToggle}
+          >
+            {`${f.homeGoals} – ${f.awayGoals}`}
+          </button>
+        ) : (
+          <span className="text-ink-muted">{t('common.vs')}</span>
+        )}
         {penalties && <span className="text-ink-faint"> {t('cup.penalties')}</span>}
       </div>
       <div className={`flex items-center gap-2 text-left ${loser(f.awayId) ? 'text-ink-faint' : ''}`}>
-        <ClubName name={name(f.awayId)} division={divisionOf(f.awayId)} />
+        <ClubName name={name(f.awayId)} division={divisionOf(f.awayId)} onClick={onShowClub ? () => onShowClub(f.awayId) : undefined} />
         {f.winnerId === f.awayId && <Badge tone="accent">{t('cup.through')}</Badge>}
       </div>
-    </>
-  )
-  return played ? (
-    <button
-      type="button"
-      className={`${rowClass} text-left transition-colors hover:opacity-90 focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 focus-visible:ring-offset-surface`}
-      onClick={onToggle}
-    >
-      {content}
-    </button>
-  ) : (
-    <div className={rowClass}>{content}</div>
+    </div>
   )
 }
 
-export default function CupScreen({ state }: { state: GameState }) {
+export default function CupScreen({ state, onShowClub }: { state: GameState; onShowClub?: (teamId: number) => void }) {
   useLang()
   const [selected, setSelected] = useState<CupFixture | null>(null)
   const name = (id: number) => state.teams.find(t => t.id === id)!.name
@@ -107,6 +117,7 @@ export default function CupScreen({ state }: { state: GameState }) {
                   divisionOf={divisionOf}
                   isUser={[f.homeId, f.awayId].includes(state.userTeamId)}
                   onToggle={() => { if (f.homeGoals === null) return; setSelected(f !== selected ? f : null) }}
+                  onShowClub={onShowClub}
                 />
               ))}
             </div>
@@ -116,9 +127,9 @@ export default function CupScreen({ state }: { state: GameState }) {
       {selected && (
         <Panel className="mt-4">
           <h3 className="mb-2 flex flex-wrap items-baseline gap-1.5 font-semibold">
-            <ClubName name={name(selected.homeId)} division={divisionOf(selected.homeId)} />
+            <ClubName name={name(selected.homeId)} division={divisionOf(selected.homeId)} onClick={onShowClub ? () => onShowClub(selected.homeId) : undefined} />
             <span>{selected.homeGoals} – {selected.awayGoals}</span>
-            <ClubName name={name(selected.awayId)} division={divisionOf(selected.awayId)} />
+            <ClubName name={name(selected.awayId)} division={divisionOf(selected.awayId)} onClick={onShowClub ? () => onShowClub(selected.awayId) : undefined} />
           </h3>
           <EventFeed events={selected.events ?? []} state={state} />
         </Panel>

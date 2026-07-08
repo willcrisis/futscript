@@ -31,6 +31,8 @@ export const en = {
   'common.age': 'Age',
   'common.level': 'Lvl',
   'common.division': 'Division',
+  'common.position': 'Pos',
+  'common.status': 'Status',
   'common.vs': 'vs',
   'common.switchToLight': 'Switch to light theme',
   'common.switchToDark': 'Switch to dark theme',
@@ -353,6 +355,18 @@ export const en = {
   'news.userSacked': 'You have been sacked by {club}',
   'news.userHired': 'You are the new manager of {club}',
   'news.jobOffer': '{club} want you as their manager',
+
+  // Club screen
+  'club.header': 'Club',
+  'club.position': '{position} in Division {division}',
+  'club.manager': 'Manager',
+  'club.fanMood': 'Fan mood',
+  'club.capacity': 'Stadium',
+  'club.squadPanel': 'Squad',
+  'club.back': 'Back',
+  'club.statusOut': 'Out {n}w',
+  'club.statusBan': 'Suspended',
+  'club.statusFit': '—',
 } as const
 
 export type TranslationKey = keyof typeof en

@@ -21,12 +21,12 @@ interface Props {
   setState: Dispatch<SetStateAction<GameState>>
   onAdvance: () => void
   onNavigate: (s: ScreenId) => void
-  onShowTeam?: (teamId: number) => void
+  onShowClub?: (teamId: number) => void
 }
 
 interface Row { pos: number; teamId: number; name: string; points: number; gd: number }
 
-export default function HomeScreen({ state, setState, onAdvance, onNavigate, onShowTeam }: Props) {
+export default function HomeScreen({ state, setState, onAdvance, onNavigate, onShowClub }: Props) {
   useLang()
   const [newsExpanded, setNewsExpanded] = useState(false)
   const user = state.teams.find(t => t.id === state.userTeamId)!
@@ -141,10 +141,10 @@ export default function HomeScreen({ state, setState, onAdvance, onNavigate, onS
             <div className="flex items-center justify-between gap-3">
               <div>
                 <div className="text-lg font-medium">
-                  {opponentId !== null && (onShowTeam ? (
+                  {opponentId !== null && (onShowClub ? (
                     <button
                       type="button"
-                      onClick={() => onShowTeam(opponentId)}
+                      onClick={() => onShowClub(opponentId)}
                       className="rounded-sm underline-offset-2 hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 focus-visible:ring-offset-surface"
                     >
                       {name(opponentId)}
@@ -240,7 +240,7 @@ export default function HomeScreen({ state, setState, onAdvance, onNavigate, onS
 
       <div className="mt-4 xl:hidden">
         <Panel label={t('news.title')}>
-          <NewsRail state={state} limit={newsExpanded ? undefined : 5} />
+          <NewsRail state={state} limit={newsExpanded ? undefined : 5} onShowClub={onShowClub} />
           {state.news.length > 5 && (
             <button
               className="mt-2 text-xs text-ink-muted underline-offset-2 hover:underline"
