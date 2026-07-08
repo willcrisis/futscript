@@ -63,6 +63,13 @@ export const pt: Record<TranslationKey, string> = {
   'home.boardPatience': 'Paciência da diretoria {n}/8',
   'home.cupTieThisWeek': 'Jogo de copa esta semana',
   'home.allQuiet': 'Tudo tranquilo no clube.',
+  'home.boardConfidence': 'Confiança da diretoria',
+  'home.confidenceAttention': 'A diretoria está inquieta — confiança {n}/100',
+  'home.poachPanel': 'Querem você',
+  'home.poachOffer': 'O {club} (Divisão {division}) quer você como técnico',
+  'home.poachDetails': 'Caixa {cash} · Salários {wages}/sem · Empréstimo após assumir {loan}',
+  'home.poachAccept': 'Aceitar o cargo',
+  'home.poachDecline': 'Recusar',
 
   // Table screen
   'table.header': 'DIVISÃO {division}',

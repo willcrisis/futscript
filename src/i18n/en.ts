@@ -61,6 +61,13 @@ export const en = {
   'home.boardPatience': 'Board patience {n}/8',
   'home.cupTieThisWeek': 'Cup tie this week',
   'home.allQuiet': 'All quiet at the club.',
+  'home.boardConfidence': 'Board confidence',
+  'home.confidenceAttention': 'The board is uneasy — confidence {n}/100',
+  'home.poachPanel': 'They want you',
+  'home.poachOffer': '{club} (Division {division}) want you as their manager',
+  'home.poachDetails': 'Cash {cash} · Wages {wages}/wk · Loan after takeover {loan}',
+  'home.poachAccept': 'Take the job',
+  'home.poachDecline': 'Decline',
 
   // Table screen
   'table.header': 'DIVISION {division}',

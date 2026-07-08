@@ -135,7 +135,7 @@ function Game() {
           )}
         </Panel>
       )}
-      {screen === 'home' && <HomeScreen state={state} onAdvance={advance} onNavigate={setScreen} onShowTeam={goToTeam} />}
+      {screen === 'home' && <HomeScreen state={state} setState={setState} onAdvance={advance} onNavigate={setScreen} onShowTeam={goToTeam} />}
       {screen === 'squad' && <SquadScreen state={state} setState={setState} />}
       {screen === 'table' && (
         <TableScreen

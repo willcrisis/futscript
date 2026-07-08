@@ -1,4 +1,7 @@
+import type { Dispatch, SetStateAction } from 'react'
 import { useState } from 'react'
+import { acceptJob, declineOffer, restructuredLoan } from '../engine/career'
+import { formatMoney, wageBill } from '../engine/finance'
 import { totalRounds } from '../engine/season'
 import { standings } from '../engine/standings'
 import type { GameState } from '../engine/types'
@@ -15,6 +18,7 @@ import Sparkline from '../ui/Sparkline'
 
 interface Props {
   state: GameState
+  setState: Dispatch<SetStateAction<GameState>>
   onAdvance: () => void
   onNavigate: (s: ScreenId) => void
   onShowTeam?: (teamId: number) => void
@@ -22,7 +26,7 @@ interface Props {
 
 interface Row { pos: number; teamId: number; name: string; points: number; gd: number }
 
-export default function HomeScreen({ state, onAdvance, onNavigate, onShowTeam }: Props) {
+export default function HomeScreen({ state, setState, onAdvance, onNavigate, onShowTeam }: Props) {
   useLang()
   const [newsExpanded, setNewsExpanded] = useState(false)
   const user = state.teams.find(t => t.id === state.userTeamId)!
@@ -83,11 +87,49 @@ export default function HomeScreen({ state, onAdvance, onNavigate, onShowTeam }:
       tone: state.brokeRounds >= 6 ? 'danger' : 'warn',
     })
   }
+  if (state.manager.confidence < 25) {
+    attention.push({
+      text: t('home.confidenceAttention', { n: state.manager.confidence }),
+      screen: 'home',
+      tone: state.manager.confidence < 15 ? 'danger' : 'warn',
+    })
+  }
   if (cup) attention.push({ text: t('home.cupTieThisWeek'), screen: 'cup' })
 
   return (
     <div>
       <ScreenHeader label={t('home.header', { season: state.season, week: Math.min(week, total), total })} title={user.name} />
+      {state.manager.jobOffers.length > 0 && (
+        <Panel label={t('home.poachPanel')} className="mb-4 border-accent/40!">
+          <ul className="flex flex-col gap-3">
+            {state.manager.jobOffers.map(o => {
+              const club = state.teams.find(tm => tm.id === o.teamId)!
+              return (
+                <li key={o.teamId} className="flex flex-wrap items-center justify-between gap-2 text-sm">
+                  <div>
+                    <div>{t('home.poachOffer', { club: club.name, division: club.division })}</div>
+                    <div className="mt-0.5 text-xs text-ink-muted">
+                      {t('home.poachDetails', {
+                        cash: formatMoney(club.cash),
+                        wages: formatMoney(wageBill(club.id, state)),
+                        loan: formatMoney(restructuredLoan(club)),
+                      })}
+                    </div>
+                  </div>
+                  <div className="flex gap-1.5">
+                    <Button variant="primary" size="sm" onClick={() => setState(s => acceptJob(s, o.teamId))}>
+                      {t('home.poachAccept')}
+                    </Button>
+                    <Button variant="ghost" size="sm" onClick={() => setState(s => declineOffer(s, o.teamId))}>
+                      {t('home.poachDecline')}
+                    </Button>
+                  </div>
+                </li>
+              )
+            })}
+          </ul>
+        </Panel>
+      )}
       <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
         <Panel label={seasonOver ? t('home.seasonComplete') : t('home.nextMatch')}>
           {seasonOver ? (
@@ -156,6 +198,18 @@ export default function HomeScreen({ state, onAdvance, onNavigate, onShowTeam }:
                   <div className="h-full bg-accent" style={{ width: `${user.fanMood}%` }} />
                 </div>
                 <span className="font-mono text-xs tabular-nums">{user.fanMood}</span>
+              </div>
+            </div>
+            <div className="flex items-center justify-between">
+              <span className="text-ink-muted">{t('home.boardConfidence')}</span>
+              <div className="flex items-center gap-2">
+                <div className="h-1.5 w-24 overflow-hidden rounded-full bg-rule">
+                  <div
+                    className={`h-full ${state.manager.confidence < 25 ? 'bg-danger' : state.manager.confidence < 45 ? 'bg-warn' : 'bg-accent'}`}
+                    style={{ width: `${state.manager.confidence}%` }}
+                  />
+                </div>
+                <span className="font-mono text-xs tabular-nums">{state.manager.confidence}</span>
               </div>
             </div>
             <div className="flex items-center justify-between">
