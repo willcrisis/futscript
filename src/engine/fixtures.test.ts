@@ -49,3 +49,43 @@ describe('calendar', () => {
     expect(new Set(week5.flatMap(f => [f.homeId, f.awayId])).size).toBe(16)
   })
 })
+
+describe('home/away balance', () => {
+  it('gives every club a near-even home split with no long streaks in the first leg', () => {
+    const ids = Array.from({ length: 16 }, (_, i) => i)
+    const fx = generateFixtures(ids, mulberry32(1))
+    const firstLegRounds = ids.length - 1 // 15
+
+    for (const id of ids) {
+      const legGames = fx
+        .filter(f => f.round <= firstLegRounds && (f.homeId === id || f.awayId === id))
+        .sort((a, b) => a.round - b.round)
+      expect(legGames).toHaveLength(firstLegRounds)
+
+      const homes = legGames.filter(f => f.homeId === id).length
+      // 15 games → 7 or 8 home
+      expect(homes).toBeGreaterThanOrEqual(7)
+      expect(homes).toBeLessThanOrEqual(8)
+
+      // no more than two consecutive home or away
+      let streak = 1
+      let maxStreak = 1
+      for (let i = 1; i < legGames.length; i++) {
+        const prevHome = legGames[i - 1].homeId === id
+        const curHome = legGames[i].homeId === id
+        streak = prevHome === curHome ? streak + 1 : 1
+        maxStreak = Math.max(maxStreak, streak)
+      }
+      expect(maxStreak).toBeLessThanOrEqual(2)
+    }
+  })
+
+  it('still schedules a full double round-robin', () => {
+    const ids = Array.from({ length: 16 }, (_, i) => i)
+    const fx = generateFixtures(ids, mulberry32(2))
+    expect(fx).toHaveLength(16 * 15) // 240 fixtures
+    // each ordered pair (home, away) appears exactly once
+    const seen = new Set(fx.map(f => `${f.homeId}-${f.awayId}`))
+    expect(seen.size).toBe(16 * 15)
+  })
+})
