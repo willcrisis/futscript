@@ -6,6 +6,7 @@ import { randomName, TEAM_NAMES } from './names'
 import { mulberry32, randInt } from './rng'
 import { INITIAL_CAPACITY } from './stadium'
 import type { GameState, Player, Position, Team } from './types'
+import { isActive } from './types'
 
 // 2 GK, 6 DF, 6 MF, 4 FW — enough to fill every formation in FORMATIONS
 export const SQUAD_TEMPLATE: Position[] = [
@@ -63,10 +64,31 @@ export function newGame(seed: number): GameState {
     })
   }
 
+  // four clubs wait in the demotion pool so D4 stays at 16 from the first rollover (they rejoin season 2)
+  for (let t = 64; t < 68; t++) {
+    const playerIds: number[] = []
+    for (const position of SQUAD_TEMPLATE) {
+      const level = randInt(rand, LEVEL_RANGE[4][0], LEVEL_RANGE[4][1])
+      const player: Player = {
+        id: nextPlayerId++, name: randomName(rand), age: randInt(rand, 17, 34), position, level,
+        form: 0, fitness: 100, injuredForRounds: 0, suspendedForRounds: 0, yellowCards: 0,
+        salary: salaryFor(level), contractSeasons: randInt(rand, 1, 3), seasonGoals: 0,
+      }
+      players[player.id] = player
+      playerIds.push(player.id)
+    }
+    teams.push({
+      id: t, name: TEAM_NAMES[t], playerIds, formation: '4-4-2', lineup: [], tactic: 'normal',
+      trainingStyle: 'normal', cash: STARTING_CASH, division: 4, capacity: INITIAL_CAPACITY[4],
+      ticketPrice: 15, fanMood: 50, manager: randomName(rand), managerHiredSeason: 0,
+      poolReturn: 2,
+    })
+  }
+
   for (const team of teams) team.lineup = autoPick(team, players)
 
   const fixtures = [4, 3, 2, 1].flatMap(d =>
-    generateDivisionFixtures(teams.filter(t => t.division === d).map(t => t.id), rand),
+    generateDivisionFixtures(teams.filter(t => t.division === d && isActive(t, 1)).map(t => t.id), rand),
   )
   const cupFixtures = drawFirstCupRound(teams, rand)
 
@@ -79,7 +101,7 @@ export function newGame(seed: number): GameState {
   // by this pick for a given seed — only userTeamId and the captured rngState below differ.
   // This MUST stay the very last rand consumption before rngState is captured, or
   // determinism breaks (rngState would no longer reflect "one draw past this point").
-  const divisionFour = teams.filter(t => t.division === 4)
+  const divisionFour = teams.filter(t => t.division === 4 && isActive(t, 1))
   const userTeamId = divisionFour[randInt(rand, 0, divisionFour.length - 1)].id
 
   return {

@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import { TEAM_NAMES } from './names'
 import { LEVEL_RANGE, newGame } from './newGame'
+import { isActive } from './types'
 
 describe('world constants', () => {
   it('supplies 68 unique team names', () => {
@@ -17,11 +18,12 @@ describe('world constants', () => {
 })
 
 describe('newGame world', () => {
-  it('builds 64 clubs across four divisions of 16', () => {
+  it('fields 64 active clubs across four divisions of 16', () => {
     const s = newGame(1)
-    expect(s.teams).toHaveLength(64)
+    const active = s.teams.filter(t => isActive(t, s.season))
+    expect(active).toHaveLength(64)
     for (const d of [1, 2, 3, 4]) {
-      expect(s.teams.filter(t => t.division === d)).toHaveLength(16)
+      expect(active.filter(t => t.division === d)).toHaveLength(16)
     }
   })
 
@@ -29,5 +31,19 @@ describe('newGame world', () => {
     const s = newGame(7)
     const user = s.teams.find(t => t.id === s.userTeamId)!
     expect(user.division).toBe(4)
+  })
+})
+
+describe('demotion pool seeding', () => {
+  it('seeds four dormant clubs that rejoin in season 2', () => {
+    const s = newGame(1)
+    expect(s.teams).toHaveLength(68)
+    const dormant = s.teams.filter(t => !isActive(t, s.season))
+    expect(dormant).toHaveLength(4)
+    expect(dormant.every(t => t.poolReturn === 2)).toBe(true)
+    // every division still fields 16 active clubs in season 1
+    for (const d of [1, 2, 3, 4]) {
+      expect(s.teams.filter(t => t.division === d && isActive(t, s.season))).toHaveLength(16)
+    }
   })
 })

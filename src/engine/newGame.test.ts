@@ -1,19 +1,20 @@
 import { describe, expect, it } from 'vitest'
 import { salaryFor, STARTING_CASH } from './finance'
 import { newGame } from './newGame'
+import { isActive } from './types'
 
 describe('newGame', () => {
   it('builds a full, valid world', () => {
     const state = newGame(123)
-    expect(state.teams).toHaveLength(64)
-    expect(Object.keys(state.players)).toHaveLength(64 * 18)
+    expect(state.teams).toHaveLength(68) // 64 active + 4 dormant demotion-pool clubs
+    expect(Object.keys(state.players)).toHaveLength(68 * 18)
     expect(state.season).toBe(1)
     expect(state.round).toBe(1)
     expect(state.teams.some(t => t.id === state.userTeamId)).toBe(true)
-    expect(state.fixtures).toHaveLength(960)
+    expect(state.fixtures).toHaveLength(960) // dormant clubs get no season-1 fixtures
 
     const teamNames = new Set(state.teams.map(t => t.name))
-    expect(teamNames.size).toBe(64)
+    expect(teamNames.size).toBe(68)
 
     for (const team of state.teams) {
       expect(team.playerIds).toHaveLength(18)
@@ -53,11 +54,12 @@ describe('newGame', () => {
 
   it('builds a four-division world with the user at the bottom', () => {
     const state = newGame(123)
-    expect(state.teams).toHaveLength(64)
-    expect(Object.keys(state.players)).toHaveLength(64 * 18)
+    expect(state.teams).toHaveLength(68) // 64 active + 4 dormant demotion-pool clubs
+    expect(Object.keys(state.players)).toHaveLength(68 * 18)
     for (const division of [1, 2, 3, 4]) {
-      expect(state.teams.filter(t => t.division === division)).toHaveLength(16)
+      expect(state.teams.filter(t => t.division === division && isActive(t, state.season))).toHaveLength(16)
     }
+    expect(state.teams.filter(t => t.division === 4)).toHaveLength(20) // 16 active + 4 dormant
     expect(state.teams[0].division).toBe(4)
     const userTeam = state.teams.find(t => t.id === state.userTeamId)!
     expect(userTeam.division).toBe(4)
@@ -74,7 +76,7 @@ describe('newGame', () => {
       }
     }
     const names = new Set(state.teams.map(t => t.name))
-    expect(names.size).toBe(64)
+    expect(names.size).toBe(68)
   })
 
   it('assigns different starting clubs across seeds (random Division 4 draw)', () => {

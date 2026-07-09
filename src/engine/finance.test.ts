@@ -6,6 +6,7 @@ import {
   runWeeklyFinances, salaryFor, severanceFor, STARTING_CASH, wageBill, SPONSOR_BASE, MAINTENANCE_PER_SEAT,
 } from './finance'
 import type { GameState, Player } from './types'
+import { isActive } from './types'
 import { CUP_WEEKS, TOTAL_WEEKS } from './fixtures'
 import { advanceRound } from './season'
 
@@ -57,6 +58,7 @@ describe('runWeeklyFinances', () => {
     const homeIds = new Set(s0.fixtures.filter(f => f.round === 1).map(f => f.homeId))
     for (const t of s1.teams) {
       const team0 = s0.teams.find(x => x.id === t.id)!
+      if (!isActive(team0, s0.season)) { expect(t.cash).toBe(team0.cash); continue } // dormant: untouched
       const maintenance = Math.round(team0.capacity * MAINTENANCE_PER_SEAT)
       const sponsors = Math.round((SPONSOR_BASE[team0.division] ?? SPONSOR_BASE[3]) * (0.5 + team0.fanMood / 100))
       const before = STARTING_CASH - wageBill(t.id, s0) - maintenance + sponsors
