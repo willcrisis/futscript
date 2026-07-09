@@ -171,3 +171,17 @@ describe('rolloverMood', () => {
     }
   })
 })
+
+describe('rolloverMood — D3 relegation in a four-division world', () => {
+  it('drops fan mood for the D3 clubs relegated to D4', () => {
+    let s = newGame(3)
+    while (s.round <= 30 + 6) s = advanceRound(s)
+    const relegated = standings(s, 3).slice(-3).map(r => r.teamId)
+    const before = new Map(s.teams.map(t => [t.id, t.fanMood]))
+    const moved = rolloverMood(s, s.teams)
+    for (const id of relegated) {
+      const t = moved.find(x => x.id === id)!
+      expect(t.fanMood).toBeLessThan(before.get(id)!) // the drop empties the terraces
+    }
+  })
+})

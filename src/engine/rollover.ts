@@ -194,7 +194,7 @@ export function rolloverMood(state: GameState, teams: Team[]): Team[] {
     const table = standings(state, division)
     if (table.length === 0) continue
     bump(table[0].teamId, 20)
-    if (division <= 2 && divisions.includes(division + 1)) {
+    if (divisions.includes(division + 1)) {
       for (const row of table.slice(-3)) bump(row.teamId, -20) // relegated
     }
     if (division >= 2) {

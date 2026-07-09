@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest'
 import {
   acceptJob,
   declineOffer,
+  dropZone,
   expectedRank,
   hireManager,
   JOB_OFFER_ROUNDS,
@@ -14,6 +15,8 @@ import {
 } from './career'
 import { BROKE_ROUNDS_LIMIT, LOAN_CAP } from './finance'
 import { newGame } from './newGame'
+import { advanceRound, newSeason } from './season'
+import { standings } from './standings'
 import { MIN_SQUAD } from './transfers'
 import { isActive } from './types'
 
@@ -237,10 +240,10 @@ function unemployed(seed: number) {
 describe('job market', () => {
   it('offers arrive reputation-tiered and age out', () => {
     const low = { ...unemployed(43), round: 5 }
-    const out = runCareerWeek(low, always) // always → offer fires, rep 30 → Division 3 only
+    const out = runCareerWeek(low, always) // always → offer fires, rep 30 → Division 3 or 4
     expect(out.manager.jobOffers).toHaveLength(1)
     const club = out.teams.find(t => t.id === out.manager.jobOffers[0].teamId)!
-    expect(club.division).toBe(3)
+    expect([3, 4]).toContain(club.division)
     expect(out.news.some(n => n.type === 'jobOffer')).toBe(true)
 
     let aging = out
@@ -250,11 +253,11 @@ describe('job market', () => {
     expect(aging.manager.jobOffers).toHaveLength(0)
   })
 
-  it('mid reputation tier (45-64) offers Division 2 or 3, never Division 1', () => {
+  it('mid reputation tier (45-64) offers Division 2, 3, or 4, never Division 1', () => {
     const midRep = { ...unemployed(43), round: 5, manager: { ...unemployed(43).manager, employed: false, reputation: 50 } }
     const out = runCareerWeek(midRep, always) // always → offer fires, picks index 0 of the candidate pool
     const division = out.teams.find(t => t.id === out.manager.jobOffers[0].teamId)!.division
-    expect([2, 3]).toContain(division)
+    expect([2, 3, 4]).toContain(division)
     expect(division).not.toBe(1)
   })
 
@@ -344,5 +347,41 @@ describe('job market', () => {
     const out = runCareerSeasonEnd(withOffer, always, 36)
     const teamIds = out.manager.jobOffers.map(o => o.teamId)
     expect(new Set(teamIds).size).toBe(teamIds.length)
+  })
+})
+
+describe('dropZone — generic over division count', () => {
+  it('a 4-division world: lower leagues drop 3, the pooled bottom drops 4', () => {
+    const s = newGame(1)
+    expect(dropZone(s, 1)).toBe(3)
+    expect(dropZone(s, 3)).toBe(3) // D3 now relegates to D4
+    expect(dropZone(s, 4)).toBe(4) // pooled bottom loses its worst four
+  })
+
+  it('a migrated 3-division world: the stand-still bottom drops none', () => {
+    const s0 = newGame(1)
+    // simulate a legacy world: drop D4 + the dormant pool, no poolReturn anywhere
+    const teams = s0.teams
+      .filter(t => t.division !== 4 && (t.poolReturn == null))
+      .map(t => ({ ...t, poolReturn: undefined }))
+    const s = { ...s0, teams }
+    expect(dropZone(s, 2)).toBe(3)
+    expect(dropZone(s, 3)).toBe(0) // no lower league, no pool → stand-still
+  })
+})
+
+describe('pooled user is sacked, not idled', () => {
+  it('sacks the manager when their club finishes the D4 pool zone', () => {
+    // seed 2: the user's D4 club finishes in the bottom four (verified)
+    let s = newGame(2)
+    expect(s.manager.employed).toBe(true)
+    const userId = s.userTeamId
+    while (s.round <= 30 + 6) s = advanceRound(s)
+    const bottom4 = standings(s, 4).slice(-4).map(r => r.teamId)
+    expect(bottom4).toContain(userId) // precondition: this seed pools the user
+    s = newSeason(s)
+    expect(s.manager.employed).toBe(false) // sacked, not left dormant
+    // the vacated club still goes to the pool (dormant next season)
+    expect(s.teams.find(t => t.id === userId)!.poolReturn).toBe(s.season + 1)
   })
 })

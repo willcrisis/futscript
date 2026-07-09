@@ -68,13 +68,23 @@ function weeklyDelta(gap: number): number {
   return 0
 }
 
+// how many bottom clubs face the drop in a division: a lower league takes the worst 3,
+// the pooled bottom division loses its worst 4, a stand-still bottom (migrated 3-division
+// save, no lower league and no pool) loses none. Generic over division count.
+export function dropZone(state: GameState, division: number): number {
+  const maxDivision = Math.max(...state.teams.map(t => t.division))
+  if (division < maxDivision) return 3
+  return state.teams.some(t => t.poolReturn != null) ? 4 : 0
+}
+
 function updateConfidence(state: GameState): GameState {
   if (state.round < CONFIDENCE_FROM_WEEK) return state // early tables are noise
   const pos = positionOf(state, state.userTeamId)
   const division = userDivision(state)
   const size = state.teams.filter(t => t.division === division && isActive(t, state.season)).length
   let delta = weeklyDelta(expectedRank(state, state.userTeamId) - pos)
-  if (division < 3 && pos > size - 3) delta -= 1 // the drop zone stings extra
+  const dz = dropZone(state, division)
+  if (dz > 0 && pos > size - dz) delta -= 1 // the drop zone stings extra
   if (state.manager.hiredSeason === state.season) delta = Math.max(0, delta) // honeymoon: gains only
   return { ...state, manager: { ...state.manager, confidence: clamp(state.manager.confidence + delta) } }
 }
@@ -156,10 +166,13 @@ function pushJobOffer(state: GameState, teamId: number, week?: number): GameStat
 function generateJobOffers(state: GameState, rand: () => number): GameState {
   if (state.manager.jobOffers.length >= MAX_JOB_OFFERS || rand() >= JOB_OFFER_CHANCE) return state
   const rep = state.manager.reputation
-  const divisions = rep >= REP_D1 ? [1, 2, 3] : rep >= REP_D2 ? [2, 3] : [3]
+  const maxDivision = Math.max(...state.teams.map(t => t.division))
+  const top = rep >= REP_D1 ? 1 : rep >= REP_D2 ? 2 : 3
+  const divisions: number[] = []
+  for (let d = top; d <= maxDivision; d++) divisions.push(d)
   const offering = new Set(state.manager.jobOffers.map(o => o.teamId))
   const candidates = state.teams.filter(
-    t => divisions.includes(t.division) && t.id !== state.userTeamId && !offering.has(t.id),
+    t => divisions.includes(t.division) && isActive(t, state.season) && t.id !== state.userTeamId && !offering.has(t.id),
   )
   // strugglers are where jobs open up
   const size = 16
@@ -266,7 +279,8 @@ export function runCareerSeasonEnd(state: GameState, rand: () => number, week: n
     if (team.managerHiredSeason === s.season) continue
     const pos = positionOf(s, team.id)
     const size = s.teams.filter(t => t.division === team.division && isActive(t, s.season)).length
-    const relegated = team.division < 3 && pos > size - 3
+    const dz = dropZone(s, team.division)
+    const relegated = dz > 0 && pos > size - dz
     const flop = pos - expectedRank(s, team.id) >= AI_SACK_GAP
     const p = relegated ? AI_SACK_RELEGATED : flop ? AI_SACK_FLOP : 0
     if (p > 0 && rand() < p) s = sackAiManager(s, team.id, rand, week)
@@ -276,6 +290,7 @@ export function runCareerSeasonEnd(state: GameState, rand: () => number, week: n
   const user = s.teams.find(t => t.id === s.userTeamId)!
   const pos = positionOf(s, s.userTeamId)
   const size = s.teams.filter(t => t.division === user.division && isActive(t, s.season)).length
+  const maxDivision = Math.max(...s.teams.map(t => t.division))
   const gap = expectedRank(s, s.userTeamId) - pos
   const honeymoon = s.manager.hiredSeason === s.season
   let conf = 0
@@ -285,7 +300,7 @@ export function runCareerSeasonEnd(state: GameState, rand: () => number, week: n
   if (cupWinner(s) === s.userTeamId) { conf += 15; rep += REP_CUP }
   if (gap >= 3) { conf += 10; rep += REP_OVERPERFORM }
   if (!honeymoon) {
-    if (user.division < 3 && pos > size - 3) conf -= 25 // relegation
+    if (user.division < maxDivision && pos > size - 3) conf -= 25 // relegation to a lower league
     else if (gap <= -5) conf -= 10 // flop
   }
   s = {
@@ -295,6 +310,11 @@ export function runCareerSeasonEnd(state: GameState, rand: () => number, week: n
       confidence: clamp(s.manager.confidence + conf),
       reputation: clamp(s.manager.reputation + rep),
     },
+  }
+  // a user whose club lands in the bottom division's demotion-pool zone is dismissed — the club
+  // still goes dormant (season.ts), but the manager is sacked rather than idling a fixtureless season.
+  if (user.division === maxDivision && dropZone(s, user.division) === 4 && pos > size - 4) {
+    return sackUser(s, rand, week)
   }
   if (s.manager.confidence <= 0) s = sackUser(s, rand, week)
   if (s.manager.employed && gap >= 3 && user.division > 1 && rand() < POACH_SEASON_END) {

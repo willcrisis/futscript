@@ -7,6 +7,7 @@ import { adjustCash } from './finance'
 import { cupWinner } from './cup'
 import { MIN_SQUAD } from './transfers'
 import type { GameState, MatchEvent, Player } from './types'
+import { isActive } from './types'
 
 function playSeason(seed: number): GameState {
   let s = newGame(seed)
@@ -384,7 +385,7 @@ describe('newSeason — the long game', () => {
       expect(delta(id)).toBeGreaterThanOrEqual(Math.round((1_500_000 - 2 * 75_000) * 0.6))
     }
     for (const id of div1Bottom) expect(s2.teams.find(t => t.id === id)!.division).toBe(2)
-    for (const d of [1, 2, 3]) expect(s2.teams.filter(t => t.division === d)).toHaveLength(16)
+    for (const d of [1, 2, 3, 4]) expect(s2.teams.filter(t => t.division === d && isActive(t, s2.season))).toHaveLength(16)
   })
 
   it('writes the season into history and restarts the calendar', () => {
