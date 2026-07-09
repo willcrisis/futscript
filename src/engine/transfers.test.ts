@@ -302,6 +302,8 @@ describe('direct offers', () => {
     expect(user.playerIds).toContain(target)
     expect(s.outgoingOffers).toHaveLength(0)
     expect(s.news.some(n => n.type === 'offerAccepted')).toBe(true)
+    expect(s.news.filter(n => n.type === 'offerAccepted')).toHaveLength(1)
+    expect(s.news.some(n => n.type === 'userSigned')).toBe(false)
   })
 
   it('a lowball offer is rejected', () => {

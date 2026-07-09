@@ -197,6 +197,6 @@ function migrateV6(s: any): GameState {
   }
 }
 
-function migrateV7(s: any): any {
+function migrateV7(s: any): GameState {
   return { ...s, version: 8, outgoingOffers: s.outgoingOffers ?? [] }
 }

@@ -178,6 +178,12 @@ export function runTransfers(state: GameState, rand: () => number): GameState {
       offer.amount <= user.cash
     if (accept) {
       s = transferPlayer(s, offer.playerId, s.userTeamId, offer.amount)
+      // transferPlayer announces the signing as `userSigned`; drop that in favour of the
+      // negotiation-framed `offerAccepted` so an accepted bid surfaces exactly one notification.
+      const last = s.news[s.news.length - 1]
+      if (last?.type === 'userSigned' && last.params.player === player.name) {
+        s = { ...s, news: s.news.slice(0, -1) }
+      }
       s = pushNews(s, 'offerAccepted', { club: seller.name, player: player.name, amount: offer.amount })
     } else {
       s = pushNews(s, 'offerRejected', { club: seller.name, player: player.name })

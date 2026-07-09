@@ -52,7 +52,10 @@ export default function ClubScreen({ state, setState, teamId, onBack }: Props) {
             type="number" value={bid} onChange={e => setBid(Number(e.target.value))}
             className="w-24 rounded-md border border-rule bg-surface px-2 py-1 text-xs font-mono focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 focus-visible:ring-offset-surface"
           />
-          <Button variant="primary" size="sm" onClick={() => { setState(s => makeOffer(s, p.id, bid)); setOffering(null) }}>
+          <Button
+            variant="primary" size="sm" disabled={bid <= 0 || bid > team.cash}
+            onClick={() => { setState(s => makeOffer(s, p.id, bid)); setOffering(null) }}
+          >
             {t('club.sendOffer')}
           </Button>
           <Button variant="ghost" size="sm" aria-label={t('common.cancel')} onClick={() => setOffering(null)}>✕</Button>
