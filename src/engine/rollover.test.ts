@@ -37,6 +37,20 @@ describe('applyPromotionRelegation', () => {
   })
 })
 
+describe('promotion/relegation across four divisions', () => {
+  it('moves clubs between divisions 3 and 4', () => {
+    let s = newGame(3)
+    // play a whole season
+    while (s.round <= 30 + 6) s = advanceRound(s)
+    const before = new Map(s.teams.map(t => [t.id, t.division]))
+    const moved = applyPromotionRelegation(s, s.teams)
+    const changed = moved.filter(t => t.division !== before.get(t.id))
+    // at least one D4 club promoted to D3 and one D3 club relegated to D4
+    expect(changed.some(t => before.get(t.id) === 4 && t.division === 3)).toBe(true)
+    expect(changed.some(t => before.get(t.id) === 3 && t.division === 4)).toBe(true)
+  })
+})
+
 describe('retirePlayers', () => {
   it('retires by age band and strips rosters', () => {
     const s = newGame(2)

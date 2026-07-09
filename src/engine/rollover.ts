@@ -11,8 +11,9 @@ import { isManaged, type GameState, type Player, type Position, type SeasonRecor
 
 // bottom three of each upper division swap with the top three below it
 export function applyPromotionRelegation(state: GameState, teams: Team[]): Team[] {
+  const divisions = [...new Set(state.teams.map(t => t.division))].sort((a, b) => a - b)
   let next = teams
-  for (const upper of [1, 2]) {
+  for (const upper of divisions.slice(0, -1)) {
     const lower = upper + 1
     const upperTable = standings(state, upper)
     const lowerTable = standings(state, lower)
