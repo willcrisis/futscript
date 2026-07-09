@@ -215,7 +215,7 @@ describe('attendance', () => {
   })
 
   it('stamps user home attendance equal to the gate ledger fans', () => {
-    let s = newGame(1)
+    let s = newGame(2)
     let checked = false
     for (let i = 0; i < 12 && !checked; i++) {
       const round = s.round
