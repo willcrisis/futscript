@@ -84,6 +84,7 @@ export function runWeeklyFinances(state: GameState, rand: () => number): GameSta
   const attendanceByHome = new Map<number, number>()
 
   const teams = state.teams.map(team => {
+    if (team.poolReturn != null && team.poolReturn > state.season) return team // dormant: no wages, no gate
     const user = state.manager.employed && team.id === state.userTeamId
     const wages = wageBill(team.id, state)
     let cash = team.cash - wages

@@ -52,6 +52,7 @@ export interface Team {
   fanMood: number // 0-100; drives attendance and sponsors
   manager: string // AI manager name; for the user's club it is stale — render state.manager.name instead
   managerHiredSeason: number // 0 = founding; === current season → immune from sacking
+  poolReturn?: number // set while dormant in the demotion pool; the season the club rejoins D4
 }
 
 export interface TransferListing {
@@ -149,6 +150,14 @@ export interface Manager {
 // engine module can import it without cycles.
 export function isManaged(state: GameState, teamId: number): boolean {
   return state.manager.employed && teamId === state.userTeamId
+}
+
+export function isActive(team: Team, season: number): boolean {
+  return team.poolReturn == null || team.poolReturn <= season
+}
+
+export function activeTeams(state: GameState): Team[] {
+  return state.teams.filter(t => isActive(t, state.season))
 }
 
 export interface GameState {

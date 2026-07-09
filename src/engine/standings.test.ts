@@ -59,3 +59,19 @@ describe('standings', () => {
     expect(standings(state)).toEqual(div1) // default division 1
   })
 })
+
+describe('standings excludes pooled clubs', () => {
+  it('omits a club whose poolReturn is in the future', () => {
+    const s0 = makeState([])
+    const teams = s0.teams.map((t, i) => ({ ...t, division: 4, id: i })) // all in D4
+    const s = { ...s0, teams, season: 1 }
+    const pooled = s.teams[0].id
+    const stateWithPooled = {
+      ...s,
+      teams: s.teams.map(t => (t.id === pooled ? { ...t, poolReturn: s.season + 1 } : t)),
+    }
+    const table = standings(stateWithPooled, 4)
+    expect(table.some(r => r.teamId === pooled)).toBe(false)
+    expect(table).toHaveLength(2) // 3 D4 clubs minus the pooled one
+  })
+})

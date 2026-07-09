@@ -15,6 +15,7 @@ export function standings(state: GameState, division = 1): Standing[] {
   const rows = new Map<number, Standing>()
   for (const t of state.teams) {
     if (t.division !== division) continue
+    if (t.poolReturn != null && t.poolReturn > state.season) continue // dormant in the pool
     rows.set(t.id, {
       teamId: t.id, played: 0, won: 0, drawn: 0, lost: 0,
       goalsFor: 0, goalsAgainst: 0, points: 0,
