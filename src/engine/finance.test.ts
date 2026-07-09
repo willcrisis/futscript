@@ -200,7 +200,7 @@ describe('stadium finances', () => {
   })
 
   it('lower divisions draw proportionally smaller crowds', () => {
-    expect(DIVISION_FACTOR).toEqual({ 1: 1, 2: 0.8, 3: 0.6 })
+    expect(DIVISION_FACTOR).toEqual({ 1: 1, 2: 0.8, 3: 0.6, 4: 0.45 })
   })
 })
 

@@ -9,7 +9,7 @@ export const STARTING_CASH = 1_000_000
 export const LOAN_CAP = 2_000_000
 
 // scales fan interest and league prizes down the pyramid
-export const DIVISION_FACTOR: Record<number, number> = { 1: 1, 2: 0.8, 3: 0.6 }
+export const DIVISION_FACTOR: Record<number, number> = { 1: 1, 2: 0.8, 3: 0.6, 4: 0.45 }
 
 // ponytail: gate attendance depends only on capacity, price, mood, league position, jitter —
 // not the result. Computed once here; stamped on the fixture so the match screen and the
@@ -23,7 +23,7 @@ export function attendanceFor(team: Team, position: number, rand: () => number):
 
 export const MAINTENANCE_PER_SEAT = 1.2
 // ponytail: sponsor money — retune here and nowhere else
-export const SPONSOR_BASE: Record<number, number> = { 1: 40_000, 2: 24_000, 3: 15_000 }
+export const SPONSOR_BASE: Record<number, number> = { 1: 40_000, 2: 24_000, 3: 15_000, 4: 10_000 }
 
 export function salaryFor(level: number): number {
   return Math.round(level * level * 2)

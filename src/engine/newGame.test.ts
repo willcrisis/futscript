@@ -21,7 +21,7 @@ describe('newGame', () => {
       for (const id of team.playerIds) {
         const p = state.players[id]
         expect(p.level).toBeGreaterThanOrEqual(30)
-        expect(p.level).toBeLessThanOrEqual(75)
+        expect(p.level).toBeLessThanOrEqual(80)
         expect(p.age).toBeGreaterThanOrEqual(17)
         expect(p.age).toBeLessThanOrEqual(34)
       }
@@ -67,9 +67,9 @@ describe('newGame', () => {
     for (const team of state.teams) {
       for (const id of team.playerIds) {
         const level = state.players[id].level
-        if (team.division === 1) { expect(level).toBeGreaterThanOrEqual(45); expect(level).toBeLessThanOrEqual(75) }
-        if (team.division === 2) { expect(level).toBeGreaterThanOrEqual(38); expect(level).toBeLessThanOrEqual(68) }
-        if (team.division === 3) { expect(level).toBeGreaterThanOrEqual(30); expect(level).toBeLessThanOrEqual(60) }
+        if (team.division === 1) { expect(level).toBeGreaterThanOrEqual(58); expect(level).toBeLessThanOrEqual(80) }
+        if (team.division === 2) { expect(level).toBeGreaterThanOrEqual(46); expect(level).toBeLessThanOrEqual(66) }
+        if (team.division === 3) { expect(level).toBeGreaterThanOrEqual(40); expect(level).toBeLessThanOrEqual(52) }
       }
     }
     const names = new Set(state.teams.map(t => t.name))

@@ -17,7 +17,12 @@ export const SQUAD_TEMPLATE: Position[] = [
 
 // ids 0-15 are Division 3 (the user's club is a random draw among them), 16-31 Division 2, 32-47 Division 1
 const DIVISION_OF = (index: number) => (index < 16 ? 3 : index < 32 ? 2 : 1)
-export const LEVEL_RANGE: Record<number, [number, number]> = { 1: [45, 75], 2: [38, 68], 3: [30, 60] }
+export const LEVEL_RANGE: Record<number, [number, number]> = {
+  1: [58, 80], // span 22
+  2: [46, 66], // span 20
+  3: [40, 52], // span 12 — ponytail: lower divisions kept uniformly weak
+  4: [30, 40], // span 10
+}
 
 export function newGame(seed: number): GameState {
   const rand = mulberry32(seed)

@@ -11,6 +11,11 @@ export const TEAM_NAMES = [
   'São Rafael FC', 'Amazônia EC', 'Cerrado FC', 'Litorânea AC',
   'Vale Verde EC', 'Piratininga FC', 'Aurora do Leste', 'Granja Real',
   'Serra Azul FC', 'Baía Formosa', 'Rio Manso EC', 'Lagoa Dourada',
+  'Vitória do Cerrado', 'Grêmio Serrano', 'Náutico do Vale', 'Esperança FC',
+  'União Barrense', 'Atlético Ipê', 'Rio Verde EC', 'Sport Colinas',
+  'Guará AC', 'Flor do Campo', 'Cristal FC', 'Ypê Amarelo EC',
+  'Anhanguera FC', 'Tocantins AC', 'Real Palmeira', 'Brava Costa FC',
+  'Sol Nascente EC', 'Monte Belo AC', 'Vale do Aço FC', 'Jacarandá EC',
 ]
 
 const FIRST = [
