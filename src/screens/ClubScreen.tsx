@@ -1,4 +1,8 @@
+import { useState } from 'react'
+import type { Dispatch, SetStateAction } from 'react'
 import { positionOf } from '../engine/career'
+import { marketValue } from '../engine/finance'
+import { makeOffer } from '../engine/transfers'
 import type { GameState, Player } from '../engine/types'
 import { isManaged } from '../engine/types'
 import { t, useLang } from '../i18n'
@@ -10,11 +14,12 @@ import ScreenHeader from '../ui/ScreenHeader'
 
 interface Props {
   state: GameState
+  setState: Dispatch<SetStateAction<GameState>>
   teamId: number
   onBack: () => void
 }
 
-export default function ClubScreen({ state, teamId, onBack }: Props) {
+export default function ClubScreen({ state, setState, teamId, onBack }: Props) {
   useLang()
   const team = state.teams.find(tm => tm.id === teamId)!
   const manager = isManaged(state, teamId) ? state.manager.name : team.manager
@@ -32,6 +37,35 @@ export default function ClubScreen({ state, teamId, onBack }: Props) {
     { key: 'level', label: t('common.level'), align: 'right', mono: true, render: p => <strong>{p.level}</strong> },
     { key: 'status', label: t('common.status'), hideOnMobile: true, render: status },
   ]
+
+  const canOffer = state.manager.employed && teamId !== state.userTeamId
+  const [offering, setOffering] = useState<number | null>(null)
+  const [bid, setBid] = useState(0)
+  const pending = (id: number) => state.outgoingOffers.some(o => o.playerId === id)
+
+  const offerColumn: Column<Player> = {
+    key: 'offer', label: '', render: p => {
+      if (pending(p.id)) return <span className="text-xs text-ink-faint">{t('club.offerPending')}</span>
+      if (offering === p.id) return (
+        <div className="flex items-center gap-1.5">
+          <input
+            type="number" value={bid} onChange={e => setBid(Number(e.target.value))}
+            className="w-24 rounded-md border border-rule bg-surface px-2 py-1 text-xs font-mono focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 focus-visible:ring-offset-surface"
+          />
+          <Button variant="primary" size="sm" onClick={() => { setState(s => makeOffer(s, p.id, bid)); setOffering(null) }}>
+            {t('club.sendOffer')}
+          </Button>
+          <Button variant="ghost" size="sm" aria-label={t('common.cancel')} onClick={() => setOffering(null)}>✕</Button>
+        </div>
+      )
+      return (
+        <Button variant="ghost" size="sm" onClick={() => { setOffering(p.id); setBid(marketValue(p)) }}>
+          {t('club.makeOffer')}
+        </Button>
+      )
+    },
+  }
+  const squadColumns = canOffer ? [...columns, offerColumn] : columns
 
   return (
     <div>
@@ -62,7 +96,7 @@ export default function ClubScreen({ state, teamId, onBack }: Props) {
         </div>
       </Panel>
       <Panel label={t('club.squadPanel')}>
-        <DataTable columns={columns} rows={squad} rowKey={p => p.id} />
+        <DataTable columns={squadColumns} rows={squad} rowKey={p => p.id} />
       </Panel>
     </div>
   )

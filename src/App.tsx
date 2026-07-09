@@ -149,7 +149,7 @@ function Game() {
       {screen === 'history' && <HistoryScreen state={state} />}
       {screen === 'saves' && <SavesScreen state={state} setState={setState} onNewCareer={startNewCareer} />}
       {screen === 'club' && clubView && (
-        <ClubScreen state={state} teamId={clubView.teamId} onBack={() => setScreen(clubView.from)} />
+        <ClubScreen state={state} setState={setState} teamId={clubView.teamId} onBack={() => setScreen(clubView.from)} />
       )}
     </Shell>
   )

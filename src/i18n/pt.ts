@@ -39,6 +39,7 @@ export const pt: Record<TranslationKey, string> = {
   'common.switchToLight': 'Mudar para tema claro',
   'common.switchToDark': 'Mudar para tema escuro',
   'common.noMatchReport': 'Nenhum relatório disponível para esta partida.',
+  'common.cancel': 'Cancelar',
 
   // Home screen
   'home.header': 'Temporada {season} · Semana {week}/{total}',
@@ -379,4 +380,7 @@ export const pt: Record<TranslationKey, string> = {
   'club.statusOut': 'Fora {n}sem',
   'club.statusBan': 'Suspenso',
   'club.statusFit': '—',
+  'club.makeOffer': 'Fazer proposta',
+  'club.sendOffer': 'Enviar',
+  'club.offerPending': 'Proposta enviada',
 }

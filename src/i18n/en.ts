@@ -37,6 +37,7 @@ export const en = {
   'common.switchToLight': 'Switch to light theme',
   'common.switchToDark': 'Switch to dark theme',
   'common.noMatchReport': 'No report available for this match.',
+  'common.cancel': 'Cancel',
 
   // Home screen
   'home.header': 'Season {season} · Week {week}/{total}',
@@ -377,6 +378,9 @@ export const en = {
   'club.statusOut': 'Out {n}w',
   'club.statusBan': 'Suspended',
   'club.statusFit': '—',
+  'club.makeOffer': 'Make offer',
+  'club.sendOffer': 'Send',
+  'club.offerPending': 'Offer pending',
 } as const
 
 export type TranslationKey = keyof typeof en
