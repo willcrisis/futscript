@@ -3,7 +3,7 @@ import { cupWinner, drawFirstCupRound, drawNextCupRound } from './cup'
 import { CUP_WEEKS, generateDivisionFixtures } from './fixtures'
 import { adjustCash, DIVISION_FACTOR, runWeeklyFinances, TICKET_PRICE, userLedger } from './finance'
 import { autoPick, isAvailable, managedMatchLineup } from './lineup'
-import { simulateMatch } from './match'
+import { resolveCupTie, simulateMatch } from './match'
 import { pushNews } from './news'
 import { mulberry32, randInt } from './rng'
 import { applyPromotionRelegation, ensureThreeDivisions, retirePlayers, rolloverMood, seasonRecord, youthIntake } from './rollover'
@@ -88,13 +88,9 @@ export function advanceRound(state: GameState): GameState {
 
   let cupFixtures = state.cupFixtures.map(f => {
     if (f.week !== week || f.winnerId !== null) return f
-    const result = simulateMatch(byId.get(f.homeId)!, byId.get(f.awayId)!, state.players, rand)
+    const result = resolveCupTie(byId.get(f.homeId)!, byId.get(f.awayId)!, state.players, rand)
     roundEvents.push(...result.events)
-    const winnerId =
-      result.homeGoals > result.awayGoals ? f.homeId
-      : result.awayGoals > result.homeGoals ? f.awayId
-      : rand() < 0.5 ? f.homeId : f.awayId // ponytail: penalty shootout is a coin flip
-    return { ...f, homeGoals: result.homeGoals, awayGoals: result.awayGoals, winnerId, events: result.events }
+    return { ...f, homeGoals: result.homeGoals, awayGoals: result.awayGoals, winnerId: result.winnerId, events: result.events }
   })
 
   let friendlyIncome = 0

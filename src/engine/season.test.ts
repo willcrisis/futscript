@@ -576,3 +576,24 @@ describe('demotion pool rollover', () => {
     }
   })
 })
+
+describe('cup ties are always decided', () => {
+  it('every played cup fixture has a winner, and level ties show penalties', () => {
+    let s = newGame(2)
+    let checked = 0
+    while (s.round <= 30 + 6 && checked < 3) {
+      const beforeRound = s.round
+      s = advanceRound(s)
+      for (const f of s.cupFixtures) {
+        if (f.week === beforeRound && f.homeGoals !== null) {
+          expect(f.winnerId).not.toBeNull()
+          if (f.homeGoals === f.awayGoals) {
+            expect((f.events ?? []).some(e => e.type === 'penalty')).toBe(true)
+          }
+          checked++
+        }
+      }
+    }
+    expect(checked).toBeGreaterThan(0)
+  })
+})

@@ -372,8 +372,9 @@ describe('dropZone — generic over division count', () => {
 
 describe('pooled user is sacked, not idled', () => {
   it('sacks the manager when their club finishes the D4 pool zone', () => {
-    // seed 4: the user's D4 club finishes in the bottom four (verified)
-    let s = newGame(4)
+    // seed 6: the user's D4 club finishes in the bottom four (verified — seed 4 stopped doing
+    // so once cup ties started consuming extra rand() draws for extra time/penalties, Task 3)
+    let s = newGame(6)
     expect(s.manager.employed).toBe(true)
     const userId = s.userTeamId
     while (s.round <= 30 + 6) s = advanceRound(s)
