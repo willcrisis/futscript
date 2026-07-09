@@ -178,10 +178,13 @@ describe('rolloverMood — D3 relegation in a four-division world', () => {
     while (s.round <= 30 + 6) s = advanceRound(s)
     const relegated = standings(s, 3).slice(-3).map(r => r.teamId)
     const before = new Map(s.teams.map(t => [t.id, t.fanMood]))
+    const cupChamp = cupWinner(s)
     const moved = rolloverMood(s, s.teams)
     for (const id of relegated) {
       const t = moved.find(x => x.id === id)!
-      expect(t.fanMood).toBeLessThan(before.get(id)!) // the drop empties the terraces
+      if (id === cupChamp) continue // a relegated cup winner nets -20 +25
+      // the drop empties the terraces (clamped at the mood floor of 0)
+      expect(t.fanMood).toBe(Math.max(0, before.get(id)! - 20))
     }
   })
 })
