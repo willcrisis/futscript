@@ -234,7 +234,7 @@ export const pt: Record<TranslationKey, string> = {
   'speed.ultraFast': 'Ultrarrápido',
   'match.skip': 'Pular',
   'match.continueButton': 'Continuar',
-  'match.penaltyWin': '({name} vence nos pênaltis)',
+  'match.shootout': 'Vitória nos pênaltis {home}–{away}',
   'match.inProgress': 'A partida está em andamento…',
   'match.attendance': '{n} presentes',
 

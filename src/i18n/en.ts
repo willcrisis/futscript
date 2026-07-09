@@ -232,7 +232,7 @@ export const en = {
   'speed.ultraFast': 'Ultra fast',
   'match.skip': 'Skip',
   'match.continueButton': 'Continue',
-  'match.penaltyWin': '({name} win on penalties)',
+  'match.shootout': 'Won on penalties {home}–{away}',
   'match.inProgress': 'The match is under way…',
   'match.attendance': '{n} in attendance',
 

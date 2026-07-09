@@ -30,10 +30,6 @@ const SPEEDS = [
   { key: 'speed.ultraFast', ms: 50 },
 ] as const
 
-function initialMinute(): number {
-  return matchMedia('(prefers-reduced-motion: reduce)').matches ? 90 : 0
-}
-
 function initialSpeedIndex(): number {
   if (typeof localStorage === 'undefined') return 2
   const raw = localStorage.getItem('futscript-speed')
@@ -44,15 +40,16 @@ function initialSpeedIndex(): number {
 
 export default function MatchScreen({ fixture, state, onClose }: Props) {
   useLang()
-  const [minute, setMinute] = useState(initialMinute)
+  const fullTime = (fixture.events ?? []).some(e => e.minute > 90) ? 120 : 90
+  const [minute, setMinute] = useState(() => (matchMedia('(prefers-reduced-motion: reduce)').matches ? fullTime : 0))
   const [speedIndex, setSpeedIndex] = useState(initialSpeedIndex)
-  const done = minute >= 90
+  const done = minute >= fullTime
 
   useEffect(() => {
     if (done) return
-    const id = setInterval(() => setMinute(m => (m >= 90 ? m : m + 1)), SPEEDS[speedIndex].ms)
+    const id = setInterval(() => setMinute(m => (m >= fullTime ? m : m + 1)), SPEEDS[speedIndex].ms)
     return () => clearInterval(id)
-  }, [speedIndex, done])
+  }, [speedIndex, done, fullTime])
 
   const name = (id: number) => state.teams.find(t => t.id === id)!.name
   const visibleEvents = (fixture.events ?? []).filter(e => e.minute <= minute)
@@ -65,7 +62,7 @@ export default function MatchScreen({ fixture, state, onClose }: Props) {
   return (
     <div className="flex min-h-dvh flex-col items-center px-4 pt-2">
       <div className="h-0.5 w-full max-w-lg overflow-hidden rounded-full bg-rule">
-        <div className="h-full bg-accent transition-[width]" style={{ width: `${(minute / 90) * 100}%` }} />
+        <div className="h-full bg-accent transition-[width]" style={{ width: `${(minute / fullTime) * 100}%` }} />
       </div>
       <div className="mt-8 flex w-full max-w-lg items-center justify-between gap-4">
         <div className="flex-1 text-right font-medium">{name(fixture.homeId)}</div>
@@ -74,17 +71,23 @@ export default function MatchScreen({ fixture, state, onClose }: Props) {
         </div>
         <div className="flex-1 font-medium">{name(fixture.awayId)}</div>
       </div>
-      <div className="mt-1 font-mono text-sm tabular-nums text-ink-muted">{Math.min(minute, 90)}'</div>
+      <div className="mt-1 font-mono text-sm tabular-nums text-ink-muted">{Math.min(minute, fullTime)}'</div>
       {fixture.attendance != null && (
         <div className="mt-1 font-mono text-xs tabular-nums text-ink-faint">
           {t('match.attendance', { n: fixture.attendance.toLocaleString('en-US') })}
         </div>
       )}
-      {done && fixture.winnerId != null && homeGoals === awayGoals && (
-        <div className="mt-1 text-sm text-ink-muted">
-          {t('match.penaltyWin', { name: name(fixture.winnerId) })}
-        </div>
-      )}
+      {done && (() => {
+        const pens = (fixture.events ?? []).filter(e => e.type === 'penalty')
+        if (pens.length === 0) return null
+        const homePens = pens.filter(e => e.teamId === fixture.homeId && e.scored).length
+        const awayPens = pens.filter(e => e.teamId === fixture.awayId && e.scored).length
+        return (
+          <div className="mt-1 text-sm text-ink-muted">
+            {t('match.shootout', { home: homePens, away: awayPens })}
+          </div>
+        )
+      })()}
       <div className="mt-6 flex flex-wrap items-center gap-2">
         {!done ? (
           <>
@@ -103,7 +106,7 @@ export default function MatchScreen({ fixture, state, onClose }: Props) {
                 {t(speed.key)}
               </Button>
             ))}
-            <Button variant="ghost" size="sm" onClick={() => setMinute(90)}>{t('match.skip')}</Button>
+            <Button variant="ghost" size="sm" onClick={() => setMinute(fullTime)}>{t('match.skip')}</Button>
           </>
         ) : (
           <Button variant="primary" size="sm" onClick={onClose}>{t('match.continueButton')}</Button>
