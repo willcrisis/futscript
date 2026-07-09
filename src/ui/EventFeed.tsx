@@ -12,6 +12,7 @@ export function eventText(e: MatchEvent, state: GameState): string {
     case 'injury': return sub
       ? t('event.injurySub', { player, sub })
       : t('event.injuryNoSub', { player })
+    case 'penalty': return t('event.penalty', { player })
   }
 }
 
@@ -34,6 +35,8 @@ function EventIcon({ event, emphasisTeamId }: { event: MatchEvent; emphasisTeamI
       return <span aria-hidden className="size-2 shrink-0 self-center bg-danger" />
     case 'injury':
       return <span aria-hidden className="w-4 shrink-0 text-center font-bold text-danger">+</span>
+    case 'penalty':
+      return <span aria-hidden className="w-4 shrink-0 text-center font-bold text-accent">P</span>
   }
 }
 

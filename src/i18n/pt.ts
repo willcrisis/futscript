@@ -326,6 +326,7 @@ export const pt: Record<TranslationKey, string> = {
   'event.red': '{player} é expulso!',
   'event.injurySub': '{player} se machuca — {sub} entra em campo',
   'event.injuryNoSub': '{player} se machuca — sem substituto disponível!',
+  'event.penalty': 'Pênalti para {player}',
 
   // Welcome screen
   'welcome.title': 'Bem-vindo ao banco de reservas',

@@ -21,10 +21,11 @@ export type TrainingStyle = 'light' | 'normal' | 'intensive' | 'youth'
 
 export interface MatchEvent {
   minute: number
-  type: 'goal' | 'chance' | 'yellow' | 'red' | 'injury'
+  type: 'goal' | 'chance' | 'yellow' | 'red' | 'injury' | 'penalty'
   teamId: number
   playerId: number
   playerInId?: number // injury replacement, if a substitute came on
+  scored?: boolean // for 'penalty' events: true = converted, false = missed
 }
 
 export type FormationName = '4-4-2' | '4-3-3' | '3-5-2' | '5-3-2' | '5-4-1'
