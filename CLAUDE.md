@@ -179,3 +179,4 @@ phase needs writing.
 - Prefer the lazy solution that actually works: stdlib and native platform features before new
   dependencies, one line before fifty. New dependencies are a high bar in a game that is
   deliberately backend-free and self-contained.
+- Always use git worktrees to implement plans.
