@@ -11,8 +11,8 @@ import { clampMood, tickConstruction } from './stadium'
 import { standings } from './standings'
 import { ageSquads, applyWeeklyUpdates } from './training'
 import { MIN_SQUAD, renewalSalary, runTransfers } from './transfers'
-import type { GameState, MatchEvent, Player } from './types'
-import { isManaged } from './types'
+import type { GameState, MatchEvent, Player, Team } from './types'
+import { isActive, isManaged } from './types'
 
 export function totalRounds(state: GameState): number {
   return Math.max(
@@ -277,6 +277,17 @@ export function newSeason(state: GameState): GameState {
     if (before !== userDivisionPre && t.division !== userDivisionPre) continue
     storyAcc = pushNews(storyAcc, t.division < before ? 'promoted' : 'relegated', { club: t.name }, seasonEnd)
   }
+  // demotion pool: the bottom division has no lower league — its worst clubs sit out one season.
+  // Gated on a division 4 existing, so migrated 3-division saves keep their stand-still bottom.
+  const nextSeason = state.season + 1
+  if (state.teams.some(t => t.division === 4)) {
+    // returns: clubs whose wait is up rejoin D4
+    teams = teams.map(t => (t.poolReturn === nextSeason ? { ...t, division: 4, poolReturn: undefined } : t))
+    // demote: the finished D4 bottom four wait one season
+    const demoted = new Set(standings(state, 4).slice(-4).map(r => r.teamId))
+    teams = teams.map(t => (demoted.has(t.id) ? { ...t, poolReturn: nextSeason + 1 } : t))
+  }
+
   teams = rolloverMood(state, teams)
 
   // retirements
@@ -321,8 +332,9 @@ export function newSeason(state: GameState): GameState {
 
   players = ageSquads(players, rand)
 
-  const fixtures = [...new Set(teams.map(t => t.division))].sort().flatMap(d =>
-    generateDivisionFixtures(teams.filter(t => t.division === d).map(t => t.id), rand),
+  const activeForNext = (t: Team) => isActive(t, nextSeason)
+  const fixtures = [...new Set(teams.filter(activeForNext).map(t => t.division))].sort().flatMap(d =>
+    generateDivisionFixtures(teams.filter(t => t.division === d && activeForNext(t)).map(t => t.id), rand),
   )
 
   return {

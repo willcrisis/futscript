@@ -558,3 +558,20 @@ describe('user lineup hygiene', () => {
     }
   })
 })
+
+describe('demotion pool rollover', () => {
+  it('keeps D4 at 16 active while rotating the bottom four through the pool', () => {
+    let s = newGame(5)
+    for (let season = 0; season < 3; season++) {
+      while (s.round <= 30 + 6) s = advanceRound(s)
+      const finishedD4Bottom = standings(s, 4).slice(-4).map(r => r.teamId)
+      s = newSeason(s)
+      // exactly four clubs are dormant, and they are last season's bottom four
+      const dormant = s.teams.filter(t => t.poolReturn != null && t.poolReturn > s.season).map(t => t.id)
+      expect(dormant).toHaveLength(4)
+      expect(new Set(dormant)).toEqual(new Set(finishedD4Bottom))
+      // D4 still fields 16 active clubs
+      expect(s.teams.filter(t => t.division === 4 && (t.poolReturn == null || t.poolReturn <= s.season))).toHaveLength(16)
+    }
+  })
+})
