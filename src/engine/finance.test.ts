@@ -6,7 +6,7 @@ import {
   runWeeklyFinances, salaryFor, severanceFor, STARTING_CASH, wageBill, SPONSOR_BASE, MAINTENANCE_PER_SEAT,
 } from './finance'
 import type { GameState, Player } from './types'
-import { CUP_WEEKS } from './fixtures'
+import { CUP_WEEKS, TOTAL_WEEKS } from './fixtures'
 import { advanceRound } from './season'
 
 export function makePlayer(id: number, over: Partial<Player> = {}): Player {
@@ -125,8 +125,9 @@ describe('loans', () => {
 
 describe('division-aware gates', () => {
   it('pays a gate for a home cup tie', () => {
-    // seed 3: no cup host also completes a same-week transfer, which would inflate the actual
-    // wage bill past the pre-round wageBill(id, s) snapshot this assertion compares against
+    // seed 3: chosen for a decent-sized round-1 cup card; a same-week transfer or the user's
+    // own loan/deposit interest still lands on some hosts, so those are excluded from the exact
+    // formula check below (a gate was still drawn for every host, transfer or not)
     let s = newGame(3)
     for (let week = 1; week < CUP_WEEKS[0]; week++) s = advanceRound(s)
     // week 4: only cup ties are scheduled
@@ -134,11 +135,27 @@ describe('division-aware gates', () => {
     expect(cupHomes.size).toBeGreaterThan(0)
     const before = new Map(s.teams.map(t => [t.id, t.cash]))
     const s2 = advanceRound(s)
+    let checked = 0
     for (const id of cupHomes) {
+      const team = s.teams.find(x => x.id === id)!
       const t = s2.teams.find(x => x.id === id)!
-      // gate income exceeds the wage bill hit for at least the cup hosts as a group
-      expect(t.cash).toBeGreaterThan(before.get(id)! - wageBill(id, s))
+      const fixture = s2.cupFixtures.find(f => f.week === CUP_WEEKS[0] && f.homeId === id)!
+      expect(fixture.attendance).toBeGreaterThan(0) // a gate was actually drawn, for every host
+      if (id === s.userTeamId) continue // the user's club also earns loan/deposit interest that week
+      const sameRoster = team.playerIds.length === t.playerIds.length &&
+        team.playerIds.every((pid, i) => pid === t.playerIds[i])
+      if (!sameRoster) continue // a same-week transfer moves cash and the wage bill outside this formula
+      const gate = fixture.attendance! * team.ticketPrice
+      const maintenance = Math.round(team.capacity * MAINTENANCE_PER_SEAT)
+      // sponsors use fan mood AFTER this week's result lands, not the pre-round snapshot
+      const sponsors = Math.round((SPONSOR_BASE[team.division] ?? SPONSOR_BASE[3]) * (0.5 + t.fanMood / 100))
+      // exact weekly formula: wages out, maintenance out, sponsors in, gate in — a big top-flight
+      // wage bill can outrun a single gate now that division 1 plays cup round 1 too (bracket fill),
+      // so this checks the gate was paid correctly rather than that it covered the wage bill
+      expect(t.cash).toBe(before.get(id)! - wageBill(id, s) - maintenance + sponsors + gate)
+      checked++
     }
+    expect(checked).toBeGreaterThan(0) // the exact formula held for at least one untouched host
   })
 })
 
@@ -217,7 +234,8 @@ describe('attendance', () => {
   it('stamps user home attendance equal to the gate ledger fans', () => {
     let s = newGame(2)
     let checked = false
-    for (let i = 0; i < 12 && !checked; i++) {
+    // a round-robin schedule guarantees a home league fixture somewhere in the season
+    for (let i = 0; i < TOTAL_WEEKS && !checked; i++) {
       const round = s.round
       s = advanceRound(s)
       const home = s.fixtures.find(f => f.round === round && f.homeId === s.userTeamId && f.attendance != null)

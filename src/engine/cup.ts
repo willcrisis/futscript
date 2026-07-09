@@ -1,6 +1,8 @@
 import { CUP_WEEKS } from './fixtures'
 import type { CupFixture, GameState, Team } from './types'
 
+const BRACKET_SLOTS = 2 ** CUP_WEEKS.length // 64: a 6-round knockout
+
 function pairUp(teamIds: number[], cupRound: number, week: number, rand: () => number): CupFixture[] {
   const ids = [...teamIds]
   for (let i = ids.length - 1; i > 0; i--) {
@@ -18,11 +20,15 @@ function pairUp(teamIds: number[], cupRound: number, week: number, rand: () => n
   return fixtures
 }
 
-// Round 1: the 32 clubs outside the top flight. Division 1 enters in round 2.
+// Round 1: fill a 64-slot bracket. The strongest clubs bye when there are fewer than 64 entrants.
 export function drawFirstCupRound(teams: Team[], rand: () => number): CupFixture[] {
-  const entrants = teams.filter(t => t.division !== 1).map(t => t.id)
-  if (entrants.length < 2) return [] // migrated 16-team world: no cup until expansion
-  return pairUp(entrants, 1, CUP_WEEKS[0], rand)
+  const active = teams.filter(t => t.poolReturn == null) // newGame/newSeason pass post-rollover teams; dormant excluded
+  if (active.length < 2) return []
+  // strongest first: top division first (player levels aren't threaded here, division is the proxy)
+  const seeded = [...active].sort((a, b) => a.division - b.division).map(t => t.id)
+  const byes = Math.max(0, BRACKET_SLOTS - seeded.length)
+  const round1 = seeded.slice(byes) // the rest play round 1
+  return pairUp(round1, 1, CUP_WEEKS[0], rand)
 }
 
 export function drawNextCupRound(state: GameState, rand: () => number): CupFixture[] {
@@ -32,7 +38,12 @@ export function drawNextCupRound(state: GameState, rand: () => number): CupFixtu
   if (ties.some(f => f.winnerId === null)) return []
   let entrants = ties.map(f => f.winnerId!)
   if (lastRound === 1) {
-    entrants = [...entrants, ...state.teams.filter(t => t.division === 1).map(t => t.id)]
+    // bye clubs = active clubs that played no round-1 tie
+    const played = new Set(state.cupFixtures.filter(f => f.cupRound === 1).flatMap(f => [f.homeId, f.awayId]))
+    const byes = state.teams
+      .filter(t => (t.poolReturn == null || t.poolReturn <= state.season) && !played.has(t.id))
+      .map(t => t.id)
+    entrants = [...entrants, ...byes]
   }
   if (entrants.length < 2) return []
   return pairUp(entrants, lastRound + 1, CUP_WEEKS[lastRound], rand)

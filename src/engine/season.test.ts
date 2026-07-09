@@ -85,7 +85,7 @@ describe('advanceRound — cup weeks', () => {
       else expect([f.homeId, f.awayId]).toContain(f.winnerId) // penalties
     }
     const round2 = s.cupFixtures.filter(f => f.cupRound === 2)
-    expect(round2).toHaveLength(20) // 24 round-1 winners + 16 div-1 entrants, paired up
+    expect(round2).toHaveLength(16) // 32 round-1 winners, paired up (0 byes: 64 clubs filled the bracket)
     // no league fixtures were scheduled on the cup week
     expect(s.fixtures.filter(f => f.round === 4)).toHaveLength(0)
   })
@@ -112,11 +112,15 @@ describe('advanceRound — cup weeks', () => {
   it('rests non-participants on cup weeks', () => {
     let s = newGame(8)
     for (let week = 1; week <= 3; week++) s = advanceRound(s)
-    // week 4 is a cup week: division clubs not in the cup (all of division 1) rest
-    const div1 = s.teams.find(t => t.division === 1)!
-    const tiredBefore = div1.lineup.map(id => s.players[id].fitness)
+    s = advanceRound(s) // week 4: cup round 1 — 64 clubs fill the bracket exactly, so everyone plays
+    const round1 = s.cupFixtures.filter(f => f.cupRound === 1)
+    const loserId = round1[0].winnerId === round1[0].homeId ? round1[0].awayId : round1[0].homeId
+    const loser = s.teams.find(t => t.id === loserId)!
+    for (let week = 5; week <= 8; week++) s = advanceRound(s)
+    // week 9 is a cup week: the round-1 loser is out of the cup and rests
+    const tiredBefore = loser.lineup.map(id => s.players[id].fitness)
     const s2 = advanceRound(s)
-    const after = div1.lineup.map(id => s2.players[id].fitness)
+    const after = loser.lineup.map(id => s2.players[id].fitness)
     after.forEach((f, i) => expect(f).toBeGreaterThanOrEqual(tiredBefore[i])) // recovery only
   })
 })
@@ -213,12 +217,14 @@ describe('backlog semantics', () => {
 
   it('suspensions only count weeks the club actually plays', () => {
     let s = newGame(8)
-    // week 4 is a cup week; division-1 clubs (not in cup round 1) rest
-    const restingClub = s.teams.find(t => t.division === 1)!
-    const restingPlayer = restingClub.lineup[3]
-    const playingClub = s.cupFixtures[0].homeId
-    const playingPlayer = s.teams.find(t => t.id === playingClub)!.lineup[3]
     for (let week = 1; week <= 3; week++) s = advanceRound(s)
+    s = advanceRound(s) // week 4: cup round 1 — 64 clubs fill the bracket exactly, so everyone plays
+    const round1 = s.cupFixtures.filter(f => f.cupRound === 1)
+    const loserId = round1[0].winnerId === round1[0].homeId ? round1[0].awayId : round1[0].homeId
+    const winnerId = round1[0].winnerId!
+    const restingPlayer = s.teams.find(t => t.id === loserId)!.lineup[3]
+    const playingPlayer = s.teams.find(t => t.id === winnerId)!.lineup[3]
+    for (let week = 5; week <= 8; week++) s = advanceRound(s)
     s = {
       ...s,
       players: {
@@ -227,7 +233,7 @@ describe('backlog semantics', () => {
         [playingPlayer]: { ...s.players[playingPlayer], suspendedForRounds: 2, injuredForRounds: 0 },
       },
     }
-    const s2 = advanceRound(s) // cup week
+    const s2 = advanceRound(s) // week 9: cup round 2 — the round-1 loser is eliminated and rests
     expect(s2.players[restingPlayer].suspendedForRounds).toBe(2) // no match, no tick
     expect(s2.players[playingPlayer].suspendedForRounds).toBe(1) // club played (he sat it out)
   })
@@ -391,7 +397,7 @@ describe('newSeason — the long game', () => {
     expect(s2.round).toBe(1)
     expect(s2.fixtures).toHaveLength(960)
     expect(s2.fixtures.every(f => f.homeGoals === null)).toBe(true)
-    expect(s2.cupFixtures).toHaveLength(24)
+    expect(s2.cupFixtures).toHaveLength(32) // 64 clubs fill the bracket exactly: 0 byes, 32 round-1 ties
     expect(s2.cupFixtures.every(f => f.cupRound === 1 && f.winnerId === null)).toBe(true)
   })
 

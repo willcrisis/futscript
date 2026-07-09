@@ -62,7 +62,7 @@ describe('newGame', () => {
     const userTeam = state.teams.find(t => t.id === state.userTeamId)!
     expect(userTeam.division).toBe(4)
     expect(state.fixtures).toHaveLength(960) // 240 per division
-    expect(state.cupFixtures).toHaveLength(24) // 48 non-top-flight clubs paired up
+    expect(state.cupFixtures).toHaveLength(32) // 64 clubs fill the bracket exactly: 0 byes, 32 round-1 ties
     // level bands per division
     for (const team of state.teams) {
       for (const id of team.playerIds) {
