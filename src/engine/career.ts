@@ -6,7 +6,7 @@ import { mulberry32, randInt } from './rng'
 import { makeRookie } from './rollover'
 import { standings } from './standings'
 import type { GameState, Player, Team } from './types'
-import { isManaged } from './types'
+import { isActive, isManaged } from './types'
 
 // ponytail: career tuning — retune here and nowhere else
 export const CONFIDENCE_START = 60
@@ -44,7 +44,7 @@ export function teamStrength(team: Team, players: Record<number, Player>): numbe
 export function expectedRank(state: GameState, teamId: number): number {
   const division = state.teams.find(t => t.id === teamId)!.division
   const ranked = state.teams
-    .filter(t => t.division === division)
+    .filter(t => t.division === division && isActive(t, state.season))
     .map(t => ({ id: t.id, strength: teamStrength(t, state.players) }))
     .sort((a, b) => b.strength - a.strength)
   return ranked.findIndex(r => r.id === teamId) + 1
@@ -72,7 +72,7 @@ function updateConfidence(state: GameState): GameState {
   if (state.round < CONFIDENCE_FROM_WEEK) return state // early tables are noise
   const pos = positionOf(state, state.userTeamId)
   const division = userDivision(state)
-  const size = state.teams.filter(t => t.division === division).length
+  const size = state.teams.filter(t => t.division === division && isActive(t, state.season)).length
   let delta = weeklyDelta(expectedRank(state, state.userTeamId) - pos)
   if (division < 3 && pos > size - 3) delta -= 1 // the drop zone stings extra
   if (state.manager.hiredSeason === state.season) delta = Math.max(0, delta) // honeymoon: gains only
@@ -265,7 +265,7 @@ export function runCareerSeasonEnd(state: GameState, rand: () => number, week: n
     if (isManaged(s, team.id)) continue
     if (team.managerHiredSeason === s.season) continue
     const pos = positionOf(s, team.id)
-    const size = s.teams.filter(t => t.division === team.division).length
+    const size = s.teams.filter(t => t.division === team.division && isActive(t, s.season)).length
     const relegated = team.division < 3 && pos > size - 3
     const flop = pos - expectedRank(s, team.id) >= AI_SACK_GAP
     const p = relegated ? AI_SACK_RELEGATED : flop ? AI_SACK_FLOP : 0
@@ -275,7 +275,7 @@ export function runCareerSeasonEnd(state: GameState, rand: () => number, week: n
   if (!s.manager.employed) return s
   const user = s.teams.find(t => t.id === s.userTeamId)!
   const pos = positionOf(s, s.userTeamId)
-  const size = s.teams.filter(t => t.division === user.division).length
+  const size = s.teams.filter(t => t.division === user.division && isActive(t, s.season)).length
   const gap = expectedRank(s, s.userTeamId) - pos
   const honeymoon = s.manager.hiredSeason === s.season
   let conf = 0

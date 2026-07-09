@@ -15,6 +15,7 @@ import {
 import { BROKE_ROUNDS_LIMIT, LOAN_CAP } from './finance'
 import { newGame } from './newGame'
 import { MIN_SQUAD } from './transfers'
+import { isActive } from './types'
 
 describe('expectation', () => {
   it('teamStrength sums the best 11 levels only', () => {
@@ -27,7 +28,8 @@ describe('expectation', () => {
   it('expectedRank orders a division by squad strength, 1 = strongest', () => {
     const state = newGame(2)
     const division = state.teams.find(t => t.id === state.userTeamId)!.division
-    const clubs = state.teams.filter(t => t.division === division)
+    // active clubs only — a dormant pool club shares the user's division but expectedRank excludes it
+    const clubs = state.teams.filter(t => t.division === division && isActive(t, state.season))
     const ranks = clubs.map(t => expectedRank(state, t.id))
     expect([...ranks].sort((a, b) => a - b)).toEqual(clubs.map((_, i) => i + 1)) // a permutation of 1..16
     const strongest = clubs.reduce((a, b) => (teamStrength(b, state.players) > teamStrength(a, state.players) ? b : a))
