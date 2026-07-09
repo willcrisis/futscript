@@ -263,7 +263,7 @@ describe('job market', () => {
 
   it('high reputation tier (>=65) reaches all the way to Division 1', () => {
     const famous = { ...unemployed(43), round: 5, manager: { ...unemployed(43).manager, employed: false, reputation: 80 } }
-    // candidates are ordered Division 3, then 2, then 1 (ascending team id); pass the offer-chance
+    // candidates are ordered Division 4, then 3, 2, 1 (ascending team id); pass the offer-chance
     // gate with the first draw, then push randInt to the pool's last (Division 1) struggler
     const forceLastCandidate = sequence(0, 0.999999)
     const out = runCareerWeek(famous, forceLastCandidate)
