@@ -324,7 +324,8 @@ export const en = {
   'event.red': '{player} is sent off!',
   'event.injurySub': '{player} goes down injured — {sub} comes on',
   'event.injuryNoSub': '{player} goes down injured — no substitute left!',
-  'event.penalty': 'Penalty to {player}',
+  'event.penaltyScored': '{player} scores the penalty',
+  'event.penaltyMissed': '{player} misses the penalty!',
 
   // Welcome screen
   'welcome.title': 'Welcome to the dugout',
