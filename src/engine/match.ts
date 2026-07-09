@@ -86,6 +86,59 @@ function pickUniform(players: Player[], rand: () => number): Player {
   return players[Math.floor(rand() * players.length)]
 }
 
+function playMinuteForSide(side: Side, opp: Side, minute: number, events: MatchEvent[], rand: () => number) {
+  if (side.active.length === 0) return
+  const att = attack(side) ** 2
+  const def = defense(opp) ** 2
+  const share = att / (att + def)
+
+  if (rand() < CHANCE_RATE * share) {
+    const shooter = pickWeighted(side.active, p => SCORER_WEIGHT[p.position], rand)
+    if (rand() < CONVERSION) {
+      side.goals++
+      events.push({ minute, type: 'goal', teamId: side.team.id, playerId: shooter.id })
+    } else {
+      events.push({ minute, type: 'chance', teamId: side.team.id, playerId: shooter.id })
+    }
+  }
+
+  if (rand() < YELLOW_P) {
+    const culprit = pickUniform(side.active, rand)
+    if (side.yellowed.has(culprit.id)) {
+      side.active = side.active.filter(p => p.id !== culprit.id) // second yellow → off
+      events.push({ minute, type: 'red', teamId: side.team.id, playerId: culprit.id })
+    } else {
+      side.yellowed.add(culprit.id)
+      events.push({ minute, type: 'yellow', teamId: side.team.id, playerId: culprit.id })
+    }
+  } else if (rand() < STRAIGHT_RED_P) {
+    const culprit = pickUniform(side.active, rand)
+    side.active = side.active.filter(p => p.id !== culprit.id)
+    events.push({ minute, type: 'red', teamId: side.team.id, playerId: culprit.id })
+  }
+
+  if (side.active.length > 0 && rand() < INJURY_P * INJURY_STYLE_MULT[side.team.trainingStyle]) {
+    const victim = pickUniform(side.active, rand)
+    side.active = side.active.filter(p => p.id !== victim.id)
+    const sub =
+      side.bench.filter(p => p.position === victim.position).sort((a, b) => b.level - a.level)[0] ??
+      side.bench.sort((a, b) => b.level - a.level)[0]
+    if (sub) {
+      side.bench = side.bench.filter(p => p.id !== sub.id)
+      side.active = [...side.active, sub]
+    }
+    events.push({ minute, type: 'injury', teamId: side.team.id, playerId: victim.id, playerInId: sub?.id })
+  }
+}
+
+function playMinutes(sides: [Side, Side], from: number, to: number, events: MatchEvent[], rand: () => number) {
+  for (let minute = from; minute <= to; minute++) {
+    for (const [side, opp] of [[sides[0], sides[1]], [sides[1], sides[0]]] as const) {
+      playMinuteForSide(side, opp, minute, events, rand)
+    }
+  }
+}
+
 export function simulateMatch(
   home: Team,
   away: Team,
@@ -94,53 +147,52 @@ export function simulateMatch(
 ): MatchResult {
   const sides: [Side, Side] = [makeSide(home, players, true), makeSide(away, players, false)]
   const events: MatchEvent[] = []
-
-  for (let minute = 1; minute <= 90; minute++) {
-    for (const [side, opp] of [[sides[0], sides[1]], [sides[1], sides[0]]] as const) {
-      if (side.active.length === 0) continue
-      const att = attack(side) ** 2
-      const def = defense(opp) ** 2
-      const share = att / (att + def)
-
-      if (rand() < CHANCE_RATE * share) {
-        const shooter = pickWeighted(side.active, p => SCORER_WEIGHT[p.position], rand)
-        if (rand() < CONVERSION) {
-          side.goals++
-          events.push({ minute, type: 'goal', teamId: side.team.id, playerId: shooter.id })
-        } else {
-          events.push({ minute, type: 'chance', teamId: side.team.id, playerId: shooter.id })
-        }
-      }
-
-      if (rand() < YELLOW_P) {
-        const culprit = pickUniform(side.active, rand)
-        if (side.yellowed.has(culprit.id)) {
-          side.active = side.active.filter(p => p.id !== culprit.id) // second yellow → off
-          events.push({ minute, type: 'red', teamId: side.team.id, playerId: culprit.id })
-        } else {
-          side.yellowed.add(culprit.id)
-          events.push({ minute, type: 'yellow', teamId: side.team.id, playerId: culprit.id })
-        }
-      } else if (rand() < STRAIGHT_RED_P) {
-        const culprit = pickUniform(side.active, rand)
-        side.active = side.active.filter(p => p.id !== culprit.id)
-        events.push({ minute, type: 'red', teamId: side.team.id, playerId: culprit.id })
-      }
-
-      if (side.active.length > 0 && rand() < INJURY_P * INJURY_STYLE_MULT[side.team.trainingStyle]) {
-        const victim = pickUniform(side.active, rand)
-        side.active = side.active.filter(p => p.id !== victim.id)
-        const sub =
-          side.bench.filter(p => p.position === victim.position).sort((a, b) => b.level - a.level)[0] ??
-          side.bench.sort((a, b) => b.level - a.level)[0]
-        if (sub) {
-          side.bench = side.bench.filter(p => p.id !== sub.id)
-          side.active = [...side.active, sub]
-        }
-        events.push({ minute, type: 'injury', teamId: side.team.id, playerId: victim.id, playerInId: sub?.id })
-      }
-    }
-  }
-
+  playMinutes(sides, 1, 90, events, rand)
   return { homeGoals: sides[0].goals, awayGoals: sides[1].goals, events }
+}
+
+// ponytail: penalties convert at ~75%, nudged a little by taker level; retune here.
+const PEN_BASE = 0.75
+function penaltyScored(taker: Player, rand: () => number): boolean {
+  return rand() < Math.min(0.95, PEN_BASE + (taker.level - 50) * 0.002)
+}
+
+function shootout(sides: [Side, Side], players: Record<number, Player>, events: MatchEvent[], rand: () => number): number {
+  const scored = [0, 0]
+  const takers: [Player[], Player[]] = [
+    sides[0].active.length ? sides[0].active : sides[0].team.lineup.map(id => players[id]),
+    sides[1].active.length ? sides[1].active : sides[1].team.lineup.map(id => players[id]),
+  ]
+  const kick = (i: 0 | 1, roundIdx: number) => {
+    const pool = takers[i].length ? takers[i] : sides[i].active
+    const taker = pool[roundIdx % pool.length]
+    const ok = penaltyScored(taker, rand)
+    if (ok) scored[i]++
+    events.push({ minute: 120, type: 'penalty', teamId: sides[i].team.id, playerId: taker.id, scored: ok })
+  }
+  // five kicks each (play all five, then compare)
+  for (let r = 0; r < 5; r++) { kick(0, r); kick(1, r) }
+  // sudden death: both kick each round, decided only when one scores and the other misses
+  for (let r = 5; scored[0] === scored[1]; r++) { kick(0, r); kick(1, r) }
+  return scored[0] > scored[1] ? sides[0].team.id : sides[1].team.id
+}
+
+export interface CupTieResult extends MatchResult {
+  winnerId: number
+}
+
+export function resolveCupTie(home: Team, away: Team, players: Record<number, Player>, rand: () => number): CupTieResult {
+  const sides: [Side, Side] = [makeSide(home, players, true), makeSide(away, players, false)]
+  const events: MatchEvent[] = []
+  playMinutes(sides, 1, 90, events, rand)
+  if (sides[0].goals !== sides[1].goals) {
+    return { homeGoals: sides[0].goals, awayGoals: sides[1].goals, events, winnerId: sides[0].goals > sides[1].goals ? home.id : away.id }
+  }
+  // extra time: 30 minutes on the SAME sides — sendings-off and subs carry over
+  playMinutes(sides, 91, 120, events, rand)
+  if (sides[0].goals !== sides[1].goals) {
+    return { homeGoals: sides[0].goals, awayGoals: sides[1].goals, events, winnerId: sides[0].goals > sides[1].goals ? home.id : away.id }
+  }
+  const winnerId = shootout(sides, players, events, rand)
+  return { homeGoals: sides[0].goals, awayGoals: sides[1].goals, events, winnerId }
 }

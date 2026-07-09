@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { effectiveLevel, simulateMatch } from './match'
+import { effectiveLevel, resolveCupTie, simulateMatch } from './match'
 import { mulberry32 } from './rng'
 import type { Player, Position, Team, TrainingStyle } from './types'
 
@@ -178,5 +178,37 @@ describe('simulateMatch', () => {
       return goals
     }
     expect(total('attacking')).toBeGreaterThan(total('defensive'))
+  })
+})
+
+function evenTeams() {
+  const players: Record<number, Player> = {}
+  const home = makeTeam(1, 50, players)
+  const away = makeTeam(2, 50, players)
+  return { home, away, players }
+}
+
+describe('resolveCupTie', () => {
+  it('always names a winner, even from a dead-even draw', () => {
+    const { home, away, players } = evenTeams()
+    for (let seed = 1; seed <= 20; seed++) {
+      const r = resolveCupTie(home, away, players, mulberry32(seed))
+      expect(r.winnerId === home.id || r.winnerId === away.id).toBe(true)
+    }
+  })
+
+  it('emits penalty events when a tie is level after extra time', () => {
+    const { home, away, players } = evenTeams()
+    let sawPens = false
+    for (let seed = 1; seed <= 50 && !sawPens; seed++) {
+      const r = resolveCupTie(home, away, players, mulberry32(seed))
+      const pens = r.events.filter(e => e.type === 'penalty')
+      if (pens.length > 0) {
+        sawPens = true
+        expect(pens.filter(e => e.teamId === home.id).length).toBeGreaterThanOrEqual(5)
+        expect(pens.filter(e => e.teamId === away.id).length).toBeGreaterThanOrEqual(5)
+      }
+    }
+    expect(sawPens).toBe(true)
   })
 })
