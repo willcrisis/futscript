@@ -44,7 +44,7 @@ export default function ClubScreen({ state, setState, teamId, onBack }: Props) {
   const pending = (id: number) => state.outgoingOffers.some(o => o.playerId === id)
 
   const offerColumn: Column<Player> = {
-    key: 'offer', label: '', render: p => {
+    key: 'offer', label: '', fullWidthOnMobile: true, render: p => {
       if (pending(p.id)) return <span className="text-xs text-ink-faint">{t('club.offerPending')}</span>
       if (offering === p.id) return (
         <div className="flex items-center gap-1.5">
