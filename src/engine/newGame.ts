@@ -15,8 +15,8 @@ export const SQUAD_TEMPLATE: Position[] = [
   'FW', 'FW', 'FW', 'FW',
 ]
 
-// ids 0-15 are Division 3 (the user's club is a random draw among them), 16-31 Division 2, 32-47 Division 1
-const DIVISION_OF = (index: number) => (index < 16 ? 3 : index < 32 ? 2 : 1)
+// ids 0-15 = Division 4 (user's club is a random draw among them), 16-31 D3, 32-47 D2, 48-63 D1
+const DIVISION_OF = (index: number) => (index < 16 ? 4 : index < 32 ? 3 : index < 48 ? 2 : 1)
 export const LEVEL_RANGE: Record<number, [number, number]> = {
   1: [58, 80], // span 22
   2: [46, 66], // span 20
@@ -30,7 +30,7 @@ export function newGame(seed: number): GameState {
   const teams: Team[] = []
   let nextPlayerId = 1
 
-  for (let t = 0; t < 48; t++) {
+  for (let t = 0; t < 64; t++) {
     const division = DIVISION_OF(t)
     const playerIds: number[] = []
     for (const position of SQUAD_TEMPLATE) {
@@ -65,7 +65,7 @@ export function newGame(seed: number): GameState {
 
   for (const team of teams) team.lineup = autoPick(team, players)
 
-  const fixtures = [3, 2, 1].flatMap(d =>
+  const fixtures = [4, 3, 2, 1].flatMap(d =>
     generateDivisionFixtures(teams.filter(t => t.division === d).map(t => t.id), rand),
   )
   const cupFixtures = drawFirstCupRound(teams, rand)
@@ -74,13 +74,13 @@ export function newGame(seed: number): GameState {
   // (teams/players/fixtures/cup) and BEFORE the user-club draw below.
   const managerName = randomName(rand)
 
-  // Random Division 3 starting club, drawn with the world's own rand AFTER every other
+  // Random Division 4 starting club, drawn with the world's own rand AFTER every other
   // draw above (teams/players/fixtures/cup/manager name) so the world itself is unaffected
   // by this pick for a given seed — only userTeamId and the captured rngState below differ.
   // This MUST stay the very last rand consumption before rngState is captured, or
   // determinism breaks (rngState would no longer reflect "one draw past this point").
-  const divisionThree = teams.filter(t => t.division === 3)
-  const userTeamId = divisionThree[randInt(rand, 0, divisionThree.length - 1)].id
+  const divisionFour = teams.filter(t => t.division === 4)
+  const userTeamId = divisionFour[randInt(rand, 0, divisionFour.length - 1)].id
 
   return {
     version: 7,

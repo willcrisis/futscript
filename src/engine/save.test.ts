@@ -290,7 +290,7 @@ describe('save slots', () => {
     saveToSlot(s, 2, storage)
     const slots = listSlots(storage)
     expect(slots[0]).toBeNull()
-    expect(slots[1]).toMatchObject({ slot: 2, season: 1, division: 3 })
+    expect(slots[1]).toMatchObject({ slot: 2, season: 1, division: 4 })
     expect(slots[1]!.teamName).toBe(s.teams.find(t => t.id === s.userTeamId)!.name)
     deleteSlot(2, storage)
     expect(listSlots(storage)[1]).toBeNull()

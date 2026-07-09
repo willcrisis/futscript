@@ -125,9 +125,9 @@ describe('loans', () => {
 
 describe('division-aware gates', () => {
   it('pays a gate for a home cup tie', () => {
-    // seed 18: no cup host also completes a same-week transfer, which would inflate the actual
+    // seed 3: no cup host also completes a same-week transfer, which would inflate the actual
     // wage bill past the pre-round wageBill(id, s) snapshot this assertion compares against
-    let s = newGame(18)
+    let s = newGame(3)
     for (let week = 1; week < CUP_WEEKS[0]; week++) s = advanceRound(s)
     // week 4: only cup ties are scheduled
     const cupHomes = new Set(s.cupFixtures.filter(f => f.week === CUP_WEEKS[0]).map(f => f.homeId))
@@ -160,7 +160,7 @@ describe('stadium finances', () => {
 
   it('attendance is capped by capacity and scales with price and mood', () => {
     const s0 = newGame(1)
-    // pump the user's mood and drop the price: the division-3 ground sells out
+    // pump the user's mood and drop the price: the division-4 ground sells out
     const cheap = {
       ...s0,
       teams: s0.teams.map(t => (t.id === s0.userTeamId ? { ...t, ticketPrice: 5, fanMood: 100 } : t)),
@@ -176,8 +176,8 @@ describe('stadium finances', () => {
     const s1 = runWeeklyFinances(withHome, mulberry32(3))
     const gate = s1.finances.find(e => e.label.startsWith('Gate receipts'))!
     const fans = Number(gate.label.match(/\((\d+) fans\)/)![1])
-    expect(fans).toBe(9_000) // capacity-capped sellout
-    expect(gate.amount).toBe(9_000 * 5)
+    expect(fans).toBe(6_000) // capacity-capped sellout
+    expect(gate.amount).toBe(6_000 * 5)
 
     // same week at price 60 and mood 0: a sliver of the ground
     const dear = {

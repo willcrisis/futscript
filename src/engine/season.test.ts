@@ -85,7 +85,7 @@ describe('advanceRound — cup weeks', () => {
       else expect([f.homeId, f.awayId]).toContain(f.winnerId) // penalties
     }
     const round2 = s.cupFixtures.filter(f => f.cupRound === 2)
-    expect(round2).toHaveLength(16) // 16 winners + 16 div-1 entrants
+    expect(round2).toHaveLength(20) // 24 round-1 winners + 16 div-1 entrants, paired up
     // no league fixtures were scheduled on the cup week
     expect(s.fixtures.filter(f => f.round === 4)).toHaveLength(0)
   })
@@ -287,7 +287,7 @@ describe('newSeason', () => {
     const s2 = newSeason(s)
     expect(s2.season).toBe(2)
     expect(s2.round).toBe(1)
-    expect(s2.fixtures).toHaveLength(720)
+    expect(s2.fixtures).toHaveLength(960)
     expect(s2.fixtures.every(f => f.homeGoals === null)).toBe(true)
     for (const p of Object.values(s2.players)) {
       if (!s.players[p.id]) continue // youth arrivals have no previous-season self
@@ -386,12 +386,12 @@ describe('newSeason — the long game', () => {
     const s2 = newSeason(s)
     expect(s2.history).toHaveLength(1)
     expect(s2.history[0].season).toBe(1)
-    expect(s2.history[0].champions).toHaveLength(3)
+    expect(s2.history[0].champions).toHaveLength(4)
     expect(s2.season).toBe(2)
     expect(s2.round).toBe(1)
-    expect(s2.fixtures).toHaveLength(720)
+    expect(s2.fixtures).toHaveLength(960)
     expect(s2.fixtures.every(f => f.homeGoals === null)).toBe(true)
-    expect(s2.cupFixtures).toHaveLength(16)
+    expect(s2.cupFixtures).toHaveLength(24)
     expect(s2.cupFixtures.every(f => f.cupRound === 1 && f.winnerId === null)).toBe(true)
   })
 

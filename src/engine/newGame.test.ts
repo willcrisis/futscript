@@ -5,15 +5,15 @@ import { newGame } from './newGame'
 describe('newGame', () => {
   it('builds a full, valid world', () => {
     const state = newGame(123)
-    expect(state.teams).toHaveLength(48)
-    expect(Object.keys(state.players)).toHaveLength(48 * 18)
+    expect(state.teams).toHaveLength(64)
+    expect(Object.keys(state.players)).toHaveLength(64 * 18)
     expect(state.season).toBe(1)
     expect(state.round).toBe(1)
     expect(state.teams.some(t => t.id === state.userTeamId)).toBe(true)
-    expect(state.fixtures).toHaveLength(720)
+    expect(state.fixtures).toHaveLength(960)
 
     const teamNames = new Set(state.teams.map(t => t.name))
-    expect(teamNames.size).toBe(48)
+    expect(teamNames.size).toBe(64)
 
     for (const team of state.teams) {
       expect(team.playerIds).toHaveLength(18)
@@ -51,18 +51,18 @@ describe('newGame', () => {
     expect(state.finances).toEqual([])
   })
 
-  it('builds a three-division world with the user at the bottom', () => {
+  it('builds a four-division world with the user at the bottom', () => {
     const state = newGame(123)
-    expect(state.teams).toHaveLength(48)
-    expect(Object.keys(state.players)).toHaveLength(48 * 18)
-    for (const division of [1, 2, 3]) {
+    expect(state.teams).toHaveLength(64)
+    expect(Object.keys(state.players)).toHaveLength(64 * 18)
+    for (const division of [1, 2, 3, 4]) {
       expect(state.teams.filter(t => t.division === division)).toHaveLength(16)
     }
-    expect(state.teams[0].division).toBe(3)
+    expect(state.teams[0].division).toBe(4)
     const userTeam = state.teams.find(t => t.id === state.userTeamId)!
-    expect(userTeam.division).toBe(3)
-    expect(state.fixtures).toHaveLength(720) // 240 per division
-    expect(state.cupFixtures).toHaveLength(16)
+    expect(userTeam.division).toBe(4)
+    expect(state.fixtures).toHaveLength(960) // 240 per division
+    expect(state.cupFixtures).toHaveLength(24) // 48 non-top-flight clubs paired up
     // level bands per division
     for (const team of state.teams) {
       for (const id of team.playerIds) {
@@ -70,18 +70,19 @@ describe('newGame', () => {
         if (team.division === 1) { expect(level).toBeGreaterThanOrEqual(58); expect(level).toBeLessThanOrEqual(80) }
         if (team.division === 2) { expect(level).toBeGreaterThanOrEqual(46); expect(level).toBeLessThanOrEqual(66) }
         if (team.division === 3) { expect(level).toBeGreaterThanOrEqual(40); expect(level).toBeLessThanOrEqual(52) }
+        if (team.division === 4) { expect(level).toBeGreaterThanOrEqual(30); expect(level).toBeLessThanOrEqual(40) }
       }
     }
     const names = new Set(state.teams.map(t => t.name))
-    expect(names.size).toBe(48)
+    expect(names.size).toBe(64)
   })
 
-  it('assigns different starting clubs across seeds (random Division 3 draw)', () => {
+  it('assigns different starting clubs across seeds (random Division 4 draw)', () => {
     const clubs = new Set([1, 2, 3, 4, 5, 6, 7, 8].map(seed => newGame(seed).userTeamId))
     expect(clubs.size).toBeGreaterThan(1) // 8 seeds landing on one club: (1/16)^7 — a broken draw, not luck
     for (const seed of [1, 2]) {
       const s = newGame(seed)
-      expect(s.teams.find(t => t.id === s.userTeamId)!.division).toBe(3)
+      expect(s.teams.find(t => t.id === s.userTeamId)!.division).toBe(4)
     }
   })
 

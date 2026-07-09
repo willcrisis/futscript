@@ -307,8 +307,8 @@ describe('job market', () => {
   })
 
   it('poaching while employed: division above, overperformers only', () => {
-    // user overperforming in Division 3 → poach offer can only come from Division 2
-    const base = newGame(59)
+    // user overperforming → poach offer can only come from the division directly above
+    const base = newGame(1)
     const user = base.teams.find(t => t.id === base.userTeamId)!
     const opponents = base.teams.filter(t => t.division === user.division && t.id !== user.id).slice(0, 10)
     const fixtures = opponents.map((opp, i) => ({

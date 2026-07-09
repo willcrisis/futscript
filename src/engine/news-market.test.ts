@@ -46,7 +46,7 @@ describe('market news', () => {
   })
 
   it('a displaced user bid writes userOutbid', () => {
-    const s0 = newGame(1)
+    const s0 = newGame(2)
     const aiClub = s0.teams.find(t => t.id !== s0.userTeamId)!
     let s = listPlayer(s0, aiClub.playerIds[0], 100_000)
     s = placeBid(s, aiClub.playerIds[0], 100_000)

@@ -39,7 +39,7 @@ describe('season news', () => {
     const expectedChampion = s.teams.find(t => t.id === standings(s, 1)[0].teamId)!.name
     const s2 = newSeason(s)
     const champions = s2.news.filter(n => n.type === 'champions')
-    expect(champions).toHaveLength(3)
+    expect(champions).toHaveLength(4)
     expect(champions.find(n => n.params.division === 1)!.params.club).toBe(expectedChampion)
     expect(s2.news.filter(n => n.type === 'cupWinner')).toHaveLength(1)
     const moves = s2.news.filter(n => n.type === 'promoted' || n.type === 'relegated')
