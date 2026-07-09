@@ -3,8 +3,8 @@ import { marketValue, severanceFor } from './finance'
 import { mulberry32 } from './rng'
 import { newGame } from './newGame'
 import {
-  acceptOffer, counterOffer, delistPlayer, listPlayer, MIN_SQUAD, placeBid, rejectOffer, releasePlayer, renewalSalary, renewContract,
-  requiredBid, runTransfers, transferPlayer,
+  acceptOffer, counterOffer, delistPlayer, listPlayer, makeOffer, MIN_SQUAD, placeBid, rejectOffer, releasePlayer, renewalSalary,
+  renewContract, requiredBid, runTransfers, transferPlayer,
 } from './transfers'
 import type { GameState } from './types'
 
@@ -280,6 +280,38 @@ describe('incoming offers', () => {
     const s1 = counterOffer(s, playerId, BIDDER_ID)
     expect(s1.incomingOffers).toHaveLength(0)
     expect(s1.transferList[0]).toMatchObject({ playerId, sellerTeamId: s.userTeamId, minPrice: 600_000 })
+  })
+})
+
+describe('direct offers', () => {
+  it('makeOffer records a bid on an AI player the user can afford', () => {
+    const s0 = newGame(1)
+    const target = s0.teams.find(t => t.id !== s0.userTeamId)!.playerIds[0]
+    const s = makeOffer(s0, target, 300_000)
+    expect(s.outgoingOffers).toHaveLength(1)
+    expect(s.outgoingOffers[0]).toMatchObject({ playerId: target, bidderTeamId: s0.userTeamId, amount: 300_000 })
+  })
+
+  it('a generous offer is accepted next tick and the player joins the user', () => {
+    let s = newGame(1)
+    const seller = s.teams.find(t => t.id !== s.userTeamId && t.playerIds.length > 14)!
+    const target = [...seller.playerIds].sort((a, b) => s.players[a].level - s.players[b].level)[0] // weakest, spareable
+    s = makeOffer(s, target, marketValue(s.players[target]) * 3) // way over value
+    s = runTransfers(s, mulberry32(4))
+    const user = s.teams.find(t => t.id === s.userTeamId)!
+    expect(user.playerIds).toContain(target)
+    expect(s.outgoingOffers).toHaveLength(0)
+    expect(s.news.some(n => n.type === 'offerAccepted')).toBe(true)
+  })
+
+  it('a lowball offer is rejected', () => {
+    let s = newGame(1)
+    const seller = s.teams.find(t => t.id !== s.userTeamId)!
+    const target = seller.playerIds[0]
+    s = makeOffer(s, target, 1) // token bid
+    s = runTransfers(s, mulberry32(4))
+    expect(s.teams.find(t => t.id === seller.id)!.playerIds).toContain(target)
+    expect(s.news.some(n => n.type === 'offerRejected')).toBe(true)
   })
 })
 

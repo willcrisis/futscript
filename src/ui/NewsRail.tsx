@@ -12,6 +12,7 @@ const ICONS: Record<NewsType, FC<{ className?: string }>> = {
   heavyWin: TableIcon, champions: TableIcon, promoted: TableIcon, relegated: TableIcon,
   cupRun: CupIcon, cupWinner: CupIcon,
   managerSacked: SquadIcon, managerHired: SquadIcon, userSacked: SquadIcon, userHired: SquadIcon, jobOffer: SquadIcon,
+  offerAccepted: TransfersIcon, offerRejected: TransfersIcon,
 }
 
 function toneOf(type: NewsType): string {

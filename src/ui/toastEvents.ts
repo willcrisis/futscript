@@ -12,6 +12,8 @@ const TOASTABLE: Partial<Record<NewsType, ToastInput['tone']>> = {
   userSacked: 'danger',
   userHired: 'accent',
   jobOffer: 'accent',
+  offerAccepted: 'accent',
+  offerRejected: 'warn',
 }
 
 // The engine already narrates everything as structured news; toasts are just

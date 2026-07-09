@@ -23,6 +23,8 @@ const NEWS_KEYS: Record<NewsType, TranslationKey> = {
   userSacked: 'news.userSacked',
   userHired: 'news.userHired',
   jobOffer: 'news.jobOffer',
+  offerAccepted: 'news.offerAccepted',
+  offerRejected: 'news.offerRejected',
 }
 
 export function newsText(item: NewsItem): string {

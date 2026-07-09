@@ -114,6 +114,19 @@ export function releasePlayer(state: GameState, playerId: number): GameState {
   }
 }
 
+export function makeOffer(state: GameState, playerId: number, amount: number): GameState {
+  if (!state.manager.employed) return state
+  const owner = state.teams.find(t => t.playerIds.includes(playerId))
+  const user = state.teams.find(t => t.id === state.userTeamId)!
+  if (!owner || owner.id === state.userTeamId) return state // only AI-owned players
+  if (amount <= 0 || amount > user.cash) return state
+  if (state.outgoingOffers.some(o => o.playerId === playerId)) return state // one bid at a time
+  return {
+    ...state,
+    outgoingOffers: [...state.outgoingOffers, { playerId, bidderTeamId: state.userTeamId, amount, roundsLeft: OFFER_ROUNDS }],
+  }
+}
+
 export function renewalSalary(p: Player): number {
   return Math.round(Math.max(p.salary, salaryFor(p.level)) * 1.1)
 }
@@ -147,6 +160,28 @@ export function runTransfers(state: GameState, rand: () => number): GameState {
     incomingOffers: s.incomingOffers
       .map(o => ({ ...o, roundsLeft: o.roundsLeft - 1 }))
       .filter(o => o.roundsLeft > 0),
+  }
+
+  // the user's outgoing offers: each selling club accepts or rejects this tick
+  const outgoing = s.outgoingOffers
+  s = { ...s, outgoingOffers: [] }
+  for (const offer of outgoing) {
+    const seller = s.teams.find(t => t.playerIds.includes(offer.playerId))
+    if (!seller || seller.id === s.userTeamId) continue // player already moved/gone
+    const user = s.teams.find(t => t.id === s.userTeamId)!
+    const player = s.players[offer.playerId]
+    const value = marketValue(player)
+    const keyMult = player.level >= 60 ? 1.4 : 1.1 // ponytail: key players cost a premium
+    const accept =
+      seller.playerIds.length > MIN_SQUAD &&
+      offer.amount >= Math.round(value * keyMult) &&
+      offer.amount <= user.cash
+    if (accept) {
+      s = transferPlayer(s, offer.playerId, s.userTeamId, offer.amount)
+      s = pushNews(s, 'offerAccepted', { club: seller.name, player: player.name, amount: offer.amount })
+    } else {
+      s = pushNews(s, 'offerRejected', { club: seller.name, player: player.name })
+    }
   }
 
   // occasionally an AI club knocks on the user's door

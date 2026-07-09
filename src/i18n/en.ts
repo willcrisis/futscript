@@ -363,6 +363,8 @@ export const en = {
   'news.userSacked': 'You have been sacked by {club}',
   'news.userHired': 'You are the new manager of {club}',
   'news.jobOffer': '{club} want you as their manager',
+  'news.offerAccepted': '{club} accepts your offer for {player} ({amount})',
+  'news.offerRejected': '{club} rejects your offer for {player}',
 
   // Club screen
   'club.header': 'Club',

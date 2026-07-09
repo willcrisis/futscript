@@ -365,6 +365,8 @@ export const pt: Record<TranslationKey, string> = {
   'news.userSacked': 'Você foi demitido pelo {club}',
   'news.userHired': 'Você é o novo técnico do {club}',
   'news.jobOffer': 'O {club} quer você como técnico',
+  'news.offerAccepted': '{club} aceita sua proposta por {player} ({amount})',
+  'news.offerRejected': '{club} recusa sua proposta por {player}',
 
   // Club screen
   'club.header': 'Clube',
