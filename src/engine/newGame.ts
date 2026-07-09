@@ -105,7 +105,7 @@ export function newGame(seed: number): GameState {
   const userTeamId = divisionFour[randInt(rand, 0, divisionFour.length - 1)].id
 
   return {
-    version: 7,
+    version: 8,
     seed,
     rngState: randInt(rand, 1, 2 ** 31 - 1),
     season: 1,
@@ -119,6 +119,7 @@ export function newGame(seed: number): GameState {
     playFriendlies: false,
     transferList: [],
     incomingOffers: [],
+    outgoingOffers: [],
     loanBalance: 0,
     brokeRounds: 0,
     finances: [],

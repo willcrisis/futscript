@@ -121,6 +121,7 @@ export interface ScorerRecord {
 
 export type NewsType =
   | 'userSigned' | 'userSold' | 'userRenewed' | 'userOutbid' | 'offerReceived'
+  | 'offerAccepted' | 'offerRejected'
   | 'starterInjured' | 'boardWarning' | 'constructionDone'
   | 'rivalTransfer' | 'heavyWin' | 'cupRun'
   | 'champions' | 'cupWinner' | 'promoted' | 'relegated'
@@ -162,7 +163,7 @@ export function activeTeams(state: GameState): Team[] {
 }
 
 export interface GameState {
-  version: 7
+  version: 8
   seed: number
   rngState: number // seeds the RNG for the next advanceRound
   season: number
@@ -176,6 +177,7 @@ export interface GameState {
   playFriendlies: boolean // user setting: friendlies on free weeks
   transferList: TransferListing[]
   incomingOffers: Offer[]
+  outgoingOffers: Offer[]
   loanBalance: number // user club only
   brokeRounds: number // consecutive rounds the user's cash was negative
   finances: FinanceEntry[] // user club ledger, newest last

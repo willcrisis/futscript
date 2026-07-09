@@ -19,7 +19,8 @@ export function migrateToCurrent(raw: unknown): GameState | null {
     if (state?.version === 4) state = migrateV4(state)
     if (state?.version === 5) state = migrateV5(state)
     if (state?.version === 6) state = migrateV6(state)
-    if (state?.version !== 7) return null
+    if (state?.version === 7) state = migrateV7(state)
+    if (state?.version !== 8) return null
     const shaped =
       Array.isArray(state.teams) &&
       state.players !== null &&
@@ -194,4 +195,8 @@ function migrateV6(s: any): GameState {
     unemployedPool: [],
     history: (s.history ?? []).map((h: any) => ({ ...h, club: h.club ?? clubName })),
   }
+}
+
+function migrateV7(s: any): any {
+  return { ...s, version: 8, outgoingOffers: s.outgoingOffers ?? [] }
 }
