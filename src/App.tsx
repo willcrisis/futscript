@@ -108,6 +108,9 @@ function Game() {
   const expiringCount = seasonOver && employed
     ? userTeam.playerIds.filter(id => state.players[id].contractSeasons <= 1).length
     : 0
+  const freshExpiring = employed && state.season === 1 && state.round === 1
+    ? userTeam.playerIds.filter(id => state.players[id].contractSeasons <= 1).length
+    : 0
 
   return (
     <Shell
@@ -132,6 +135,11 @@ function Game() {
               {expiringCount > 0 && t('app.contractsExpireWarning', { n: expiringCount })}
             </p>
           )}
+        </Panel>
+      )}
+      {freshExpiring > 0 && !champion && (
+        <Panel className="mb-4">
+          <p className="text-sm text-ink-muted">{t('app.contractsExpireWarning', { n: freshExpiring })}</p>
         </Panel>
       )}
       {screen === 'home' && (employed
