@@ -292,6 +292,16 @@ describe('direct offers', () => {
     expect(s.outgoingOffers[0]).toMatchObject({ playerId: target, bidderTeamId: s0.userTeamId, amount: 300_000 })
   })
 
+  it('rounds a fractional amount to an integer before storing it', () => {
+    const s0 = newGame(1)
+    const target = s0.teams.find(t => t.id !== s0.userTeamId)!.playerIds[0]
+    const s = makeOffer(s0, target, 150_000.5)
+    expect(s.outgoingOffers).toHaveLength(1)
+    const offer = s.outgoingOffers[0]
+    expect(Number.isInteger(offer.amount)).toBe(true)
+    expect(offer.amount).toBe(Math.round(150_000.5))
+  })
+
   it('a generous offer is accepted next tick and the player joins the user', () => {
     let s = newGame(1)
     const seller = s.teams.find(t => t.id !== s.userTeamId && t.playerIds.length > 14)!

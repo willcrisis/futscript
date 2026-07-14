@@ -116,14 +116,18 @@ export function releasePlayer(state: GameState, playerId: number): GameState {
 
 export function makeOffer(state: GameState, playerId: number, amount: number): GameState {
   if (!state.manager.employed) return state
+  const roundedAmount = Math.round(amount)
   const owner = state.teams.find(t => t.playerIds.includes(playerId))
   const user = state.teams.find(t => t.id === state.userTeamId)!
   if (!owner || owner.id === state.userTeamId) return state // only AI-owned players
-  if (amount <= 0 || amount > user.cash) return state
+  if (roundedAmount <= 0 || roundedAmount > user.cash) return state
   if (state.outgoingOffers.some(o => o.playerId === playerId)) return state // one bid at a time
   return {
     ...state,
-    outgoingOffers: [...state.outgoingOffers, { playerId, bidderTeamId: state.userTeamId, amount, roundsLeft: OFFER_ROUNDS }],
+    outgoingOffers: [
+      ...state.outgoingOffers,
+      { playerId, bidderTeamId: state.userTeamId, amount: roundedAmount, roundsLeft: OFFER_ROUNDS },
+    ],
   }
 }
 
