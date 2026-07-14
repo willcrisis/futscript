@@ -1,6 +1,7 @@
 import type { ReactNode } from 'react'
 import SectionLabel from './SectionLabel'
 import { BackIcon } from './icons'
+import { t } from '../i18n'
 
 export default function ScreenHeader({
   label, title, actions, onBack,
@@ -12,7 +13,7 @@ export default function ScreenHeader({
           <button
             type="button"
             onClick={onBack}
-            aria-label="Back"
+            aria-label={t('common.back')}
             className="rounded-md p-1.5 text-ink-muted hover:text-ink focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent"
           >
             <BackIcon />

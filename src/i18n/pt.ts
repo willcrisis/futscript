@@ -40,6 +40,7 @@ export const pt: Record<TranslationKey, string> = {
   'common.switchToDark': 'Mudar para tema escuro',
   'common.noMatchReport': 'Nenhum relatório disponível para esta partida.',
   'common.cancel': 'Cancelar',
+  'common.back': 'Voltar',
 
   // Home screen
   'home.header': 'Temporada {season} · Semana {week}/{total}',

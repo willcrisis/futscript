@@ -38,6 +38,7 @@ export const en = {
   'common.switchToDark': 'Switch to dark theme',
   'common.noMatchReport': 'No report available for this match.',
   'common.cancel': 'Cancel',
+  'common.back': 'Back',
 
   // Home screen
   'home.header': 'Season {season} · Week {week}/{total}',
