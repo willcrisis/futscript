@@ -39,6 +39,7 @@ export default function ClubScreen({ state, setState, teamId, onBack }: Props) {
   ]
 
   const canOffer = state.manager.employed && teamId !== state.userTeamId
+  const userCash = state.teams.find(tm => tm.id === state.userTeamId)!.cash
   const [offering, setOffering] = useState<number | null>(null)
   const [bid, setBid] = useState(0)
   const pending = (id: number) => state.outgoingOffers.some(o => o.playerId === id)
@@ -53,7 +54,7 @@ export default function ClubScreen({ state, setState, teamId, onBack }: Props) {
             className="w-24 rounded-md border border-rule bg-surface px-2 py-1 text-xs font-mono focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 focus-visible:ring-offset-surface"
           />
           <Button
-            variant="primary" size="sm" disabled={bid <= 0 || bid > team.cash}
+            variant="primary" size="sm" disabled={bid <= 0 || bid > userCash}
             onClick={() => { setState(s => makeOffer(s, p.id, bid)); setOffering(null) }}
           >
             {t('club.sendOffer')}
