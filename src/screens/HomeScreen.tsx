@@ -1,6 +1,7 @@
 import type { Dispatch, SetStateAction } from 'react'
 import { useState } from 'react'
 import { acceptJob, declineOffer, restructuredLoan } from '../engine/career'
+import { CUP_WEEKS } from '../engine/fixtures'
 import { formatMoney, wageBill } from '../engine/finance'
 import { totalRounds } from '../engine/season'
 import { standings } from '../engine/standings'
@@ -166,7 +167,7 @@ export default function HomeScreen({ state, setState, onAdvance, advanceDisabled
           ) : (
             <div className="flex items-center justify-between gap-3">
               <p className="text-sm text-ink-muted">
-                {t('home.freeWeek')}
+                {CUP_WEEKS.includes(week) ? t('home.cupWeekIdle') : t('home.freeWeek')}
               </p>
               <div className="flex flex-col items-end gap-1">
                 <Button variant="primary" disabled={advanceDisabled} onClick={onAdvance}>{t('shell.advanceWeek')}</Button>
