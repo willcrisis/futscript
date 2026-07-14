@@ -374,7 +374,6 @@ export const en = {
   'club.fanMood': 'Fan mood',
   'club.capacity': 'Stadium',
   'club.squadPanel': 'Squad',
-  'club.back': 'Back',
   'club.statusOut': 'Out {n}w',
   'club.statusBan': 'Suspended',
   'club.statusFit': '—',

@@ -376,7 +376,6 @@ export const pt: Record<TranslationKey, string> = {
   'club.fanMood': 'Humor da torcida',
   'club.capacity': 'Estádio',
   'club.squadPanel': 'Elenco',
-  'club.back': 'Voltar',
   'club.statusOut': 'Fora {n}sem',
   'club.statusBan': 'Suspenso',
   'club.statusFit': '—',

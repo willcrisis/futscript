@@ -76,7 +76,7 @@ export default function ClubScreen({ state, setState, teamId, onBack }: Props) {
       <ScreenHeader
         label={t('club.position', { position: positionOf(state, teamId), division: team.division })}
         title={team.name}
-        actions={<Button variant="ghost" size="sm" onClick={onBack}>{t('club.back')}</Button>}
+        onBack={onBack}
       />
       <Panel className="mb-4">
         <div className="flex flex-col gap-3 text-sm">

@@ -75,3 +75,6 @@ export const DelistIcon = ({ className }: { className?: string }) => (
     <path d="M9 5H6a2 2 0 0 0-2 2v3l7 7 3-3" /><circle cx="8" cy="9" r="1" /><path d="M4 4l16 16" />
   </Icon>
 )
+export const BackIcon = ({ className }: { className?: string }) => (
+  <Icon className={className}><path d="M15 5l-7 7 7 7" /></Icon>
+)
