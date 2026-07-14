@@ -112,6 +112,11 @@ export default function FixturesScreen({ state }: { state: GameState }) {
           <h3 className="mb-2 font-semibold">
             {name(selected.homeId)} {selected.homeGoals} – {selected.awayGoals} {name(selected.awayId)}
           </h3>
+          {selected.attendance != null && (
+            <p className="mb-2 text-sm text-ink-muted">
+              {t('match.attendance', { n: selected.attendance.toLocaleString('en-US') })}
+            </p>
+          )}
           <EventFeed events={selected.events ?? []} state={state} />
         </Panel>
       )}
