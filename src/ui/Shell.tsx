@@ -11,12 +11,12 @@ import SectionLabel from './SectionLabel'
 import ThemeToggle from './ThemeToggle'
 import {
   CupIcon, FinanceIcon, FixturesIcon, HistoryIcon, HomeIcon, MoreIcon,
-  SavesIcon, SquadIcon, StatsIcon, TableIcon, TransfersIcon,
+  SavesIcon, ScoutIcon, SquadIcon, StatsIcon, TableIcon, TransfersIcon,
 } from './icons'
 
 export type ScreenId =
   | 'home' | 'squad' | 'table' | 'fixtures' | 'cup'
-  | 'stats' | 'transfers' | 'finance' | 'history' | 'saves' | 'club'
+  | 'stats' | 'transfers' | 'scout' | 'finance' | 'history' | 'saves' | 'club'
 
 export const NAV: { id: ScreenId; labelKey: TranslationKey; icon: FC<{ className?: string }> }[] = [
   { id: 'home', labelKey: 'nav.home', icon: HomeIcon },
@@ -26,13 +26,14 @@ export const NAV: { id: ScreenId; labelKey: TranslationKey; icon: FC<{ className
   { id: 'cup', labelKey: 'nav.cup', icon: CupIcon },
   { id: 'stats', labelKey: 'nav.stats', icon: StatsIcon },
   { id: 'transfers', labelKey: 'nav.transfers', icon: TransfersIcon },
+  { id: 'scout', labelKey: 'nav.scout', icon: ScoutIcon },
   { id: 'finance', labelKey: 'nav.finance', icon: FinanceIcon },
   { id: 'history', labelKey: 'nav.history', icon: HistoryIcon },
   { id: 'saves', labelKey: 'nav.saves', icon: SavesIcon },
 ]
 
 const MOBILE_PRIMARY: ScreenId[] = ['home', 'squad', 'table', 'finance']
-const HIDDEN_WHEN_UNEMPLOYED: ScreenId[] = ['squad', 'transfers', 'finance']
+const HIDDEN_WHEN_UNEMPLOYED: ScreenId[] = ['squad', 'transfers', 'scout', 'finance']
 
 interface Props {
   screen: ScreenId

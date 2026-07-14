@@ -83,3 +83,6 @@ export const DelistIcon = ({ className }: { className?: string }) => (
 export const BackIcon = ({ className }: { className?: string }) => (
   <Icon className={className}><path d="M15 5l-7 7 7 7" /></Icon>
 )
+export const ScoutIcon = ({ className }: { className?: string }) => (
+  <Icon className={className}><circle cx="11" cy="11" r="7" /><path d="m21 21-4.3-4.3" /></Icon>
+)

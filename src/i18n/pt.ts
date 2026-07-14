@@ -8,6 +8,7 @@ export const pt: Record<TranslationKey, string> = {
   'nav.cup': 'Copa',
   'nav.stats': 'Estatísticas',
   'nav.transfers': 'Transferências',
+  'nav.scout': 'Observação',
   'nav.finance': 'Finanças',
   'nav.history': 'História',
   'nav.saves': 'Jogos salvos',
@@ -185,6 +186,20 @@ export const pt: Record<TranslationKey, string> = {
   'transfers.minColumn': 'Mín',
   'transfers.topBidColumn': 'Maior lance',
   'transfers.endsColumn': 'Termina',
+
+  // Scout screen
+  'scout.header': 'OBSERVAÇÃO',
+  'scout.title': 'Busca de jogadores',
+  'scout.searchPlaceholder': 'Nome do jogador',
+  'scout.minLevel': 'Nível mín.',
+  'scout.maxValue': 'Valor máx.',
+  'scout.allPositions': 'Todas as posições',
+  'scout.allDivisions': 'Todas as divisões',
+  'scout.clubColumn': 'Clube',
+  'scout.makeOffer': 'Fazer proposta',
+  'scout.sendOffer': 'Enviar',
+  'scout.offerPending': 'Proposta enviada',
+  'scout.noMatch': 'Nenhum jogador corresponde a esses filtros.',
 
   // History screen
   'history.header': 'A LONGA JORNADA',

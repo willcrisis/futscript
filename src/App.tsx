@@ -24,6 +24,7 @@ import HomeScreen from './screens/HomeScreen'
 import MatchScreen from './screens/MatchScreen'
 import type { MatchLike } from './screens/MatchScreen'
 import SavesScreen from './screens/SavesScreen'
+import ScoutScreen from './screens/ScoutScreen'
 import SquadScreen from './screens/SquadScreen'
 import StatsScreen from './screens/StatsScreen'
 import TableScreen from './screens/TableScreen'
@@ -69,7 +70,7 @@ function Game() {
   const availableCount = employed ? userTeam.playerIds.filter(id => isAvailable(state.players[id])).length : 0
   const needsEleven = employed && !seasonOver && availableCount >= 11 && userTeam.lineup.length !== 11
   useEffect(() => {
-    if (!employed && ['squad', 'transfers', 'finance'].includes(screen)) setScreen('home')
+    if (!employed && ['squad', 'transfers', 'scout', 'finance'].includes(screen)) setScreen('home')
   }, [employed, screen])
 
   const advance = () => {
@@ -173,6 +174,7 @@ function Game() {
       {screen === 'cup' && <CupScreen key={state.season} state={state} onShowClub={openClub} />}
       {screen === 'stats' && <StatsScreen state={state} />}
       {screen === 'transfers' && <TransfersScreen state={state} setState={setState} />}
+      {screen === 'scout' && <ScoutScreen state={state} setState={setState} />}
       {screen === 'finance' && <FinanceScreen state={state} setState={setState} />}
       {screen === 'history' && <HistoryScreen state={state} />}
       {screen === 'saves' && <SavesScreen state={state} setState={setState} onNewCareer={startNewCareer} />}

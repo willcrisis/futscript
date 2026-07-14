@@ -6,6 +6,7 @@ export const en = {
   'nav.cup': 'Cup',
   'nav.stats': 'Stats',
   'nav.transfers': 'Transfers',
+  'nav.scout': 'Scout',
   'nav.finance': 'Finance',
   'nav.history': 'History',
   'nav.saves': 'Saves',
@@ -183,6 +184,20 @@ export const en = {
   'transfers.minColumn': 'Min',
   'transfers.topBidColumn': 'Top bid',
   'transfers.endsColumn': 'Ends',
+
+  // Scout screen
+  'scout.header': 'SCOUT',
+  'scout.title': 'Player search',
+  'scout.searchPlaceholder': 'Player name',
+  'scout.minLevel': 'Min level',
+  'scout.maxValue': 'Max value',
+  'scout.allPositions': 'All positions',
+  'scout.allDivisions': 'All divisions',
+  'scout.clubColumn': 'Club',
+  'scout.makeOffer': 'Make offer',
+  'scout.sendOffer': 'Send',
+  'scout.offerPending': 'Offer pending',
+  'scout.noMatch': 'No players match those filters.',
 
   // History screen
   'history.header': 'THE LONG GAME',
