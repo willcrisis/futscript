@@ -12,6 +12,7 @@ import Panel from './ui/Panel'
 import Shell from './ui/Shell'
 import type { ScreenId } from './ui/Shell'
 import { ToastProvider, useToasts } from './ui/Toast'
+import type { ToastInput } from './ui/Toast'
 import { detectToasts } from './ui/toastEvents'
 import ClubScreen from './screens/ClubScreen'
 import CupScreen from './screens/CupScreen'
@@ -49,6 +50,7 @@ function Game() {
   const [state, setState] = useState<GameState>(boot.state)
   const [screen, setScreen] = useState<ScreenId>('home')
   const [replay, setReplay] = useState<MatchLike | null>(null)
+  const [pendingToasts, setPendingToasts] = useState<ToastInput[]>([])
   const [showWelcome, setShowWelcome] = useState(boot.fresh)
   const [clubView, setClubView] = useState<{ teamId: number; from: ScreenId } | null>(null)
   const advancingRef = useRef(false)
@@ -79,7 +81,7 @@ function Game() {
         return
       }
       const next = advanceRound(state)
-      for (const t of detectToasts(state, next)) push(t)
+      const toasts = detectToasts(state, next)
       const mine = (f: { homeId: number; awayId: number }) =>
         f.homeId === state.userTeamId || f.awayId === state.userTeamId
       const played =
@@ -87,7 +89,14 @@ function Game() {
         next.cupFixtures.find(f => f.week === state.round && mine(f)) ??
         null
       setState(next)
-      setReplay(played)
+      if (played) {
+        setPendingToasts(toasts) // flushed when the match report closes
+        setReplay(played)
+      } else {
+        toasts.forEach(push) // no match to defer behind
+        setReplay(null)
+        setScreen('home')
+      }
     } finally {
       advancingRef.current = false
     }
@@ -98,7 +107,18 @@ function Game() {
   }
 
   if (replay) {
-    return <MatchScreen fixture={replay} state={state} onClose={() => { setReplay(null); setScreen('home') }} />
+    return (
+      <MatchScreen
+        fixture={replay}
+        state={state}
+        onClose={() => {
+          pendingToasts.forEach(push)
+          setPendingToasts([])
+          setReplay(null)
+          setScreen('home')
+        }}
+      />
+    )
   }
 
   const champion = seasonOver
