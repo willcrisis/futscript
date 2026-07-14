@@ -193,7 +193,7 @@ export default function HomeScreen({ state, setState, onAdvance, advanceDisabled
             columns={excerptColumns}
             rows={excerpt}
             rowKey={r => r.teamId}
-            rowAccent={r => (r.teamId === user.id ? 'user' : null)}
+            rowClass={r => (r.teamId === user.id ? 'bg-accent/10 font-semibold' : undefined)}
           />
         </Panel>
 

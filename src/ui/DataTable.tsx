@@ -15,7 +15,7 @@ interface Props<T> {
   columns: Column<T>[]
   rows: T[]
   rowKey: (row: T) => string | number
-  rowAccent?: (row: T) => 'user' | 'up' | 'down' | null
+  rowAccent?: (row: T) => 'up' | 'down' | null
   /** Extra classes for a specific row (e.g. a highlight ring), layered on top of any spine. */
   rowClass?: (row: T) => string | undefined
   onRowClick?: (row: T) => void
@@ -24,7 +24,6 @@ interface Props<T> {
 }
 
 const SPINE = {
-  user: 'shadow-[inset_3px_0_0_0_var(--accent)]',
   up: 'shadow-[inset_3px_0_0_0_var(--accent)] opacity-90',
   down: 'shadow-[inset_3px_0_0_0_var(--danger)]',
 }

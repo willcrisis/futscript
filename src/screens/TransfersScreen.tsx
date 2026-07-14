@@ -157,7 +157,7 @@ export default function TransfersScreen({ state, setState }: Props) {
             columns={columns}
             rows={state.transferList}
             rowKey={l => l.playerId}
-            rowAccent={l => (l.sellerTeamId === state.userTeamId ? 'user' : null)}
+            rowClass={l => (l.sellerTeamId === state.userTeamId ? 'bg-accent/10 font-semibold' : undefined)}
             empty={<EmptyState>{t('transfers.noListings')}</EmptyState>}
           />
         </Panel>

@@ -35,6 +35,7 @@ export default function TableScreen({ state, onShowClub }: Props) {
   const divisions = [...new Set(state.teams.map(t => t.division))].sort()
   const name = (id: number) => state.teams.find(t => t.id === id)!.name
   const rows: Row[] = standings(state, division).map((r, i) => ({ pos: i + 1, ...r, name: name(r.teamId) }))
+  const lowestDivision = Math.max(...state.teams.map(t => t.division))
 
   const onSearch = (raw: string) => {
     setQuery(raw)
@@ -77,11 +78,10 @@ export default function TableScreen({ state, onShowClub }: Props) {
     { key: 'pts', label: t('common.pts'), align: 'right', mono: true, render: r => <strong>{r.points}</strong> },
   ]
 
-  // promotion spine for top 3 in divisions 2-3; relegation spine for bottom 3 in divisions 1-2; user wins any overlap
-  const rowAccent = (r: Row): 'user' | 'up' | 'down' | null => {
-    if (r.teamId === state.userTeamId) return 'user'
+  // promotion spine for top 3 in non-top divisions; relegation spine for bottom 3 in non-bottom divisions
+  const rowAccent = (r: Row): 'up' | 'down' | null => {
     if (division !== 1 && r.pos <= 3) return 'up'
-    if (division !== 3 && r.pos > rows.length - 3) return 'down'
+    if (division !== lowestDivision && r.pos > rows.length - 3) return 'down'
     return null
   }
 
@@ -123,7 +123,12 @@ export default function TableScreen({ state, onShowClub }: Props) {
         rows={rows}
         rowKey={r => r.teamId}
         rowAccent={rowAccent}
-        rowClass={r => (r.teamId === highlightId ? 'ring-1 ring-accent' : undefined)}
+        rowClass={r => {
+          const classes = []
+          if (r.teamId === state.userTeamId) classes.push('bg-accent/10 font-semibold')
+          if (r.teamId === highlightId) classes.push('ring-1 ring-accent')
+          return classes.length ? classes.join(' ') : undefined
+        }}
         onRowClick={onShowClub ? r => onShowClub(r.teamId) : undefined}
       />
     </div>
