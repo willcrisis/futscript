@@ -139,7 +139,7 @@ function Game() {
       )}
       {freshExpiring > 0 && !champion && (
         <Panel className="mb-4">
-          <p className="text-sm text-ink-muted">{t('app.contractsExpireWarning', { n: freshExpiring })}</p>
+          <p className="text-sm text-ink-muted">{t('app.contractsExpireFresh', { n: freshExpiring })}</p>
         </Panel>
       )}
       {screen === 'home' && (employed

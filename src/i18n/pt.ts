@@ -242,6 +242,7 @@ export const pt: Record<TranslationKey, string> = {
   // App chrome
   'app.championMessage': '🏆 {name} é o campeão da Divisão {division}!',
   'app.contractsExpireWarning': '⚠ {n} contrato(s) vence(m) — jogadores não renovados saem (os mais baratos são mantidos automaticamente se o elenco cair abaixo de 14)',
+  'app.contractsExpireFresh': '{n} dos seus jogadores estão no último ano de contrato — renove-os no Elenco.',
 
   // Unemployed screen
   'unemployed.header': 'Aguardando propostas',

@@ -240,6 +240,7 @@ export const en = {
   // App chrome
   'app.championMessage': '🏆 {name} are the Division {division} champions!',
   'app.contractsExpireWarning': '⚠ {n} contract(s) expire — unrenewed players leave (cheapest are kept automatically if the squad would drop below 14)',
+  'app.contractsExpireFresh': '{n} of your players are in the final year of their contract — renew them in Squad.',
 
   // Unemployed screen
   'unemployed.header': 'Awaiting offers',
