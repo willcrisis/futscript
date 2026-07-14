@@ -249,24 +249,6 @@ describe('backlog semantics', () => {
     expect(s2.players[hurt].injuredForRounds).toBe(2)
   })
 
-  it('a friendly does not burn a suspension', () => {
-    let s = { ...newGame(8), playFriendlies: true }
-    // eliminate the user from cup round 1 so week 4 is a friendly week for them
-    s = {
-      ...s,
-      cupFixtures: s.cupFixtures.map(f =>
-        f.homeId === s.userTeamId || f.awayId === s.userTeamId
-          ? { ...f, homeGoals: 0, awayGoals: 3, winnerId: f.homeId === s.userTeamId ? f.awayId : f.homeId, week: 0 }
-          : f,
-      ),
-    }
-    for (let week = 1; week <= 3; week++) s = advanceRound(s)
-    const banned = s.teams.find(t => t.id === s.userTeamId)!.playerIds[5]
-    s = { ...s, players: { ...s.players, [banned]: { ...s.players[banned], suspendedForRounds: 2, injuredForRounds: 0 } } }
-    const s2 = advanceRound(s) // week 4: user plays only a friendly
-    expect(s2.finances.some(e => e.label === 'Friendly gate receipts')).toBe(true) // friendly actually happened
-    expect(s2.players[banned].suspendedForRounds).toBe(2) // ban untouched
-  })
 })
 
 describe('newSeason', () => {
@@ -474,44 +456,12 @@ describe('spectator gates', () => {
   })
 })
 
-describe('friendlies', () => {
-  function toFreeWeek(seed: number, playFriendlies: boolean) {
-    let s: GameState = { ...newGame(seed), playFriendlies }
-    // eliminate the user from the cup so week 4 is a free week: resolve their round-1 tie against them
-    s = {
-      ...s,
-      cupFixtures: s.cupFixtures.map(f =>
-        f.homeId === s.userTeamId || f.awayId === s.userTeamId
-          ? { ...f, homeGoals: 0, awayGoals: 3, winnerId: f.homeId === s.userTeamId ? f.awayId : f.homeId, week: 0 }
-          : f,
-      ),
-    }
-    for (let week = 1; week < 4; week++) s = advanceRound(s)
-    return s // next advance simulates week 4 (cup week, user idle)
-  }
-
-  it('plays a friendly for income when enabled', () => {
-    const s = toFreeWeek(11, true)
-    const s2 = advanceRound(s)
-    expect(s2.finances.some(e => e.label === 'Friendly gate receipts' && e.amount > 0)).toBe(true)
-  })
-
-  it('does not play one when disabled', () => {
-    const s = toFreeWeek(11, false)
-    const s2 = advanceRound(s)
-    expect(s2.finances.some(e => e.label === 'Friendly gate receipts')).toBe(false)
-  })
-
-  it('friendly goals never reach season tallies', () => {
-    const s = toFreeWeek(11, true)
-    const before = Object.values(s.players).reduce((sum, p) => sum + p.seasonGoals, 0)
-    const s2 = advanceRound(s)
-    const storedGoalEvents = [...s2.fixtures, ...s2.cupFixtures]
-      .flatMap(f => f.events ?? []).filter(e => e.type === 'goal').length
-    const after = Object.values(s2.players).reduce((sum, p) => sum + p.seasonGoals, 0)
-    expect(after - before).toBeLessThanOrEqual(storedGoalEvents) // friendly events are not stored anywhere
-    // and specifically: tallies match stored events exactly (invariant from Task 4 holds)
-    expect(after).toBe(storedGoalEvents)
+describe('no friendlies', () => {
+  it('an idle cup week never produces friendly gate receipts', () => {
+    let s = newGame(1)
+    // advance through the first cup week (week 4) and a few more
+    while (s.round <= 10) s = advanceRound(s)
+    expect(s.finances.some(e => e.label === 'Friendly gate receipts')).toBe(false)
   })
 })
 

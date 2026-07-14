@@ -52,7 +52,6 @@ export const pt: Record<TranslationKey, string> = {
   'home.leagueWeek': 'Liga · Semana {week}',
   'home.cupRound': 'Copa · Rodada {round}',
   'home.freeWeek': 'Semana livre.',
-  'home.freeWeekFriendly': 'Semana livre — um amistoso será organizado.',
   'home.money': 'Dinheiro',
   'home.financeLink': 'Finanças →',
   'home.thisWeek': 'Esta semana:',
@@ -159,8 +158,6 @@ export const pt: Record<TranslationKey, string> = {
   'squad.renew': 'Renovar',
   'squad.renewFor': 'Renovar · {salary}/sem',
   'squad.autoPick': 'Escalação automática',
-  'squad.friendlies': 'Amistosos nas semanas livres',
-  'squad.friendliesHint': 'Renda extra de bilheteria em semanas de copa em que você não joga; risco normal de lesão.',
   'squad.selectElevenHint': 'Escale 11 para continuar ({n}/11)',
 
   // Transfers screen
@@ -261,7 +258,6 @@ export const pt: Record<TranslationKey, string> = {
   'ledger.maintenance': 'Manutenção do estádio',
   'ledger.sponsors': 'Patrocinadores',
   'ledger.gate': 'Bilheteria ({n} torcedores)',
-  'ledger.friendlyGate': 'Bilheteria de amistoso',
   'ledger.depositInterest': 'Juros de depósito',
   'ledger.overdraftCharge': 'Juros de cheque especial',
   'ledger.loanInterest': 'Juros do empréstimo',

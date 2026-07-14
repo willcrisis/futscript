@@ -50,7 +50,6 @@ export const en = {
   'home.leagueWeek': 'League · Week {week}',
   'home.cupRound': 'Cup · Round {round}',
   'home.freeWeek': 'Free week.',
-  'home.freeWeekFriendly': 'Free week — a friendly will be arranged.',
   'home.money': 'Money',
   'home.financeLink': 'Finance →',
   'home.thisWeek': 'This week:',
@@ -157,8 +156,6 @@ export const en = {
   'squad.renew': 'Renew',
   'squad.renewFor': 'Renew · {salary}/wk',
   'squad.autoPick': 'Auto-pick',
-  'squad.friendlies': 'Friendlies on free weeks',
-  'squad.friendliesHint': "Extra gate income on cup weeks you're not playing; normal injury risk.",
   'squad.selectElevenHint': 'Pick 11 to continue ({n}/11)',
 
   // Transfers screen
@@ -259,7 +256,6 @@ export const en = {
   'ledger.maintenance': 'Stadium maintenance',
   'ledger.sponsors': 'Sponsors',
   'ledger.gate': 'Gate receipts ({n} fans)',
-  'ledger.friendlyGate': 'Friendly gate receipts',
   'ledger.depositInterest': 'Deposit interest',
   'ledger.overdraftCharge': 'Overdraft charge',
   'ledger.loanInterest': 'Loan interest',

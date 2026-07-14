@@ -126,7 +126,6 @@ describe('save/load', () => {
     expect(state!.teams[0]).toMatchObject({ capacity: 25_000, ticketPrice: 15, fanMood: 50 })
     expect(state!.cupFixtures).toEqual([])
     expect(state!.history).toEqual([])
-    expect(state!.playFriendlies).toBe(false)
     expect(state!.manager.employed).toBe(true)
     expect(state!.unemployedPool).toEqual([])
     expect(state!.construction).toBeNull()
@@ -147,14 +146,13 @@ describe('save/load', () => {
         { id: 0, name: 'T0', playerIds: [1], formation: '4-4-2', lineup: [1], tactic: 'normal', trainingStyle: 'normal', cash: 500_000, division: 3 },
         { id: 1, name: 'T1', playerIds: [], formation: '4-4-2', lineup: [], tactic: 'normal', trainingStyle: 'normal', cash: 500_000, division: 1 },
       ],
-      fixtures: [], cupFixtures: [], history: [], playFriendlies: true,
+      fixtures: [], cupFixtures: [], history: [],
       transferList: [], incomingOffers: [], loanBalance: 0, brokeRounds: 0, gameOver: false, finances: [],
     }
     storage.setItem('futscript-save', JSON.stringify(v4))
     const state = load(storage)
     expect(state!.version).toBe(8)
     expect(state!.season).toBe(3) // progress preserved
-    expect(state!.playFriendlies).toBe(true)
     expect(state!.teams[0]).toMatchObject({ capacity: 9_000, ticketPrice: 15, fanMood: 50 }) // division 3
     expect(state!.teams[1]).toMatchObject({ capacity: 25_000 }) // division 1
     expect(state!.manager.employed).toBe(true)
@@ -217,8 +215,8 @@ describe('save/load', () => {
     const base = newGame(77)
     const div1 = base.teams.filter(t => t.division === 1)
     const keep = new Set(div1.flatMap(t => t.playerIds))
-    const { cupFixtures: _c, history: _h, playFriendlies: _p, construction: _k, allTimeScorers: _a, ...v3state } = base
-    void _c; void _h; void _p; void _k; void _a
+    const { cupFixtures: _c, history: _h, construction: _k, allTimeScorers: _a, ...v3state } = base
+    void _c; void _h; void _k; void _a
     const v3ish = {
       ...v3state,
       version: 3,

@@ -284,18 +284,6 @@ export default function SquadScreen({ state, setState }: Props) {
             >
               {t('squad.autoPick')}
             </Button>
-            <label className="flex items-center gap-1.5 text-sm" title={t('squad.friendliesHint')}>
-              <input
-                type="checkbox"
-                checked={state.playFriendlies}
-                onChange={e => {
-                  const playFriendlies = e.target.checked
-                  setState(s => ({ ...s, playFriendlies }))
-                }}
-                className="accent-accent size-4"
-              />
-              {t('squad.friendlies')}
-            </label>
           </>
         }
       />

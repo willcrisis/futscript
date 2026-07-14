@@ -13,7 +13,7 @@ export interface Player {
   yellowCards: number // this season; 3 accumulated = one-round ban
   salary: number // weekly, dollars
   contractSeasons: number // seasons remaining, including the current one
-  seasonGoals: number // this season, league + cup (friendlies excluded)
+  seasonGoals: number // this season, league + cup
 }
 
 export type Tactic = 'defensive' | 'normal' | 'attacking'
@@ -175,7 +175,6 @@ export interface GameState {
   fixtures: Fixture[]
   cupFixtures: CupFixture[]
   history: SeasonRecord[] // one record per completed season
-  playFriendlies: boolean // user setting: friendlies on free weeks
   transferList: TransferListing[]
   incomingOffers: Offer[]
   outgoingOffers: Offer[]

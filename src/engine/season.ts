@@ -1,7 +1,7 @@
 import { runCareerSeasonEnd, runCareerWeek } from './career'
 import { cupWinner, drawFirstCupRound, drawNextCupRound } from './cup'
 import { CUP_WEEKS, generateDivisionFixtures } from './fixtures'
-import { adjustCash, DIVISION_FACTOR, runWeeklyFinances, TICKET_PRICE, userLedger } from './finance'
+import { adjustCash, DIVISION_FACTOR, runWeeklyFinances } from './finance'
 import { autoPick, isAvailable, managedMatchLineup } from './lineup'
 import { resolveCupTie, simulateMatch } from './match'
 import { pushNews } from './news'
@@ -59,17 +59,6 @@ export function advanceRound(state: GameState): GameState {
 
   const competitiveIds = new Set(playingIds)
 
-  // an idle user on a cup week can host a friendly (user setting)
-  let friendly: { homeId: number; awayId: number } | null = null
-  if (state.manager.employed && state.playFriendlies && cupToday.length > 0 && !playingIds.has(state.userTeamId)) {
-    const idle = state.teams.filter(t => t.id !== state.userTeamId && !playingIds.has(t.id))
-    if (idle.length > 0) {
-      friendly = { homeId: state.userTeamId, awayId: idle[Math.floor(rand() * idle.length)].id }
-      playingIds.add(friendly.homeId)
-      playingIds.add(friendly.awayId)
-    }
-  }
-
   // refresh lineups only for clubs that play this week
   const teams = state.teams.map(t =>
     playingIds.has(t.id)
@@ -93,18 +82,7 @@ export function advanceRound(state: GameState): GameState {
     return { ...f, homeGoals: result.homeGoals, awayGoals: result.awayGoals, winnerId: result.winnerId, events: result.events }
   })
 
-  let friendlyIncome = 0
-  if (friendly) {
-    const result = simulateMatch(byId.get(friendly.homeId)!, byId.get(friendly.awayId)!, state.players, rand)
-    // friendlies: knocks are real, bookings and goals are not
-    roundEvents.push(...result.events.filter(e => e.type === 'injury'))
-    const user = byId.get(state.userTeamId)!
-    friendlyIncome = Math.round(
-      (6000 + randInt(rand, -500, 500)) * TICKET_PRICE * (DIVISION_FACTOR[user.division] ?? 1),
-    )
-  }
-
-  // fans react to results (friendlies don't count; shootout wins still feel like draws)
+  // fans react to results (shootout wins still feel like draws)
   const moodDelta = new Map<number, number>()
   const bump = (id: number, d: number) => moodDelta.set(id, (moodDelta.get(id) ?? 0) + d)
   for (const f of [...fixtures.filter(f => f.round === week), ...cupFixtures.filter(f => f.week === week)]) {
@@ -119,7 +97,6 @@ export function advanceRound(state: GameState): GameState {
 
   // existing bans/injuries tick down BEFORE this week's knocks land
   // injuries heal by the week (physio time); bans only burn on matchdays the club plays
-  // bans burn on competitive matchdays only — a friendly doesn't serve a suspension
   const playingPlayerIds = new Set(
     teams.filter(t => competitiveIds.has(t.id)).flatMap(t => t.playerIds),
   )
@@ -143,13 +120,6 @@ export function advanceRound(state: GameState): GameState {
   )
 
   let s: GameState = { ...state, teams: cleanedTeams, players, fixtures, cupFixtures }
-  if (friendlyIncome > 0) {
-    s = {
-      ...s,
-      teams: adjustCash(s.teams, s.userTeamId, friendlyIncome),
-      finances: userLedger(s, 'Friendly gate receipts', friendlyIncome),
-    }
-  }
   s = runTransfers(s, rand)
   s = runWeeklyFinances(s, rand)
   s = tickConstruction(s)

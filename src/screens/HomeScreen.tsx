@@ -166,7 +166,7 @@ export default function HomeScreen({ state, setState, onAdvance, advanceDisabled
           ) : (
             <div className="flex items-center justify-between gap-3">
               <p className="text-sm text-ink-muted">
-                {state.playFriendlies ? t('home.freeWeekFriendly') : t('home.freeWeek')}
+                {t('home.freeWeek')}
               </p>
               <div className="flex flex-col items-end gap-1">
                 <Button variant="primary" disabled={advanceDisabled} onClick={onAdvance}>{t('shell.advanceWeek')}</Button>

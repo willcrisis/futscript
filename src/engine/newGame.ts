@@ -116,7 +116,6 @@ export function newGame(seed: number): GameState {
     fixtures,
     cupFixtures,
     history: [],
-    playFriendlies: false,
     transferList: [],
     incomingOffers: [],
     outgoingOffers: [],

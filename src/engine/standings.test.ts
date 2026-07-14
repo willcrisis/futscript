@@ -12,7 +12,7 @@ function makeState(fixtures: Fixture[]): GameState {
   return {
     version: 8, seed: 1, rngState: 1, season: 1, round: 1,
     userTeamId: 0, players: {}, teams, fixtures,
-    cupFixtures: [], history: [], playFriendlies: false,
+    cupFixtures: [], history: [],
     transferList: [], incomingOffers: [], outgoingOffers: [], loanBalance: 0,
     brokeRounds: 0, finances: [],
     construction: null, allTimeScorers: [], news: [],

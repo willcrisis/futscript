@@ -149,7 +149,6 @@ function migrateV3(s: any): any {
     teams: s.teams.map((t: any) => ({ ...t, division: 1 })),
     cupFixtures: [],
     history: [],
-    playFriendlies: false,
   }
 }
 

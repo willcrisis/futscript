@@ -28,7 +28,6 @@ const PATTERNS: LedgerPattern[] = [
   { re: /^Stadium maintenance$/, key: 'ledger.maintenance', category: 'maintenance' },
   { re: /^Sponsors$/, key: 'ledger.sponsors', category: 'sponsors' },
   { re: /^Gate receipts \((\d+) fans\)$/, key: 'ledger.gate', category: 'gate', params: m => ({ n: m[1] }) },
-  { re: /^Friendly gate receipts$/, key: 'ledger.friendlyGate', category: 'gate' },
   { re: /^Deposit interest$/, key: 'ledger.depositInterest', category: 'interest' },
   { re: /^Overdraft charge$/, key: 'ledger.overdraftCharge', category: 'interest' },
   { re: /^Loan interest$/, key: 'ledger.loanInterest', category: 'interest' },
