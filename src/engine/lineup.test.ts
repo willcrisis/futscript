@@ -168,6 +168,33 @@ describe('availability', () => {
   })
 })
 
+describe('new formations', () => {
+  it('3-4-3 fills its shape', () => {
+    const { team, players } = makeSquad()
+    const lineup = autoPick({ ...team, formation: '3-4-3' }, players)
+    const counts: Record<Position, number> = { GK: 0, DF: 0, MF: 0, FW: 0 }
+    for (const id of lineup) counts[players[id].position]++
+    expect(counts).toEqual(FORMATIONS['3-4-3'])
+  })
+
+  it('Best picks the 11 highest levels when the keeper is already top-tier', () => {
+    const { team, players } = makeSquad() // levels descend 90..73; GKs are the top two
+    const lineup = autoPick({ ...team, formation: 'Best' }, players)
+    expect(lineup).toHaveLength(11)
+    expect(new Set(lineup)).toEqual(new Set([1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11]))
+  })
+
+  it('Best forces the best available keeper in even when GKs are weak', () => {
+    const { team, players } = makeSquad()
+    players[1] = { ...players[1], level: 10 } // both keepers now well outside the natural top 11
+    players[2] = { ...players[2], level: 9 }
+    const lineup = autoPick({ ...team, formation: 'Best' }, players)
+    expect(lineup).toHaveLength(11)
+    expect(lineup.some(id => players[id].position === 'GK')).toBe(true)
+    expect(lineup).toContain(1) // the stronger of the two keepers
+  })
+})
+
 describe('degraded squads (fewer than 11 available)', () => {
   it('autoPick and patchLineup return all available players without crashing', () => {
     const { team, players } = makeSquad()

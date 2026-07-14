@@ -6,8 +6,15 @@ export function isAvailable(p: Player): boolean {
 
 export function autoPick(team: Team, players: Record<number, Player>): number[] {
   const squad = team.playerIds.map(id => players[id]).filter(isAvailable)
+  const formation = team.formation
+  if (formation === 'Best') {
+    // highest-level keeper, then the ten best remaining regardless of position
+    const gk = squad.filter(p => p.position === 'GK').sort((a, b) => b.level - a.level)[0]
+    const rest = squad.filter(p => p.id !== gk?.id).sort((a, b) => b.level - a.level).slice(0, 10)
+    return [gk, ...rest].filter(Boolean).map(p => (p as Player).id)
+  }
   const lineup: number[] = []
-  for (const [position, count] of Object.entries(FORMATIONS[team.formation])) {
+  for (const [position, count] of Object.entries(FORMATIONS[formation])) {
     const best = squad
       .filter(p => p.position === position)
       .sort((a, b) => b.level - a.level)
@@ -77,6 +84,7 @@ function reshapeToFormation(
 // earlier hole) left the XI complete but lopsided — e.g. both GKs recovered
 // but an outfielder is still deputizing in goal.
 export function patchLineup(team: Team, players: Record<number, Player>): number[] {
+  if (team.formation === 'Best') return autoPick(team, players)
   const formation = FORMATIONS[team.formation]
   const kept = team.lineup.filter(id => isAvailable(players[id]))
   if (kept.length === 11 && matchesShape(kept, players, formation)) return kept

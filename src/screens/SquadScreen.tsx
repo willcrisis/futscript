@@ -248,7 +248,7 @@ export default function SquadScreen({ state, setState }: Props) {
                 }}
                 className={SELECT_CLASS}
               >
-                {Object.keys(FORMATIONS).map(f => <option key={f}>{f}</option>)}
+                {[...Object.keys(FORMATIONS), 'Best'].map(f => <option key={f}>{f}</option>)}
               </select>
             </label>
             <label className="flex flex-col gap-0.5">

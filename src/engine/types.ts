@@ -28,11 +28,12 @@ export interface MatchEvent {
   scored?: boolean // for 'penalty' events: true = converted, false = missed
 }
 
-export type FormationName = '4-4-2' | '4-3-3' | '3-5-2' | '5-3-2' | '5-4-1'
+export type FormationName = '4-4-2' | '4-3-3' | '3-4-3' | '3-5-2' | '5-3-2' | '5-4-1' | 'Best'
 
-export const FORMATIONS: Record<FormationName, Record<Position, number>> = {
+export const FORMATIONS: Record<Exclude<FormationName, 'Best'>, Record<Position, number>> = {
   '4-4-2': { GK: 1, DF: 4, MF: 4, FW: 2 },
   '4-3-3': { GK: 1, DF: 4, MF: 3, FW: 3 },
+  '3-4-3': { GK: 1, DF: 3, MF: 4, FW: 3 },
   '3-5-2': { GK: 1, DF: 3, MF: 5, FW: 2 },
   '5-3-2': { GK: 1, DF: 5, MF: 3, FW: 2 },
   '5-4-1': { GK: 1, DF: 5, MF: 4, FW: 1 },
