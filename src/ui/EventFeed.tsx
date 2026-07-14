@@ -1,5 +1,6 @@
 import type { GameState, MatchEvent } from '../engine/types'
 import { t, useLang } from '../i18n'
+import { PlusIcon, RedCardIcon, YellowCardIcon } from './icons'
 
 export function eventText(e: MatchEvent, state: GameState): string {
   const player = state.players[e.playerId]?.name ?? '?'
@@ -32,11 +33,11 @@ function EventIcon({ event, emphasisTeamId }: { event: MatchEvent; emphasisTeamI
     case 'chance':
       return <span aria-hidden className="w-4 shrink-0 text-center text-ink-faint">○</span>
     case 'yellow':
-      return <span aria-hidden className="size-2 shrink-0 self-center bg-warn" />
+      return <span aria-hidden className="flex w-4 shrink-0 justify-center"><YellowCardIcon /></span>
     case 'red':
-      return <span aria-hidden className="size-2 shrink-0 self-center bg-danger" />
+      return <span aria-hidden className="flex w-4 shrink-0 justify-center"><RedCardIcon /></span>
     case 'injury':
-      return <span aria-hidden className="w-4 shrink-0 text-center font-bold text-danger">+</span>
+      return <span aria-hidden className="flex w-4 shrink-0 justify-center text-danger"><PlusIcon className="size-3.5" /></span>
     case 'penalty':
       return event.scored
         ? <span aria-hidden className={`w-4 shrink-0 text-center ${event.teamId === emphasisTeamId ? 'text-accent' : 'text-ink'}`}>◉</span>

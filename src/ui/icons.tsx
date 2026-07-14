@@ -63,6 +63,11 @@ export const YellowCardIcon = ({ className }: { className?: string }) => (
     <rect x="0.5" y="0.5" width="10" height="14" rx="1.5" fill="#eab308" />
   </svg>
 )
+export const RedCardIcon = ({ className }: { className?: string }) => (
+  <svg width="11" height="15" viewBox="0 0 11 15" className={className} aria-hidden>
+    <rect x="0.5" y="0.5" width="10" height="14" rx="1.5" fill="#dc2626" />
+  </svg>
+)
 export const PlusIcon = ({ className }: { className?: string }) => (
   <Icon className={className}><path d="M12 5v14M5 12h14" /></Icon>
 )
