@@ -43,7 +43,6 @@ interface Props {
   onAdvance: () => void
   advanceDisabled?: boolean
   advanceHint?: string
-  onShowClub?: (teamId: number) => void
   children: ReactNode
 }
 
@@ -53,7 +52,7 @@ function attentionFor(id: ScreenId, state: GameState): boolean {
   return false
 }
 
-export default function Shell({ screen, onNavigate, state, advanceLabel, onAdvance, advanceDisabled = false, advanceHint, onShowClub, children }: Props) {
+export default function Shell({ screen, onNavigate, state, advanceLabel, onAdvance, advanceDisabled = false, advanceHint, children }: Props) {
   useLang() // subscribes Shell to language changes; re-renders nav/labels below
   const [moreOpen, setMoreOpen] = useState(false)
   const moreButtonRef = useRef<HTMLButtonElement>(null)
@@ -156,7 +155,7 @@ export default function Shell({ screen, onNavigate, state, advanceLabel, onAdvan
       >
         <SectionLabel>{t('news.title')}</SectionLabel>
         <div className="mt-2">
-          <NewsRail state={state} onShowClub={onShowClub} />
+          <NewsRail state={state} />
         </div>
       </aside>
 

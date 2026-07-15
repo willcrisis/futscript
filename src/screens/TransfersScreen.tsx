@@ -6,6 +6,7 @@ import type { GameState, TransferListing } from '../engine/types'
 import { t, useLang } from '../i18n'
 import Badge from '../ui/Badge'
 import Button from '../ui/Button'
+import ClubLink from '../ui/ClubLink'
 import DataTable from '../ui/DataTable'
 import type { Column } from '../ui/DataTable'
 import EmptyState from '../ui/EmptyState'
@@ -116,7 +117,7 @@ export default function TransfersScreen({ state, setState }: Props) {
                     <div className="flex flex-wrap items-center gap-2">
                       <Badge tone="accent">{t('transfers.offerBadge')}</Badge>
                       <span>
-                        {name(o.bidderTeamId)} {t('transfers.offerVerb')} <MoneyText amount={o.amount} size="sm" /> {t('transfers.forWord')} {p.name} (
+                        <ClubLink teamId={o.bidderTeamId}>{name(o.bidderTeamId)}</ClubLink> {t('transfers.offerVerb')} <MoneyText amount={o.amount} size="sm" /> {t('transfers.forWord')} {p.name} (
                         {p.position} {p.level})
                       </span>
                       <span className="text-xs text-ink-faint">{t('transfers.expiresIn', { n: o.roundsLeft })}</span>

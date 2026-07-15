@@ -2,6 +2,7 @@ import type { FC } from 'react'
 import type { GameState, NewsItem, NewsType } from '../engine/types'
 import { t, useLang } from '../i18n'
 import { newsText } from '../i18n/news'
+import { useClubNav } from './ClubLink'
 import EmptyState from './EmptyState'
 import { CupIcon, FinanceIcon, SquadIcon, TableIcon, TransfersIcon } from './icons'
 
@@ -37,7 +38,7 @@ export function isPastWeek(item: NewsItem, latest: { season: number; week: numbe
   return item.season < latest.season || (item.season === latest.season && item.week < latest.week)
 }
 
-export default function NewsRail({ state, limit, onShowClub }: { state: GameState; limit?: number; onShowClub?: (teamId: number) => void }) {
+export default function NewsRail({ state, limit }: { state: GameState; limit?: number }) {
   useLang()
   const items = [...state.news].reverse().slice(0, limit)
   if (items.length === 0) return <EmptyState>{t('news.empty')}</EmptyState>
@@ -45,14 +46,15 @@ export default function NewsRail({ state, limit, onShowClub }: { state: GameStat
   return (
     <ol className="flex flex-col">
       {items.map((item, i) => (
-        <NewsRow key={`${state.news.length - i}`} item={item} state={state} onShowClub={onShowClub} past={isPastWeek(item, latest)} />
+        <NewsRow key={`${state.news.length - i}`} item={item} state={state} past={isPastWeek(item, latest)} />
       ))}
     </ol>
   )
 }
 
-function NewsRow({ item, state, onShowClub, past }: { item: NewsItem; state: GameState; onShowClub?: (teamId: number) => void; past: boolean }) {
+function NewsRow({ item, state, past }: { item: NewsItem; state: GameState; past: boolean }) {
   const RowIcon = ICONS[item.type]
+  const onShowClub = useClubNav()
   const clubId = onShowClub ? clubIdOf(item, state) : null
   return (
     <li className={`flex items-baseline gap-2 border-b border-rule/60 py-2 text-sm ${toneOf(item.type)} ${past ? 'opacity-60' : ''}`}>

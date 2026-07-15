@@ -1,5 +1,6 @@
 import type { GameState } from '../engine/types'
 import { t, useLang } from '../i18n'
+import ClubLink from '../ui/ClubLink'
 import DataTable from '../ui/DataTable'
 import type { Column } from '../ui/DataTable'
 import EmptyState from '../ui/EmptyState'
@@ -11,6 +12,7 @@ interface ScorerRow {
   rank: number
   player: string
   club: string
+  teamId?: number // present for live players (this-season); all-time rows carry only a name string
   goals: number
 }
 
@@ -18,7 +20,7 @@ function columnsFor(lastClub: boolean): Column<ScorerRow>[] {
   return [
     { key: 'rank', label: t('common.pos'), mono: true, render: r => r.rank },
     { key: 'player', label: t('common.player'), render: r => r.player },
-    { key: 'club', label: lastClub ? t('stats.lastClub') : t('common.club'), render: r => r.club },
+    { key: 'club', label: lastClub ? t('stats.lastClub') : t('common.club'), render: r => r.teamId != null ? <ClubLink teamId={r.teamId}>{r.club}</ClubLink> : r.club },
     { key: 'goals', label: t('stats.goals'), align: 'right', mono: true, render: r => <strong>{r.goals}</strong> },
   ]
 }
@@ -27,12 +29,15 @@ export default function StatsScreen({ state }: { state: GameState }) {
   useLang()
   const columns = columnsFor(false)
   const allTimeColumns = columnsFor(true)
-  const teamOf = (playerId: number) => state.teams.find(t => t.playerIds.includes(playerId))?.name ?? '—'
+  const teamOf = (playerId: number) => state.teams.find(t => t.playerIds.includes(playerId))
   const thisSeason: ScorerRow[] = Object.values(state.players)
     .filter(p => p.seasonGoals > 0)
     .sort((a, b) => b.seasonGoals - a.seasonGoals)
     .slice(0, 15)
-    .map((p, i) => ({ key: p.id, rank: i + 1, player: p.name, club: teamOf(p.id), goals: p.seasonGoals }))
+    .map((p, i) => {
+      const team = teamOf(p.id)
+      return { key: p.id, rank: i + 1, player: p.name, club: team?.name ?? '—', teamId: team?.id, goals: p.seasonGoals }
+    })
   const allTime: ScorerRow[] = state.allTimeScorers.slice(0, 20).map((e, i) => ({
     key: e.playerId, rank: i + 1, player: e.player, club: e.team, goals: e.goals,
   }))

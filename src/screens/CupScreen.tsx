@@ -4,6 +4,7 @@ import type { CupFixture, GameState } from '../engine/types'
 import { t, useLang } from '../i18n'
 import type { TranslationKey } from '../i18n'
 import Badge from '../ui/Badge'
+import ClubLink from '../ui/ClubLink'
 import EmptyState from '../ui/EmptyState'
 import EventFeed from '../ui/EventFeed'
 import Panel from '../ui/Panel'
@@ -17,33 +18,22 @@ const ROUND_NAME_KEYS: TranslationKey[] = [
 const ROW = 'grid w-full grid-cols-[1fr_auto_1fr] items-center gap-3 rounded-lg border border-rule bg-surface-raised px-3 py-2'
 const SPINE = 'shadow-[inset_3px_0_0_0_var(--accent)]'
 
-function ClubName({ name, division, onClick }: { name: string; division: number; onClick?: () => void }) {
-  const content = (
-    <span>
-      {name} <span className="text-ink-faint">· D{division}</span>
-    </span>
-  )
-  if (!onClick) return content
+function ClubName({ teamId, name, division }: { teamId: number; name: string; division: number }) {
   return (
-    <button
-      type="button"
-      onClick={onClick}
-      className="rounded-sm underline-offset-2 hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent"
-    >
-      {content}
-    </button>
+    <ClubLink teamId={teamId}>
+      {name} <span className="text-ink-faint">· D{division}</span>
+    </ClubLink>
   )
 }
 
 function TieRow({
-  f, name, divisionOf, isUser, onToggle, onShowClub,
+  f, name, divisionOf, isUser, onToggle,
 }: {
   f: CupFixture
   name: (id: number) => string
   divisionOf: (id: number) => number
   isUser: boolean
   onToggle: () => void
-  onShowClub?: (teamId: number) => void
 }) {
   const played = f.homeGoals !== null
   const penalties = f.winnerId !== null && f.homeGoals === f.awayGoals
@@ -53,7 +43,7 @@ function TieRow({
     <div className={rowClass}>
       <div className={`flex items-center justify-end gap-2 text-right ${loser(f.homeId) ? 'text-ink-faint' : ''}`}>
         {f.winnerId === f.homeId && <Badge tone="accent">{t('cup.through')}</Badge>}
-        <ClubName name={name(f.homeId)} division={divisionOf(f.homeId)} onClick={onShowClub ? () => onShowClub(f.homeId) : undefined} />
+        <ClubName teamId={f.homeId} name={name(f.homeId)} division={divisionOf(f.homeId)} />
       </div>
       <div className="text-center font-mono text-sm tabular-nums">
         {played ? (
@@ -70,14 +60,14 @@ function TieRow({
         {penalties && <span className="text-ink-faint"> {t('cup.penalties')}</span>}
       </div>
       <div className={`flex items-center gap-2 text-left ${loser(f.awayId) ? 'text-ink-faint' : ''}`}>
-        <ClubName name={name(f.awayId)} division={divisionOf(f.awayId)} onClick={onShowClub ? () => onShowClub(f.awayId) : undefined} />
+        <ClubName teamId={f.awayId} name={name(f.awayId)} division={divisionOf(f.awayId)} />
         {f.winnerId === f.awayId && <Badge tone="accent">{t('cup.through')}</Badge>}
       </div>
     </div>
   )
 }
 
-export default function CupScreen({ state, onShowClub }: { state: GameState; onShowClub?: (teamId: number) => void }) {
+export default function CupScreen({ state }: { state: GameState }) {
   useLang()
   const [selected, setSelected] = useState<CupFixture | null>(null)
   const name = (id: number) => state.teams.find(t => t.id === id)!.name
@@ -117,7 +107,6 @@ export default function CupScreen({ state, onShowClub }: { state: GameState; onS
                   divisionOf={divisionOf}
                   isUser={[f.homeId, f.awayId].includes(state.userTeamId)}
                   onToggle={() => { if (f.homeGoals === null) return; setSelected(f !== selected ? f : null) }}
-                  onShowClub={onShowClub}
                 />
               ))}
             </div>
@@ -127,9 +116,9 @@ export default function CupScreen({ state, onShowClub }: { state: GameState; onS
       {selected && (
         <Panel className="mt-4">
           <h3 className="mb-2 flex flex-wrap items-baseline gap-1.5 font-semibold">
-            <ClubName name={name(selected.homeId)} division={divisionOf(selected.homeId)} onClick={onShowClub ? () => onShowClub(selected.homeId) : undefined} />
+            <ClubName teamId={selected.homeId} name={name(selected.homeId)} division={divisionOf(selected.homeId)} />
             <span>{selected.homeGoals} – {selected.awayGoals}</span>
-            <ClubName name={name(selected.awayId)} division={divisionOf(selected.awayId)} onClick={onShowClub ? () => onShowClub(selected.awayId) : undefined} />
+            <ClubName teamId={selected.awayId} name={name(selected.awayId)} division={divisionOf(selected.awayId)} />
           </h3>
           <EventFeed events={selected.events ?? []} state={state} />
         </Panel>

@@ -6,6 +6,7 @@ import { makeOffer } from '../engine/transfers'
 import type { GameState, Player, Position, Team } from '../engine/types'
 import { t, useLang } from '../i18n'
 import Button from '../ui/Button'
+import ClubLink from '../ui/ClubLink'
 import DataTable from '../ui/DataTable'
 import type { Column } from '../ui/DataTable'
 import EmptyState from '../ui/EmptyState'
@@ -81,7 +82,7 @@ export default function ScoutScreen({ state, setState }: { state: GameState; set
         </span>
       ),
     },
-    { key: 'club', label: t('scout.clubColumn'), hideOnMobile: true, render: r => r.team.name },
+    { key: 'club', label: t('scout.clubColumn'), hideOnMobile: true, render: r => <ClubLink teamId={r.team.id}>{r.team.name}</ClubLink> },
     { key: 'pos', label: t('common.position'), mono: true, render: r => r.player.position },
     { key: 'age', label: t('common.age'), mono: true, hideOnMobile: true, render: r => r.player.age },
     { key: 'level', label: t('common.level'), mono: true, render: r => (

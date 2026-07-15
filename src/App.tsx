@@ -8,6 +8,7 @@ import { advanceRound, newSeason, totalRounds } from './engine/season'
 import { standings } from './engine/standings'
 import type { GameState } from './engine/types'
 import { t, useLang } from './i18n'
+import { ClubNavProvider } from './ui/ClubLink'
 import Panel from './ui/Panel'
 import Shell from './ui/Shell'
 import type { ScreenId } from './ui/Shell'
@@ -140,6 +141,7 @@ function Game() {
     : 0
 
   return (
+    <ClubNavProvider value={openClub}>
     <Shell
       screen={screen}
       onNavigate={setScreen}
@@ -148,7 +150,6 @@ function Game() {
       onAdvance={advance}
       advanceDisabled={needsEleven}
       advanceHint={advanceHint}
-      onShowClub={openClub}
     >
       {champion && (
         <Panel className="mb-4 border-accent/40!">
@@ -170,14 +171,14 @@ function Game() {
         </Panel>
       )}
       {screen === 'home' && (employed
-        ? <HomeScreen state={state} setState={setState} onAdvance={advance} advanceDisabled={needsEleven} advanceHint={advanceHint} onNavigate={setScreen} onShowClub={openClub} />
+        ? <HomeScreen state={state} setState={setState} onAdvance={advance} advanceDisabled={needsEleven} advanceHint={advanceHint} onNavigate={setScreen} />
         : <UnemployedScreen state={state} setState={setState} onAdvance={advance} />)}
       {screen === 'squad' && <SquadScreen state={state} setState={setState} />}
       {screen === 'table' && (
         <TableScreen key={state.season} state={state} onShowClub={openClub} />
       )}
       {screen === 'fixtures' && <FixturesScreen key={state.season} state={state} />}
-      {screen === 'cup' && <CupScreen key={state.season} state={state} onShowClub={openClub} />}
+      {screen === 'cup' && <CupScreen key={state.season} state={state} />}
       {screen === 'stats' && <StatsScreen state={state} />}
       {screen === 'transfers' && <TransfersScreen state={state} setState={setState} />}
       {screen === 'scout' && <ScoutScreen state={state} setState={setState} />}
@@ -188,5 +189,6 @@ function Game() {
         <ClubScreen state={state} setState={setState} teamId={clubView.teamId} onBack={() => setScreen(clubView.from)} />
       )}
     </Shell>
+    </ClubNavProvider>
   )
 }

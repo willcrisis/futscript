@@ -3,6 +3,7 @@ import { totalRounds } from '../engine/season'
 import type { Fixture, GameState } from '../engine/types'
 import { t, useLang } from '../i18n'
 import Button from '../ui/Button'
+import ClubLink from '../ui/ClubLink'
 import EmptyState from '../ui/EmptyState'
 import EventFeed from '../ui/EventFeed'
 import Panel from '../ui/Panel'
@@ -110,7 +111,9 @@ export default function FixturesScreen({ state }: { state: GameState }) {
       {selected && fixtures.includes(selected) && (
         <Panel className="mt-4">
           <h3 className="mb-2 font-semibold">
-            {name(selected.homeId)} {selected.homeGoals} – {selected.awayGoals} {name(selected.awayId)}
+            <ClubLink teamId={selected.homeId}>{name(selected.homeId)}</ClubLink>{' '}
+            {selected.homeGoals} – {selected.awayGoals}{' '}
+            <ClubLink teamId={selected.awayId}>{name(selected.awayId)}</ClubLink>
           </h3>
           {selected.attendance != null && (
             <p className="mb-2 text-sm text-ink-muted">

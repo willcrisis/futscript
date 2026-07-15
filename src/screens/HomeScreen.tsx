@@ -8,6 +8,7 @@ import { standings } from '../engine/standings'
 import type { GameState } from '../engine/types'
 import { t, useLang } from '../i18n'
 import Button from '../ui/Button'
+import ClubLink from '../ui/ClubLink'
 import DataTable from '../ui/DataTable'
 import type { Column } from '../ui/DataTable'
 import MoneyText from '../ui/MoneyText'
@@ -24,12 +25,11 @@ interface Props {
   advanceDisabled?: boolean
   advanceHint?: string
   onNavigate: (s: ScreenId) => void
-  onShowClub?: (teamId: number) => void
 }
 
 interface Row { pos: number; teamId: number; name: string; points: number; gd: number }
 
-export default function HomeScreen({ state, setState, onAdvance, advanceDisabled, advanceHint, onNavigate, onShowClub }: Props) {
+export default function HomeScreen({ state, setState, onAdvance, advanceDisabled, advanceHint, onNavigate }: Props) {
   useLang()
   const [newsExpanded, setNewsExpanded] = useState(false)
   const user = state.teams.find(t => t.id === state.userTeamId)!
@@ -144,15 +144,7 @@ export default function HomeScreen({ state, setState, onAdvance, advanceDisabled
             <div className="flex items-center justify-between gap-3">
               <div>
                 <div className="text-lg font-medium">
-                  {opponentId !== null && (onShowClub ? (
-                    <button
-                      type="button"
-                      onClick={() => onShowClub(opponentId)}
-                      className="rounded-sm underline-offset-2 hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 focus-visible:ring-offset-surface"
-                    >
-                      {name(opponentId)}
-                    </button>
-                  ) : name(opponentId))}
+                  {opponentId !== null && <ClubLink teamId={opponentId}>{name(opponentId)}</ClubLink>}
                 </div>
                 <div className="mt-0.5 text-xs text-ink-muted">
                   {isHome ? t('home.venueHome') : t('home.venueAway')} ·{' '}
@@ -249,7 +241,7 @@ export default function HomeScreen({ state, setState, onAdvance, advanceDisabled
 
       <div className="mt-4 xl:hidden">
         <Panel label={t('news.title')}>
-          <NewsRail state={state} limit={newsExpanded ? undefined : 5} onShowClub={onShowClub} />
+          <NewsRail state={state} limit={newsExpanded ? undefined : 5} />
           {state.news.length > 5 && (
             <button
               className="mt-2 text-xs text-ink-muted underline-offset-2 hover:underline"
