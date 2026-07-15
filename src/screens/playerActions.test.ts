@@ -29,6 +29,14 @@ describe('playerActions', () => {
     expect(playerActions(s2, ownId).listed).toBe(true)
   })
 
+  it('does not flag a player listed by another team', () => {
+    const s = newGame(1)
+    const aiTeam = s.teams.find(t => t.id !== s.userTeamId)!
+    const aiId = aiTeam.playerIds[0]
+    const s2 = { ...s, transferList: [{ playerId: aiId, sellerTeamId: aiTeam.id, minPrice: 1, currentBid: null, currentBidderId: null, roundsLeft: 3 }] }
+    expect(playerActions(s2, aiId).listed).toBe(false)
+  })
+
   it('offers nothing when unemployed', () => {
     const s = newGame(1)
     const aiId = s.teams.find(t => t.id !== s.userTeamId)!.playerIds[0]

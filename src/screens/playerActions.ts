@@ -15,6 +15,6 @@ export function playerActions(state: GameState, playerId: number): PlayerActionI
   const isOwn = employed && owner != null && owner.id === state.userTeamId
   const canOffer = employed && owner != null && owner.id !== state.userTeamId
   const offerPending = state.outgoingOffers.some(o => o.playerId === playerId)
-  const listed = state.transferList.some(l => l.playerId === playerId)
+  const listed = state.transferList.some(l => l.playerId === playerId && l.sellerTeamId === state.userTeamId)
   return { owner, isOwn, canOffer, offerPending, listed }
 }
