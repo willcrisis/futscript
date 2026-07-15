@@ -9,6 +9,7 @@ import { standings } from './engine/standings'
 import type { GameState } from './engine/types'
 import { t, useLang } from './i18n'
 import { ClubNavProvider } from './ui/ClubLink'
+import { PlayerNavProvider } from './ui/PlayerLink'
 import Panel from './ui/Panel'
 import Shell from './ui/Shell'
 import type { ScreenId } from './ui/Shell'
@@ -24,6 +25,7 @@ import HistoryScreen from './screens/HistoryScreen'
 import HomeScreen from './screens/HomeScreen'
 import MatchScreen from './screens/MatchScreen'
 import type { MatchLike } from './screens/MatchScreen'
+import PlayerModal from './screens/PlayerModal'
 import SavesScreen from './screens/SavesScreen'
 import ScoutScreen from './screens/ScoutScreen'
 import SquadScreen from './screens/SquadScreen'
@@ -55,6 +57,7 @@ function Game() {
   const [pendingToasts, setPendingToasts] = useState<ToastInput[]>([])
   const [showWelcome, setShowWelcome] = useState(boot.fresh)
   const [clubView, setClubView] = useState<{ teamId: number; from: ScreenId } | null>(null)
+  const [playerView, setPlayerView] = useState<number | null>(null)
   const advancingRef = useRef(false)
   useEffect(() => { save(state) }, [state])
 
@@ -142,6 +145,7 @@ function Game() {
 
   return (
     <ClubNavProvider value={openClub}>
+    <PlayerNavProvider value={setPlayerView}>
     <Shell
       screen={screen}
       onNavigate={setScreen}
@@ -189,6 +193,10 @@ function Game() {
         <ClubScreen state={state} setState={setState} teamId={clubView.teamId} onBack={() => setScreen(clubView.from)} />
       )}
     </Shell>
+    {playerView != null && (
+      <PlayerModal state={state} setState={setState} playerId={playerView} onClose={() => setPlayerView(null)} />
+    )}
+    </PlayerNavProvider>
     </ClubNavProvider>
   )
 }

@@ -20,6 +20,7 @@ import DataTable from '../ui/DataTable'
 import type { Column } from '../ui/DataTable'
 import { DelistIcon, ExitIcon, MinusIcon, PlayIcon, PlusIcon, RenewIcon, TagIcon, YellowCardIcon } from '../ui/icons'
 import MoneyText from '../ui/MoneyText'
+import PlayerLink from '../ui/PlayerLink'
 import ScreenHeader from '../ui/ScreenHeader'
 
 const ORDER = ['GK', 'DF', 'MF', 'FW']
@@ -96,7 +97,7 @@ export default function SquadScreen({ state, setState }: Props) {
       label: t('squad.nameColumn'),
       render: p => (
         <span className="inline-flex items-center gap-2">
-          {p.name}
+          <PlayerLink playerId={p.id}>{p.name}</PlayerLink>
           {team.lineup.includes(p.id) && (
             <span className="size-2 shrink-0 rounded-full bg-accent" aria-label={t('squad.startingXi')} title={t('squad.startingXi')} />
           )}

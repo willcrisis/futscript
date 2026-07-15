@@ -163,6 +163,23 @@ export const en = {
   'squad.recoveringTo': 'recovering to {n}',
   'squad.injuryProne': 'injury prone',
 
+  // Player popup
+  'player.form': 'Form',
+  'player.fitness': 'Fitness',
+  'player.value': 'Value',
+  'player.salary': 'Salary',
+  'player.perWeek': '{money}/wk',
+  'player.contract': 'Contract',
+  'player.contractSeasons': '{n} seasons',
+  'player.seasonGoals': 'Season goals',
+  'player.injuries': 'Injuries',
+  'player.yellows': 'Yellow cards',
+  'player.status': 'Status',
+  'player.statusFit': 'Fit',
+  'player.statusInjured': 'Injured — {n}w',
+  'player.statusSuspended': 'Suspended — {n}w',
+  'player.close': 'Close',
+
   // Transfers screen
   'transfers.header': 'MARKET',
   'transfers.title': 'Transfers',

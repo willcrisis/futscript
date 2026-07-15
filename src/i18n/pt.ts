@@ -165,6 +165,23 @@ export const pt: Record<TranslationKey, string> = {
   'squad.recoveringTo': 'recuperando até {n}',
   'squad.injuryProne': 'propenso a lesões',
 
+  // Player popup
+  'player.form': 'Forma',
+  'player.fitness': 'Preparo',
+  'player.value': 'Valor',
+  'player.salary': 'Salário',
+  'player.perWeek': '{money}/sem',
+  'player.contract': 'Contrato',
+  'player.contractSeasons': '{n} temporadas',
+  'player.seasonGoals': 'Gols na temporada',
+  'player.injuries': 'Lesões',
+  'player.yellows': 'Cartões amarelos',
+  'player.status': 'Situação',
+  'player.statusFit': 'Apto',
+  'player.statusInjured': 'Lesionado — {n}sem',
+  'player.statusSuspended': 'Suspenso — {n}sem',
+  'player.close': 'Fechar',
+
   // Transfers screen
   'transfers.header': 'MERCADO',
   'transfers.title': 'Transferências',
