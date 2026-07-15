@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { effectiveLevel, resolveCupTie, simulateMatch } from './match'
+import { effectiveLevel, injuryWeight, PRONE_THRESHOLD, resolveCupTie, simulateMatch } from './match'
 import { mulberry32 } from './rng'
 import type { Player, Position, Team, TrainingStyle } from './types'
 
@@ -210,5 +210,18 @@ describe('resolveCupTie', () => {
       }
     }
     expect(sawPens).toBe(true)
+  })
+})
+
+describe('injury proneness', () => {
+  it('injuryWeight rises with the injury counter', () => {
+    const base = injuryWeight({ injuryCount: 0 } as any)
+    const prone = injuryWeight({ injuryCount: 5 } as any)
+    expect(base).toBe(1)
+    expect(prone).toBeGreaterThan(base)
+  })
+
+  it('exposes a prone threshold', () => {
+    expect(PRONE_THRESHOLD).toBeGreaterThan(0)
   })
 })

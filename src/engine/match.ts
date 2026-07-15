@@ -32,6 +32,13 @@ const YELLOW_P = 0.015 // per team-minute ≈ 1.35 yellows/team/match
 const STRAIGHT_RED_P = 0.0005
 const INJURY_P = 0.0012 // per team-minute ≈ 1 injury per team per 9 matches
 
+// ponytail: injury-prone players take a larger share of new injuries; retune the weight/threshold.
+const PRONENESS_WEIGHT = 0.15
+export const PRONE_THRESHOLD = 3
+export function injuryWeight(p: Player): number {
+  return 1 + p.injuryCount * PRONENESS_WEIGHT
+}
+
 const SCORER_WEIGHT: Record<Player['position'], number> = { GK: 0.1, DF: 1, MF: 2, FW: 4 }
 
 interface Side {
@@ -118,7 +125,7 @@ function playMinuteForSide(side: Side, opp: Side, minute: number, events: MatchE
   }
 
   if (side.active.length > 0 && rand() < INJURY_P * INJURY_STYLE_MULT[side.team.trainingStyle]) {
-    const victim = pickUniform(side.active, rand)
+    const victim = pickWeighted(side.active, injuryWeight, rand)
     side.active = side.active.filter(p => p.id !== victim.id)
     const sub =
       side.bench.filter(p => p.position === victim.position).sort((a, b) => b.level - a.level)[0] ??
