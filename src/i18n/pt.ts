@@ -162,6 +162,8 @@ export const pt: Record<TranslationKey, string> = {
   'squad.autoPick': 'Escalação automática',
   'squad.selectElevenHint': 'Escale 11 para continuar ({n}/11)',
   'squad.oneKeeperHint': 'Sua escalação precisa de exatamente um goleiro.',
+  'squad.recoveringTo': 'recuperando até {n}',
+  'squad.injuryProne': 'propenso a lesões',
 
   // Transfers screen
   'transfers.header': 'MERCADO',

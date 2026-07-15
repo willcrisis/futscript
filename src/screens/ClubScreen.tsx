@@ -2,6 +2,7 @@ import { useState } from 'react'
 import type { Dispatch, SetStateAction } from 'react'
 import { positionOf } from '../engine/career'
 import { marketValue } from '../engine/finance'
+import { PRONE_THRESHOLD } from '../engine/match'
 import { makeOffer } from '../engine/transfers'
 import type { GameState, Player } from '../engine/types'
 import { isManaged } from '../engine/types'
@@ -31,10 +32,28 @@ export default function ClubScreen({ state, setState, teamId, onBack }: Props) {
     : t('club.statusFit')
 
   const columns: Column<Player>[] = [
-    { key: 'name', label: t('common.player'), render: p => p.name },
+    {
+      key: 'name',
+      label: t('common.player'),
+      render: p => (
+        <span className="inline-flex items-center gap-2">
+          {p.name}
+          {p.injuryCount >= PRONE_THRESHOLD && (
+            <span className="text-danger" title={t('squad.injuryProne')} aria-label={t('squad.injuryProne')}>⚠</span>
+          )}
+        </span>
+      ),
+    },
     { key: 'position', label: t('common.position'), mono: true, render: p => p.position },
     { key: 'age', label: t('common.age'), align: 'right', mono: true, render: p => p.age },
-    { key: 'level', label: t('common.level'), align: 'right', mono: true, render: p => <strong>{p.level}</strong> },
+    { key: 'level', label: t('common.level'), align: 'right', mono: true, render: p => (
+      <span className="inline-flex items-baseline gap-1">
+        <strong>{p.level}</strong>
+        {p.level < p.peakLevel && (
+          <span className="text-[10px] text-ink-faint" title={t('squad.recoveringTo', { n: p.peakLevel })}>↑{p.peakLevel}</span>
+        )}
+      </span>
+    ) },
     { key: 'status', label: t('common.status'), hideOnMobile: true, render: status },
   ]
 

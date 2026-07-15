@@ -2,6 +2,7 @@ import { useState } from 'react'
 import type { Dispatch, SetStateAction } from 'react'
 import { formatMoney, marketValue, severanceFor } from '../engine/finance'
 import { autoPick, isAvailable, toggleStarter, updateTeam } from '../engine/lineup'
+import { PRONE_THRESHOLD } from '../engine/match'
 import { delistPlayer, listPlayer, releasePlayer, renewalSalary, renewContract } from '../engine/transfers'
 import {
   FORMATIONS,
@@ -99,11 +100,21 @@ export default function SquadScreen({ state, setState }: Props) {
           {team.lineup.includes(p.id) && (
             <span className="size-2 shrink-0 rounded-full bg-accent" aria-label={t('squad.startingXi')} title={t('squad.startingXi')} />
           )}
+          {p.injuryCount >= PRONE_THRESHOLD && (
+            <span className="text-danger" title={t('squad.injuryProne')} aria-label={t('squad.injuryProne')}>⚠</span>
+          )}
         </span>
       ),
     },
     { key: 'age', label: t('common.age'), mono: true, hideOnMobile: true, render: p => p.age },
-    { key: 'level', label: t('common.level'), mono: true, render: p => <strong>{p.level}</strong> },
+    { key: 'level', label: t('common.level'), mono: true, render: p => (
+      <span className="inline-flex items-baseline gap-1">
+        <strong>{p.level}</strong>
+        {p.level < p.peakLevel && (
+          <span className="text-[10px] text-ink-faint" title={t('squad.recoveringTo', { n: p.peakLevel })}>↑{p.peakLevel}</span>
+        )}
+      </span>
+    ) },
     { key: 'form', label: t('squad.formColumn'), mono: true, hideOnMobile: true, render: p => formCell(p.form) },
     {
       key: 'fit',

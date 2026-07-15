@@ -160,6 +160,8 @@ export const en = {
   'squad.autoPick': 'Auto-pick',
   'squad.selectElevenHint': 'Pick 11 to continue ({n}/11)',
   'squad.oneKeeperHint': 'Your XI needs exactly one goalkeeper.',
+  'squad.recoveringTo': 'recovering to {n}',
+  'squad.injuryProne': 'injury prone',
 
   // Transfers screen
   'transfers.header': 'MARKET',

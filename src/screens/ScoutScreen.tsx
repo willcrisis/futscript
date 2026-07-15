@@ -1,6 +1,7 @@
 import { useMemo, useState } from 'react'
 import type { Dispatch, SetStateAction } from 'react'
 import { marketValue } from '../engine/finance'
+import { PRONE_THRESHOLD } from '../engine/match'
 import { makeOffer } from '../engine/transfers'
 import type { GameState, Player, Position, Team } from '../engine/types'
 import { t, useLang } from '../i18n'
@@ -68,11 +69,29 @@ export default function ScoutScreen({ state, setState }: { state: GameState; set
   const pending = (id: number) => state.outgoingOffers.some(o => o.playerId === id)
 
   const columns: Column<ScoutRow>[] = [
-    { key: 'name', label: t('common.player'), render: r => r.player.name },
+    {
+      key: 'name',
+      label: t('common.player'),
+      render: r => (
+        <span className="inline-flex items-center gap-2">
+          {r.player.name}
+          {r.player.injuryCount >= PRONE_THRESHOLD && (
+            <span className="text-danger" title={t('squad.injuryProne')} aria-label={t('squad.injuryProne')}>⚠</span>
+          )}
+        </span>
+      ),
+    },
     { key: 'club', label: t('scout.clubColumn'), hideOnMobile: true, render: r => r.team.name },
     { key: 'pos', label: t('common.position'), mono: true, render: r => r.player.position },
     { key: 'age', label: t('common.age'), mono: true, hideOnMobile: true, render: r => r.player.age },
-    { key: 'level', label: t('common.level'), mono: true, render: r => <strong>{r.player.level}</strong> },
+    { key: 'level', label: t('common.level'), mono: true, render: r => (
+      <span className="inline-flex items-baseline gap-1">
+        <strong>{r.player.level}</strong>
+        {r.player.level < r.player.peakLevel && (
+          <span className="text-[10px] text-ink-faint" title={t('squad.recoveringTo', { n: r.player.peakLevel })}>↑{r.player.peakLevel}</span>
+        )}
+      </span>
+    ) },
     { key: 'value', label: t('squad.valueColumn'), mono: true, align: 'right', render: r => <MoneyText amount={r.value} size="sm" /> },
     {
       key: 'offer', label: '', fullWidthOnMobile: true, render: r => {
