@@ -8,9 +8,10 @@ export function autoPick(team: Team, players: Record<number, Player>): number[] 
   const squad = team.playerIds.map(id => players[id]).filter(isAvailable)
   const formation = team.formation
   if (formation === 'Best') {
-    // highest-level keeper, then the ten best remaining regardless of position
+    // highest-level keeper, then the best outfielders — never a second GK
     const gk = squad.filter(p => p.position === 'GK').sort((a, b) => b.level - a.level)[0]
-    const rest = squad.filter(p => p.id !== gk?.id).sort((a, b) => b.level - a.level).slice(0, 10)
+    const outfield = squad.filter(p => p.position !== 'GK').sort((a, b) => b.level - a.level)
+    const rest = outfield.slice(0, gk ? 10 : 11) // no keeper available → field 11 outfielders
     return [gk, ...rest].filter(Boolean).map(p => (p as Player).id)
   }
   const lineup: number[] = []
@@ -112,17 +113,37 @@ export function patchLineup(team: Team, players: Record<number, Player>): number
   return reshapeToFormation(lineup, bench, players, formation)
 }
 
-export function toggleStarter(team: Team, playerId: number): number[] {
-  return team.lineup.includes(playerId)
-    ? team.lineup.filter(id => id !== playerId)
-    : [...team.lineup, playerId]
+const gkCount = (ids: number[], players: Record<number, Player>): number =>
+  ids.filter(id => players[id]?.position === 'GK').length
+
+export function toggleStarter(team: Team, playerId: number, players: Record<number, Player>): number[] {
+  if (team.lineup.includes(playerId)) return team.lineup.filter(id => id !== playerId)
+  // one keeper slot: starting a keeper benches any keeper already in the XI
+  if (players[playerId].position === 'GK') {
+    return [...team.lineup.filter(id => players[id].position !== 'GK'), playerId]
+  }
+  return [...team.lineup, playerId]
+}
+
+// Why the user's XI isn't match-ready, or null if it is. Drives the advance gate + hint.
+// Only demands a keeper when the squad actually has an available one (a keeper-less
+// degraded squad falls to autoPick at match time, so we don't lock the user out).
+export function lineupIssue(team: Team, players: Record<number, Player>): 'count' | 'keeper' | null {
+  if (team.lineup.length !== 11) return 'count'
+  const keeperAvailable = team.playerIds.some(id => players[id].position === 'GK' && isAvailable(players[id]))
+  if (keeperAvailable && gkCount(team.lineup, players) !== 1) return 'keeper'
+  return null
 }
 
 // The managed team's XI is user-curated (formation is only a suggestion). Trust it
 // verbatim when it's a legal 11; the advance gate + post-matchday cleanup keep it so.
 // autoPick is the safety net for a degraded or half-built lineup that slips through.
 export function managedMatchLineup(team: Team, players: Record<number, Player>): number[] {
-  const valid = team.lineup.length === 11 && team.lineup.every(id => isAvailable(players[id]))
+  // trust a legal 11 verbatim; a stale two-keeper XI (e.g. an old save) heals via autoPick
+  const valid =
+    team.lineup.length === 11 &&
+    team.lineup.every(id => isAvailable(players[id])) &&
+    gkCount(team.lineup, players) <= 1
   return valid ? team.lineup : autoPick(team, players)
 }
 

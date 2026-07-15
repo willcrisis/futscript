@@ -161,6 +161,7 @@ export const pt: Record<TranslationKey, string> = {
   'squad.renewFor': 'Renovar · {salary}/sem',
   'squad.autoPick': 'Escalação automática',
   'squad.selectElevenHint': 'Escale 11 para continuar ({n}/11)',
+  'squad.oneKeeperHint': 'Sua escalação precisa de exatamente um goleiro.',
 
   // Transfers screen
   'transfers.header': 'MERCADO',

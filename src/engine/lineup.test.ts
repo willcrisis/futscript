@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { autoPick, isAvailable, managedMatchLineup, patchLineup, toggleStarter } from './lineup'
+import { autoPick, isAvailable, lineupIssue, managedMatchLineup, patchLineup, toggleStarter } from './lineup'
 import { FORMATIONS, type Player, type Position, type Team } from './types'
 
 // 18-player squad: 2 GK, 6 DF, 6 MF, 4 FW — levels descend within each group
@@ -53,21 +53,32 @@ describe('autoPick', () => {
 })
 
 describe('toggleStarter', () => {
-  it('appends a benched player to the lineup', () => {
-    const { team } = makeSquad()
-    expect(toggleStarter({ ...team, lineup: [1, 2, 3] }, 4)).toEqual([1, 2, 3, 4])
+  it('appends a benched outfielder to the lineup', () => {
+    const { team, players } = makeSquad()
+    expect(toggleStarter({ ...team, lineup: [1, 3, 4] }, 5, players)).toEqual([1, 3, 4, 5])
   })
 
   it('removes a starting player from the lineup', () => {
-    const { team } = makeSquad()
-    expect(toggleStarter({ ...team, lineup: [1, 2, 3] }, 2)).toEqual([1, 3])
+    const { team, players } = makeSquad()
+    expect(toggleStarter({ ...team, lineup: [1, 3, 4] }, 3, players)).toEqual([1, 4])
   })
 
-  it('imposes no formation shape — a lopsided XI is allowed', () => {
-    const { team } = makeSquad()
-    // five forwards (15,16,17,18 + toggling in nobody new) — just prove add works past shape
+  it('imposes no outfield shape — a lopsided XI is allowed', () => {
+    const { team, players } = makeSquad()
+    // four forwards + toggling in another MF — prove add works past shape
     const lineup = [15, 16, 17, 18]
-    expect(toggleStarter({ ...team, lineup }, 14)).toEqual([15, 16, 17, 18, 14])
+    expect(toggleStarter({ ...team, lineup }, 14, players)).toEqual([15, 16, 17, 18, 14])
+  })
+
+  it('starting a second keeper benches the first — one keeper slot', () => {
+    const { team, players } = makeSquad() // ids 1 and 2 are GKs
+    // GK id 1 already starting; start GK id 2 → id 1 is benched
+    expect(toggleStarter({ ...team, lineup: [1, 3, 4] }, 2, players)).toEqual([3, 4, 2])
+  })
+
+  it('starting an outfielder leaves the current keeper alone', () => {
+    const { team, players } = makeSquad()
+    expect(toggleStarter({ ...team, lineup: [1, 3] }, 9, players)).toEqual([1, 3, 9])
   })
 })
 
@@ -92,6 +103,49 @@ describe('managedMatchLineup', () => {
     const result = managedMatchLineup({ ...team, lineup }, players)
     expect(result).not.toEqual(lineup)
     expect(result.every(id => isAvailable(players[id]))).toBe(true)
+  })
+
+  it('falls back to autoPick when a stale lineup fields two keepers', () => {
+    const { team, players } = makeSquad()
+    // 2 GKs (1,2) + 9 outfield = an available 11, but illegal — heal it
+    const lineup = [1, 2, 3, 4, 5, 6, 9, 10, 15, 16, 17]
+    const result = managedMatchLineup({ ...team, lineup }, players)
+    expect(result).not.toEqual(lineup)
+    expect(result.filter(id => players[id].position === 'GK')).toHaveLength(1)
+  })
+})
+
+describe('lineupIssue', () => {
+  const valid = [1, 3, 4, 5, 6, 9, 10, 15, 16, 17, 18] // 1 GK + 10 outfield
+
+  it('returns null for a legal 11 with exactly one keeper', () => {
+    const { team, players } = makeSquad()
+    expect(lineupIssue({ ...team, lineup: valid }, players)).toBeNull()
+  })
+
+  it("returns 'count' when the XI is not 11", () => {
+    const { team, players } = makeSquad()
+    expect(lineupIssue({ ...team, lineup: [1, 3, 4] }, players)).toBe('count')
+  })
+
+  it("returns 'keeper' when an 11-player XI has two keepers", () => {
+    const { team, players } = makeSquad()
+    const twoKeepers = [1, 2, 3, 4, 5, 6, 9, 10, 15, 16, 17]
+    expect(lineupIssue({ ...team, lineup: twoKeepers }, players)).toBe('keeper')
+  })
+
+  it("returns 'keeper' when an 11-player XI has no keeper (one is available)", () => {
+    const { team, players } = makeSquad()
+    const noKeeper = [3, 4, 5, 6, 7, 9, 10, 15, 16, 17, 18]
+    expect(lineupIssue({ ...team, lineup: noKeeper }, players)).toBe('keeper')
+  })
+
+  it('does not demand a keeper the squad cannot field', () => {
+    const { team, players } = makeSquad()
+    players[1] = { ...players[1], injuredForRounds: 2 }
+    players[2] = { ...players[2], injuredForRounds: 2 } // both keepers out
+    const noKeeper = [3, 4, 5, 6, 7, 9, 10, 15, 16, 17, 18]
+    expect(lineupIssue({ ...team, lineup: noKeeper }, players)).toBeNull()
   })
 })
 
@@ -177,11 +231,14 @@ describe('new formations', () => {
     expect(counts).toEqual(FORMATIONS['3-4-3'])
   })
 
-  it('Best picks the 11 highest levels when the keeper is already top-tier', () => {
-    const { team, players } = makeSquad() // levels descend 90..73; GKs are the top two
+  it('Best fields exactly one keeper — the best GK plus the ten best outfielders', () => {
+    const { team, players } = makeSquad() // ids 1,2 are the top-two levels and both GKs
     const lineup = autoPick({ ...team, formation: 'Best' }, players)
     expect(lineup).toHaveLength(11)
-    expect(new Set(lineup)).toEqual(new Set([1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11]))
+    // exactly one keeper (id 1), never the second GK (id 2), then the top-10 outfield (ids 3–12)
+    expect(lineup.filter(id => players[id].position === 'GK')).toEqual([1])
+    expect(lineup).not.toContain(2)
+    expect(new Set(lineup)).toEqual(new Set([1, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12]))
   })
 
   it('Best forces the best available keeper in even when GKs are weak', () => {

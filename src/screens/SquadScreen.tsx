@@ -178,7 +178,7 @@ export default function SquadScreen({ state, setState }: Props) {
               aria-label={starting ? t('squad.bench') : t('squad.start')}
               title={starting ? t('squad.bench') : t('squad.start')}
               className={starting ? 'border-accent! text-accent-strong!' : ''}
-              onClick={() => withUserTeam((s, t) => updateTeam(s, t.id, { lineup: toggleStarter(t, p.id) }))}
+              onClick={() => withUserTeam((s, t) => updateTeam(s, t.id, { lineup: toggleStarter(t, p.id, s.players) }))}
             >
               <PlayIcon />
             </Button>

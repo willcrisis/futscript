@@ -159,6 +159,7 @@ export const en = {
   'squad.renewFor': 'Renew · {salary}/wk',
   'squad.autoPick': 'Auto-pick',
   'squad.selectElevenHint': 'Pick 11 to continue ({n}/11)',
+  'squad.oneKeeperHint': 'Your XI needs exactly one goalkeeper.',
 
   // Transfers screen
   'transfers.header': 'MARKET',
