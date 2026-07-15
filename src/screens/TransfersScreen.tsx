@@ -12,6 +12,7 @@ import type { Column } from '../ui/DataTable'
 import EmptyState from '../ui/EmptyState'
 import MoneyText from '../ui/MoneyText'
 import Panel from '../ui/Panel'
+import PlayerLink from '../ui/PlayerLink'
 import ScreenHeader from '../ui/ScreenHeader'
 
 interface Props {
@@ -26,7 +27,7 @@ export default function TransfersScreen({ state, setState }: Props) {
   const user = state.teams.find(t => t.id === state.userTeamId)!
 
   const columns: Column<TransferListing>[] = [
-    { key: 'player', label: t('common.player'), render: l => state.players[l.playerId].name },
+    { key: 'player', label: t('common.player'), render: l => <PlayerLink playerId={l.playerId}>{state.players[l.playerId].name}</PlayerLink> },
     { key: 'pos', label: t('transfers.posColumn'), hideOnMobile: true, render: l => state.players[l.playerId].position },
     { key: 'lvl', label: t('common.level'), mono: true, render: l => state.players[l.playerId].level },
     { key: 'age', label: t('common.age'), mono: true, hideOnMobile: true, render: l => state.players[l.playerId].age },

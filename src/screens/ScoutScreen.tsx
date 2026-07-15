@@ -11,6 +11,7 @@ import DataTable from '../ui/DataTable'
 import type { Column } from '../ui/DataTable'
 import EmptyState from '../ui/EmptyState'
 import MoneyText from '../ui/MoneyText'
+import PlayerLink from '../ui/PlayerLink'
 import ScreenHeader from '../ui/ScreenHeader'
 
 const fold = (s: string) => s.normalize('NFD').replace(/\p{Diacritic}/gu, '').toLowerCase()
@@ -75,7 +76,7 @@ export default function ScoutScreen({ state, setState }: { state: GameState; set
       label: t('common.player'),
       render: r => (
         <span className="inline-flex items-center gap-2">
-          {r.player.name}
+          <PlayerLink playerId={r.player.id}>{r.player.name}</PlayerLink>
           {r.player.injuryCount >= PRONE_THRESHOLD && (
             <span className="text-danger" title={t('squad.injuryProne')} aria-label={t('squad.injuryProne')}>⚠</span>
           )}

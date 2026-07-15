@@ -11,6 +11,7 @@ import Button from '../ui/Button'
 import DataTable from '../ui/DataTable'
 import type { Column } from '../ui/DataTable'
 import Panel from '../ui/Panel'
+import PlayerLink from '../ui/PlayerLink'
 import ScreenHeader from '../ui/ScreenHeader'
 
 interface Props {
@@ -37,7 +38,7 @@ export default function ClubScreen({ state, setState, teamId, onBack }: Props) {
       label: t('common.player'),
       render: p => (
         <span className="inline-flex items-center gap-2">
-          {p.name}
+          <PlayerLink playerId={p.id}>{p.name}</PlayerLink>
           {p.injuryCount >= PRONE_THRESHOLD && (
             <span className="text-danger" title={t('squad.injuryProne')} aria-label={t('squad.injuryProne')}>⚠</span>
           )}
