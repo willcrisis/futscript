@@ -99,3 +99,28 @@ describe('ageSquads', () => {
     expect(next[2]!.level).toBeLessThanOrEqual(59) // declined 1-3
   })
 })
+
+describe('injury recovery in weekly updates', () => {
+  it('a below-peak player climbs toward peak without exceeding it', () => {
+    const players: Record<number, Player> = {
+      1: { id: 1, name: 'P', age: 25, position: 'MF', level: 50, peakLevel: 58, form: 0, fitness: 100,
+           injuredForRounds: 0, suspendedForRounds: 0, yellowCards: 0, injuryCount: 1, salary: 5000, contractSeasons: 2, seasonGoals: 0 },
+    }
+    const team: Team = { id: 0, name: 'T', playerIds: [1], formation: '4-4-2', lineup: [], tactic: 'normal',
+      trainingStyle: 'normal', cash: 0, division: 1, capacity: 9000, ticketPrice: 15, fanMood: 50, manager: 'AI', managerHiredSeason: 0 }
+    let cur = players
+    for (let w = 0; w < 3; w++) cur = applyWeeklyUpdates(cur, [team], new Set(), mulberry32(w + 1))
+    expect(cur[1].level).toBeGreaterThan(50)               // recovered some
+    expect(cur[1].level).toBeLessThanOrEqual(cur[1].peakLevel) // never above peak
+  })
+
+  it('age decline lowers peak too, so recovery cannot undo it', () => {
+    const players: Record<number, Player> = {
+      1: { id: 1, name: 'Vet', age: 33, position: 'DF', level: 60, peakLevel: 60, form: 0, fitness: 100,
+           injuredForRounds: 0, suspendedForRounds: 0, yellowCards: 0, injuryCount: 0, salary: 5000, contractSeasons: 2, seasonGoals: 0 },
+    }
+    const aged = ageSquads(players, mulberry32(1))
+    expect(aged[1].peakLevel).toBeLessThanOrEqual(60)
+    expect(aged[1].level).toBeLessThanOrEqual(aged[1].peakLevel)
+  })
+})

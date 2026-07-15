@@ -17,6 +17,7 @@ function growthChance(age: number): number {
 
 const MATCH_FITNESS_COST = 25
 const WEEKLY_RECOVERY = 20
+const RECOVER_STEP = 1 // ponytail: levels regained per week toward peak (reconditioning)
 
 export function applyWeeklyUpdates(
   players: Record<number, Player>,
@@ -36,7 +37,9 @@ export function applyWeeklyUpdates(
         Math.max(0, p.fitness - (starters.has(p.id) ? MATCH_FITNESS_COST : 0) + WEEKLY_RECOVERY),
       )
       const form = Math.max(-3, Math.min(3, p.form + randInt(rand, -1, 1)))
-      return [p.id, { ...p, level: Math.min(99, p.level + gain), fitness, form }]
+      const peakLevel = Math.min(99, p.peakLevel + gain) // development lifts true ability
+      const level = Math.min(peakLevel, p.level + RECOVER_STEP) // recondition toward peak
+      return [p.id, { ...p, peakLevel, level, fitness, form }]
     }),
   )
 }
@@ -48,9 +51,11 @@ export function ageSquads(players: Record<number, Player>, rand: () => number): 
     Object.values(players).map(p => {
       const age = p.age + 1
       const decline = age >= 30 ? randInt(rand, 1, 3) : 0
+      const peakLevel = Math.max(1, p.peakLevel - decline)
       return [p.id, {
         ...p, age,
-        level: Math.max(1, p.level - decline),
+        peakLevel,
+        level: Math.min(peakLevel, Math.max(1, p.level - decline)),
         form: 0, fitness: 100, yellowCards: 0, injuredForRounds: 0, suspendedForRounds: 0, seasonGoals: 0,
       }]
     }),
