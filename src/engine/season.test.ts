@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import { mulberry32 } from './rng'
 import { newGame } from './newGame'
-import { advanceRound, applyMatchConsequences, newSeason, totalRounds } from './season'
+import { advanceRound, applyMatchConsequences, newSeason, newSuspensions, totalRounds } from './season'
 import { standings } from './standings'
 import { adjustCash } from './finance'
 import { cupWinner } from './cup'
@@ -59,6 +59,28 @@ describe('applyMatchConsequences', () => {
       expect(next[1].peakLevel).toBeLessThanOrEqual(50)
       expect(next[1].level).toBeLessThanOrEqual(next[1].peakLevel)
     }
+  })
+})
+
+describe('newSuspensions', () => {
+  it('announces only players newly banned this week, with their ban length', () => {
+    const before = {
+      1: makePlayer(1, { suspendedForRounds: 0 }), // fresh ban incoming
+      2: makePlayer(2, { suspendedForRounds: 1 }), // already serving — not re-announced
+      3: makePlayer(3, { suspendedForRounds: 0 }), // stays fit
+    }
+    const after = {
+      1: makePlayer(1, { name: 'Alberto', suspendedForRounds: 2 }),
+      2: makePlayer(2, { suspendedForRounds: 1 }),
+      3: makePlayer(3, { suspendedForRounds: 0 }),
+    }
+    expect(newSuspensions(before, after, [1, 2, 3])).toEqual([{ name: 'Alberto', weeks: 2 }])
+  })
+
+  it('ignores player ids outside the given roster', () => {
+    const before = { 1: makePlayer(1) }
+    const after = { 1: makePlayer(1, { suspendedForRounds: 1 }) }
+    expect(newSuspensions(before, after, [])).toEqual([])
   })
 })
 

@@ -9,7 +9,7 @@ import { CupIcon, FinanceIcon, SquadIcon, TableIcon, TransfersIcon } from './ico
 const ICONS: Record<NewsType, FC<{ className?: string }>> = {
   userSigned: TransfersIcon, userSold: TransfersIcon, userRenewed: SquadIcon, userOutbid: TransfersIcon,
   offerReceived: TransfersIcon, rivalTransfer: TransfersIcon,
-  starterInjured: SquadIcon, boardWarning: FinanceIcon, constructionDone: FinanceIcon,
+  starterInjured: SquadIcon, playerSuspended: SquadIcon, boardWarning: FinanceIcon, constructionDone: FinanceIcon,
   heavyWin: TableIcon, champions: TableIcon, promoted: TableIcon, relegated: TableIcon,
   cupRun: CupIcon, cupWinner: CupIcon,
   managerSacked: SquadIcon, managerHired: SquadIcon, userSacked: SquadIcon, userHired: SquadIcon, jobOffer: SquadIcon,
@@ -18,7 +18,7 @@ const ICONS: Record<NewsType, FC<{ className?: string }>> = {
 
 function toneOf(type: NewsType): string {
   if (type === 'starterInjured' || type === 'userSacked') return 'text-danger'
-  if (type === 'boardWarning' || type === 'relegated') return 'text-warn'
+  if (type === 'boardWarning' || type === 'relegated' || type === 'playerSuspended') return 'text-warn'
   return 'text-ink'
 }
 

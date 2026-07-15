@@ -60,6 +60,23 @@ export function applyMatchConsequences(
   return next
 }
 
+// Players who picked up a fresh ban this week (0 → positive): a red card or a
+// third yellow in applyMatchConsequences. `before` is the post-tick, pre-consequence
+// snapshot, so a player still serving an earlier ban isn't re-announced.
+export function newSuspensions(
+  before: Record<number, Player>,
+  after: Record<number, Player>,
+  playerIds: number[],
+): { name: string; weeks: number }[] {
+  const out: { name: string; weeks: number }[] = []
+  for (const id of playerIds) {
+    const wasBanned = (before[id]?.suspendedForRounds ?? 0) > 0
+    const p = after[id]
+    if (!wasBanned && p && p.suspendedForRounds > 0) out.push({ name: p.name, weeks: p.suspendedForRounds })
+  }
+  return out
+}
+
 export function advanceRound(state: GameState): GameState {
   if (state.round > totalRounds(state)) return state
   const rand = mulberry32(state.rngState)
@@ -119,6 +136,7 @@ export function advanceRound(state: GameState): GameState {
       suspendedForRounds: playingPlayerIds.has(p.id) ? Math.max(0, p.suspendedForRounds - 1) : p.suspendedForRounds,
     }]),
   )
+  const preConsequence = players // snapshot before this week's knocks, for fresh-ban detection
   players = applyMatchConsequences(players, roundEvents, rand)
 
   // only this week's participants drain fitness; everyone else recovers
@@ -146,6 +164,9 @@ export function advanceRound(state: GameState): GameState {
         const hurt = s.players[e.playerId]
         if (hurt) s = pushNews(s, 'starterInjured', { player: hurt.name, weeks: hurt.injuredForRounds })
       }
+    }
+    for (const { name, weeks } of newSuspensions(preConsequence, s.players, byId.get(state.userTeamId)!.playerIds)) {
+      s = pushNews(s, 'playerSuspended', { player: name, weeks })
     }
   }
   for (const f of fixtures.filter(f => f.round === week && f.homeGoals !== null)) {

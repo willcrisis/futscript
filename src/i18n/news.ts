@@ -9,6 +9,7 @@ const NEWS_KEYS: Record<NewsType, TranslationKey> = {
   userOutbid: 'news.userOutbid',
   offerReceived: 'news.offerReceived',
   starterInjured: 'news.starterInjured',
+  playerSuspended: 'news.playerSuspended',
   boardWarning: 'news.boardWarning',
   constructionDone: 'news.constructionDone',
   rivalTransfer: 'news.rivalTransfer',

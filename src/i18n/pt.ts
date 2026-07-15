@@ -369,6 +369,7 @@ export const pt: Record<TranslationKey, string> = {
   'news.userOutbid': 'Você foi superado no lance por {player}',
   'news.offerReceived': '{bidder} ofereceu {amount} por {player}',
   'news.starterInjured': '{player} se lesionou — {weeks}sem fora',
+  'news.playerSuspended': '{player} suspenso — {weeks}sem fora',
   'news.boardWarning': 'A diretoria está perdendo a paciência: {n}/8 semanas no vermelho',
   'news.constructionDone': 'Ampliação do estádio concluída: +{seats} lugares',
   'news.rivalTransfer': '{player} deixa o {from} e vai para o {to} por {amount}',

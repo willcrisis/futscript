@@ -125,7 +125,7 @@ export interface ScorerRecord {
 export type NewsType =
   | 'userSigned' | 'userSold' | 'userRenewed' | 'userOutbid' | 'offerReceived'
   | 'offerAccepted' | 'offerRejected'
-  | 'starterInjured' | 'boardWarning' | 'constructionDone'
+  | 'starterInjured' | 'playerSuspended' | 'boardWarning' | 'constructionDone'
   | 'rivalTransfer' | 'heavyWin' | 'cupRun'
   | 'champions' | 'cupWinner' | 'promoted' | 'relegated'
   | 'managerSacked' | 'managerHired' | 'userSacked' | 'userHired' | 'jobOffer'

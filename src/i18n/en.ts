@@ -367,6 +367,7 @@ export const en = {
   'news.userOutbid': 'You were outbid on {player}',
   'news.offerReceived': '{bidder} bid {amount} for {player}',
   'news.starterInjured': '{player} injured — out {weeks}w',
+  'news.playerSuspended': '{player} suspended — out {weeks}w',
   'news.boardWarning': 'The board is losing patience: {n}/8 weeks in the red',
   'news.constructionDone': 'Stadium expansion complete: +{seats} seats',
   'news.rivalTransfer': '{player} moves from {from} to {to} for {amount}',
