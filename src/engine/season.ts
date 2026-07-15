@@ -14,6 +14,10 @@ import { MIN_SQUAD, renewalSalary, runTransfers } from './transfers'
 import type { GameState, MatchEvent, Player, Team } from './types'
 import { isActive, isManaged } from './types'
 
+// ponytail: injury severity → current-level hit and permanent peak shave. Retune here.
+const DROP_PER_WEEK = 1.5
+const PERMA_DIVISOR = 3
+
 export function totalRounds(state: GameState): number {
   return Math.max(
     ...state.fixtures.map(f => f.round),
@@ -41,8 +45,16 @@ export function applyMatchConsequences(
       next[p.id] = { ...p, suspendedForRounds: randInt(rand, 1, 2) }
     } else if (e.type === 'injury') {
       const rounds = randInt(rand, 1, 6)
-      const levelLoss = rounds >= 4 ? randInt(rand, 1, 2) : 0
-      next[p.id] = { ...p, injuredForRounds: rounds, level: Math.max(1, p.level - levelLoss) }
+      const drop = Math.round(rounds * DROP_PER_WEEK)
+      const permaLoss = Math.round(rounds / PERMA_DIVISOR)
+      const peakLevel = Math.max(1, p.peakLevel - permaLoss)
+      next[p.id] = {
+        ...p,
+        injuredForRounds: rounds,
+        injuryCount: p.injuryCount + 1,
+        peakLevel,
+        level: Math.max(1, Math.min(peakLevel, p.level - drop)),
+      }
     }
   }
   return next

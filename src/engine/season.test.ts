@@ -47,19 +47,17 @@ describe('applyMatchConsequences', () => {
     expect(next[1].suspendedForRounds).toBeLessThanOrEqual(2)
   })
 
-  it('injures 1-6 rounds and costs levels only when serious', () => {
+  it('injures 1-6 rounds and always costs some level, scaled by severity', () => {
     const rand = mulberry32(3)
     for (let i = 0; i < 50; i++) {
       const next = applyMatchConsequences({ 1: makePlayer(1) }, [injury(1)], rand)
       const rounds = next[1].injuredForRounds
       expect(rounds).toBeGreaterThanOrEqual(1)
       expect(rounds).toBeLessThanOrEqual(6)
-      if (rounds >= 4) {
-        expect(next[1].level).toBeGreaterThanOrEqual(48)
-        expect(next[1].level).toBeLessThanOrEqual(49)
-      } else {
-        expect(next[1].level).toBe(50)
-      }
+      expect(next[1].level).toBeLessThan(50)
+      expect(next[1].level).toBeGreaterThanOrEqual(1)
+      expect(next[1].peakLevel).toBeLessThanOrEqual(50)
+      expect(next[1].level).toBeLessThanOrEqual(next[1].peakLevel)
     }
   })
 })
@@ -545,5 +543,34 @@ describe('cup ties are always decided', () => {
       }
     }
     expect(checked).toBeGreaterThan(0)
+  })
+})
+
+function mkPlayer(over: Partial<Player> = {}): Player {
+  return {
+    id: 1, name: 'P', age: 25, position: 'MF', level: 60, peakLevel: 60,
+    form: 0, fitness: 100, injuredForRounds: 0, suspendedForRounds: 0, yellowCards: 0,
+    injuryCount: 0, salary: 5000, contractSeasons: 2, seasonGoals: 0, ...over,
+  }
+}
+
+describe('injury consequences', () => {
+  it('a long injury drops level more than a short one and shaves the peak', () => {
+    // run many seeds so randInt(1,6) spans short and long injuries
+    const outcomes = Array.from({ length: 40 }, (_, i) => {
+      const p = applyMatchConsequences({ 1: mkPlayer() }, [{ minute: 10, type: 'injury', teamId: 0, playerId: 1 }], mulberry32(i + 1))[1]
+      return p
+    })
+    for (const p of outcomes) {
+      expect(p.injuryCount).toBe(1)
+      expect(p.injuredForRounds).toBeGreaterThanOrEqual(1)
+      expect(p.level).toBeLessThan(60)          // level always drops
+      expect(p.level).toBeLessThanOrEqual(p.peakLevel) // invariant
+      expect(p.peakLevel).toBeLessThanOrEqual(60)
+      expect(p.level).toBeGreaterThanOrEqual(1)
+    }
+    // the longest injuries drop level furthest
+    const byWeeks = [...outcomes].sort((a, b) => a.injuredForRounds - b.injuredForRounds)
+    expect(byWeeks[0].level).toBeGreaterThan(byWeeks[byWeeks.length - 1].level)
   })
 })
