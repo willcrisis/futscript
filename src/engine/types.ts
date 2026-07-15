@@ -6,6 +6,8 @@ export interface Player {
   age: number
   position: Position
   level: number // 1-99
+  peakLevel: number // true ability ceiling; level recovers toward it, injuries shave it
+  injuryCount: number // career injuries; permanent; raises re-injury chance
   form: number // -3..+3, random walk each round
   fitness: number // 0-100; low fitness = weaker play, higher injury risk
   injuredForRounds: number // 0 = fit; N = misses the next N rounds
@@ -164,7 +166,7 @@ export function activeTeams(state: GameState): Team[] {
 }
 
 export interface GameState {
-  version: 8
+  version: 9
   seed: number
   rngState: number // seeds the RNG for the next advanceRound
   season: number

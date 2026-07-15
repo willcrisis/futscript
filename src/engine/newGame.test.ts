@@ -90,7 +90,7 @@ describe('newGame', () => {
 
   it('v7: every club has a manager, the user has a career, the pool starts empty', () => {
     const state = newGame(7)
-    expect(state.version).toBe(8)
+    expect(state.version).toBe(9)
     for (const team of state.teams) {
       expect(team.manager).toMatch(/\S+ \S+/) // "First Last" — \S so accented names (André, ...) still match
       expect(team.managerHiredSeason).toBe(0)

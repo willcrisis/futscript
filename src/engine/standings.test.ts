@@ -10,7 +10,7 @@ function makeState(fixtures: Fixture[]): GameState {
     manager: `AI Manager ${id}`, managerHiredSeason: 0,
   }))
   return {
-    version: 8, seed: 1, rngState: 1, season: 1, round: 1,
+    version: 9, seed: 1, rngState: 1, season: 1, round: 1,
     userTeamId: 0, players: {}, teams, fixtures,
     cupFixtures: [], history: [],
     transferList: [], incomingOffers: [], outgoingOffers: [], loanBalance: 0,

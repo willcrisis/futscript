@@ -5,7 +5,7 @@ import type { Player, Team, TrainingStyle } from './types'
 
 function makePlayer(id: number, age: number, over: Partial<Player> = {}): Player {
   return {
-    id, name: `P${id}`, age, position: 'MF', level: 50,
+    id, name: `P${id}`, age, position: 'MF', level: 50, peakLevel: 50, injuryCount: 0,
     form: 0, fitness: 100, injuredForRounds: 0, suspendedForRounds: 0, yellowCards: 0,
     salary: 5000, contractSeasons: 2, seasonGoals: 0,
     ...over,
@@ -50,7 +50,7 @@ describe('applyWeeklyUpdates — training', () => {
 
   it('level never exceeds 99', () => {
     const rand = mulberry32(4)
-    let players: Record<number, Player> = { 1: makePlayer(1, 18, { level: 99 }) }
+    let players: Record<number, Player> = { 1: makePlayer(1, 18, { level: 99, peakLevel: 99 }) }
     for (let w = 0; w < 50; w++) players = applyWeeklyUpdates(players, [makeTeam([1], 'intensive')], new Set(), rand)
     expect(players[1]!.level).toBe(99)
   })
@@ -87,7 +87,7 @@ describe('ageSquads', () => {
     const rand = mulberry32(7)
     const players: Record<number, Player> = {
       1: makePlayer(1, 22, { form: 2, fitness: 55, yellowCards: 2, injuredForRounds: 3, suspendedForRounds: 1, seasonGoals: 7 }),
-      2: makePlayer(2, 31, { level: 60 }),
+      2: makePlayer(2, 31, { level: 60, peakLevel: 60 }),
     }
     const next = ageSquads(players, rand)
     expect(next[1]!.age).toBe(23)

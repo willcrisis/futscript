@@ -14,7 +14,7 @@ function makeSquad(): { team: Team; players: Record<number, Player> } {
   const playerIds = positions.map((position, i) => {
     const id = i + 1
     players[id] = {
-      id, name: `P${id}`, age: 25, position, level: 90 - i,
+      id, name: `P${id}`, age: 25, position, level: 90 - i, peakLevel: 90 - i, injuryCount: 0,
       form: 0, fitness: 100, injuredForRounds: 0, suspendedForRounds: 0, yellowCards: 0,
       salary: 5000, contractSeasons: 2, seasonGoals: 0,
     }

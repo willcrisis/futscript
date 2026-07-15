@@ -42,6 +42,8 @@ export function newGame(seed: number): GameState {
         age: randInt(rand, 17, 34),
         position,
         level,
+        peakLevel: level,
+        injuryCount: 0,
         form: 0,
         fitness: 100,
         injuredForRounds: 0,
@@ -71,6 +73,7 @@ export function newGame(seed: number): GameState {
       const level = randInt(rand, LEVEL_RANGE[4][0], LEVEL_RANGE[4][1])
       const player: Player = {
         id: nextPlayerId++, name: randomName(rand), age: randInt(rand, 17, 34), position, level,
+        peakLevel: level, injuryCount: 0,
         form: 0, fitness: 100, injuredForRounds: 0, suspendedForRounds: 0, yellowCards: 0,
         salary: salaryFor(level), contractSeasons: randInt(rand, 1, 3), seasonGoals: 0,
       }
@@ -105,7 +108,7 @@ export function newGame(seed: number): GameState {
   const userTeamId = divisionFour[randInt(rand, 0, divisionFour.length - 1)].id
 
   return {
-    version: 8,
+    version: 9,
     seed,
     rngState: randInt(rand, 1, 2 ** 31 - 1),
     season: 1,

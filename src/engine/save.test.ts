@@ -5,7 +5,7 @@ import { newGame } from './newGame'
 import { mulberry32 } from './rng'
 import {
   activeSlot, deleteSlot, exportSave, importSave, listSlots, load, loadSlot,
-  save, saveToSlot, setActiveSlot,
+  migrateToCurrent, save, saveToSlot, setActiveSlot,
 } from './save'
 import { newSeason } from './season'
 
@@ -61,7 +61,7 @@ describe('save/load', () => {
     }
     storage.setItem('futscript-save', JSON.stringify(v1))
     const state = load(storage)
-    expect(state!.version).toBe(8)
+    expect(state!.version).toBe(9)
     expect(state!.players[1]).toMatchObject({
       form: 0, fitness: 100, yellowCards: 0, salary: salaryFor(50), contractSeasons: 2, seasonGoals: 0,
     })
@@ -91,7 +91,7 @@ describe('save/load', () => {
     }
     storage.setItem('futscript-save', JSON.stringify(v2))
     const state = load(storage)
-    expect(state!.version).toBe(8)
+    expect(state!.version).toBe(9)
     expect(state!.players[1]).toMatchObject({ form: 1, fitness: 80, salary: salaryFor(50), contractSeasons: 2 })
     expect(state!.teams[0]).toMatchObject({ tactic: 'attacking', cash: 1_000_000, capacity: 25_000, ticketPrice: 15, fanMood: 50 })
     expect(state!.loanBalance).toBe(0)
@@ -117,7 +117,7 @@ describe('save/load', () => {
     }
     storage.setItem('futscript-save', JSON.stringify(v3))
     const state = load(storage)
-    expect(state!.version).toBe(8)
+    expect(state!.version).toBe(9)
     expect(state!.season).toBe(2) // progress preserved
     expect(state!.round).toBe(9)
     expect(state!.loanBalance).toBe(100_000)
@@ -151,7 +151,7 @@ describe('save/load', () => {
     }
     storage.setItem('futscript-save', JSON.stringify(v4))
     const state = load(storage)
-    expect(state!.version).toBe(8)
+    expect(state!.version).toBe(9)
     expect(state!.season).toBe(3) // progress preserved
     expect(state!.teams[0]).toMatchObject({ capacity: 9_000, ticketPrice: 15, fanMood: 50 }) // division 3
     expect(state!.teams[1]).toMatchObject({ capacity: 25_000 }) // division 1
@@ -168,7 +168,7 @@ describe('save/load', () => {
     delete v5.news
     storage.setItem('futscript-save', JSON.stringify(v5))
     const state = load(storage)
-    expect(state!.version).toBe(8)
+    expect(state!.version).toBe(9)
     expect(state!.news).toEqual([])
     expect(state!.season).toBe(1)
   })
@@ -181,7 +181,7 @@ describe('save/load', () => {
     ;(v6.teams as Record<string, unknown>[]).forEach(t => { delete t.manager; delete t.managerHiredSeason })
     storage.setItem('futscript-save', JSON.stringify(v6))
     const state = load(storage)!
-    expect(state.version).toBe(8)
+    expect(state.version).toBe(9)
     expect(state.manager).toMatchObject({ reputation: 30, confidence: 60, employed: true, hiredSeason: 0, jobOffers: [] })
     expect(state.unemployedPool).toEqual([])
     for (const team of state.teams) expect(typeof team.manager).toBe('string')
@@ -241,7 +241,7 @@ describe('save/load', () => {
     }
     storage.setItem('futscript-save', JSON.stringify(v3ish))
     const migrated = load(storage)!
-    expect(migrated.version).toBe(8)
+    expect(migrated.version).toBe(9)
     expect(migrated.teams).toHaveLength(16)
     expect(migrated.teams.every(t => t.division === 1)).toBe(true)
     // give it played fixtures so standings/prizes are meaningful, then roll over
@@ -308,7 +308,7 @@ describe('save slots', () => {
     })
     const imported = importSave(JSON.stringify(v3ish))
     expect(imported).not.toBeNull()
-    expect(imported!.version).toBe(8)
+    expect(imported!.version).toBe(9)
     expect(importSave('not json at all')).toBeNull()
     expect(importSave('{"version": 999}')).toBeNull()
     expect(importSave('{"version": 5}')).toBeNull()
@@ -321,8 +321,30 @@ describe('save slots', () => {
       delete v7.outgoingOffers
       const migrated = importSave(JSON.stringify(v7))
       expect(migrated).not.toBeNull()
-      expect(migrated!.version).toBe(8)
+      expect(migrated!.version).toBe(9)
       expect(migrated!.outgoingOffers).toEqual([])
     })
+  })
+})
+
+describe('v8 → v9 migration (injuries)', () => {
+  it('adds peakLevel = level and injuryCount = 0 to every player', () => {
+    const v8 = { ...newGame(1), version: 8 } as any
+    for (const p of Object.values<any>(v8.players)) { delete p.peakLevel; delete p.injuryCount }
+    const migrated = migrateToCurrent(v8)
+    expect(migrated).not.toBeNull()
+    expect(migrated!.version).toBe(9)
+    for (const p of Object.values(migrated!.players)) {
+      expect(p.peakLevel).toBe(p.level)
+      expect(p.injuryCount).toBe(0)
+    }
+  })
+
+  it('newGame players start at peak with no injuries', () => {
+    const s = newGame(1)
+    for (const p of Object.values(s.players)) {
+      expect(p.peakLevel).toBe(p.level)
+      expect(p.injuryCount).toBe(0)
+    }
   })
 })

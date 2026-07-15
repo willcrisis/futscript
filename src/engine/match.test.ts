@@ -18,7 +18,7 @@ function makeTeam(
   const playerIds = positions.map((position, i) => {
     const pid = id * 100 + i
     players[pid] = {
-      id: pid, name: `P${pid}`, age: 25, position, level,
+      id: pid, name: `P${pid}`, age: 25, position, level, peakLevel: level, injuryCount: 0,
       form: 0, fitness: 100, injuredForRounds: 0, suspendedForRounds: 0, yellowCards: 0,
       salary: 5000, contractSeasons: 2, seasonGoals: 0,
     }
@@ -36,7 +36,7 @@ function makeTeam(
 describe('effectiveLevel', () => {
   it('scales with form and fitness', () => {
     const base: Player = {
-      id: 1, name: 'P', age: 25, position: 'MF', level: 50,
+      id: 1, name: 'P', age: 25, position: 'MF', level: 50, peakLevel: 50, injuryCount: 0,
       form: 0, fitness: 100, injuredForRounds: 0, suspendedForRounds: 0, yellowCards: 0,
       salary: 5000, contractSeasons: 2, seasonGoals: 0,
     }
@@ -139,7 +139,7 @@ describe('simulateMatch', () => {
     const solo = (id: number): Team => {
       const pid = id * 100
       players[pid] = {
-        id: pid, name: `P${pid}`, age: 25, position: 'FW', level: 60,
+        id: pid, name: `P${pid}`, age: 25, position: 'FW', level: 60, peakLevel: 60, injuryCount: 0,
         form: 0, fitness: 100, injuredForRounds: 0, suspendedForRounds: 0, yellowCards: 0,
         salary: 5000, contractSeasons: 2, seasonGoals: 0,
       }
