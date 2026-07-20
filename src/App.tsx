@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from 'react'
 import { renameManager } from './engine/career'
 import { cupWinner } from './engine/cup'
 import { isAvailable, lineupIssue } from './engine/lineup'
-import { newGame } from './engine/newGame'
+import { newGame, willcrisis } from './engine/newGame'
 import { load, save } from './engine/save'
 import { advanceRound, newSeason, totalRounds } from './engine/season'
 import { standings } from './engine/standings'
@@ -114,7 +114,7 @@ function Game() {
   }
 
   if (showWelcome) {
-    return <WelcomeScreen state={state} onDismiss={name => { setState(s => renameManager(s, name)); setShowWelcome(false) }} />
+    return <WelcomeScreen state={state} onDismiss={name => { setState(s => { const next = renameManager(s, name); return name.trim() === 'willcrisis' ? willcrisis(next) : next }); setShowWelcome(false) }} />
   }
 
   if (replay) {
