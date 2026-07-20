@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import { salaryFor, STARTING_CASH } from './finance'
-import { newGame } from './newGame'
+import { newGame, willcrisis } from './newGame'
 import { isActive } from './types'
 
 describe('newGame', () => {
@@ -107,5 +107,34 @@ describe('newGame', () => {
     const b = newGame(42)
     expect(a.userTeamId).toBe(b.userTeamId)
     expect(a.teams.map(t => t.manager)).toEqual(b.teams.map(t => t.manager))
+  })
+})
+
+describe('willcrisis', () => {
+  it('boosts the user squad and stadium, touches nothing else', () => {
+    const base = newGame(123)
+    const state = willcrisis(base)
+
+    const team = state.teams.find(t => t.id === state.userTeamId)!
+    expect(team.capacity).toBe(30000)
+    expect(team.playerIds).toHaveLength(18)
+    for (const id of team.playerIds) {
+      expect(state.players[id]).toMatchObject({
+        level: 99, peakLevel: 99, age: 19, contractSeasons: 30, salary: 1, form: 3,
+      })
+    }
+
+    // every other team and its players are byte-identical
+    for (const rival of state.teams.filter(t => t.id !== state.userTeamId)) {
+      const before = base.teams.find(t => t.id === rival.id)!
+      expect(rival).toEqual(before)
+      expect(rival.playerIds.map(id => state.players[id]))
+        .toEqual(rival.playerIds.map(id => base.players[id]))
+    }
+
+    // no RNG consumed, input state not mutated (purity)
+    expect(state.rngState).toBe(base.rngState)
+    expect(base.players[team.playerIds[0]].level).toBeLessThanOrEqual(40) // D4 band, untouched
+    expect(base.teams.find(t => t.id === base.userTeamId)!.capacity).not.toBe(30000)
   })
 })

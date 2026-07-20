@@ -132,3 +132,18 @@ export function newGame(seed: number): GameState {
     unemployedPool: [],
   }
 }
+
+// Easter egg: manager named exactly "willcrisis" on a fresh career gets a dream
+// team. Draws no randomness and adds no ids — rngState and determinism untouched.
+export function willcrisis(state: GameState): GameState {
+  const team = state.teams.find(t => t.id === state.userTeamId)!
+  const players = { ...state.players }
+  for (const id of team.playerIds) {
+    players[id] = { ...players[id], level: 99, peakLevel: 99, age: 19, contractSeasons: 30, salary: 1, form: 3 }
+  }
+  return {
+    ...state,
+    players,
+    teams: state.teams.map(t => (t.id === team.id ? { ...t, capacity: 30000 } : t)),
+  }
+}
