@@ -208,6 +208,40 @@ describe('board confidence', () => {
     const out = runCareerWeek(broke, never)
     expect(out.manager.employed).toBe(false)
   })
+
+  // helper: user has the strongest squad (expected 1st) and sits at position `above + 1` —
+  // `above` rivals rack up 27 fabricated points while the user draws 10 games (10 pts).
+  function zoneSeason(seed: number, above: number, division?: number) {
+    const base = newGame(seed)
+    const userTeamId = division ? base.teams.find(t => t.division === division)!.id : base.userTeamId
+    const user = base.teams.find(t => t.id === userTeamId)!
+    const rivals = base.teams.filter(t => t.division === user.division && t.id !== user.id)
+    const leaders = rivals.slice(0, above)
+    const rest = rivals.slice(above)
+    const fixtures = [
+      ...leaders.flatMap(l => rest.slice(0, 9).map((opp, i) => ({
+        round: i + 1, homeId: l.id, awayId: opp.id, homeGoals: 3, awayGoals: 0,
+      }))),
+      ...rest.slice(0, 10).map((opp, i) => ({
+        round: i + 1, homeId: user.id, awayId: opp.id, homeGoals: 1, awayGoals: 1,
+      })),
+    ]
+    const players = Object.fromEntries(Object.values(base.players).map(p => [p.id,
+      user.playerIds.includes(p.id) ? { ...p, level: 99 } : p]))
+    return { ...base, userTeamId, players, fixtures, round: 11 }
+  }
+
+  it('promotion zone: a strongest squad sitting 3rd stops draining', () => {
+    expect(runCareerWeek(zoneSeason(31, 2), never).manager.confidence).toBe(60)
+  })
+
+  it('1st place gains even when the board expected exactly that', () => {
+    expect(runCareerWeek(zoneSeason(31, 0), never).manager.confidence).toBe(61)
+  })
+
+  it('Division 1 keeps pure expectations: strongest squad in 2nd still drains', () => {
+    expect(runCareerWeek(zoneSeason(31, 1, 1), never).manager.confidence).toBe(59)
+  })
 })
 
 describe('season verdict', () => {

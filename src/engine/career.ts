@@ -85,6 +85,8 @@ function updateConfidence(state: GameState): GameState {
   let delta = weeklyDelta(expectedRank(state, state.userTeamId) - pos)
   const dz = dropZone(state, division)
   if (dz > 0 && pos > size - dz) delta -= 1 // the drop zone stings extra
+  if (pos === 1) delta = Math.max(delta, 1) // leading the table always pleases the board
+  else if (division > 1 && pos <= 3) delta = Math.max(delta, 0) // promotion zone: content, not thrilled
   if (state.manager.hiredSeason === state.season) delta = Math.max(0, delta) // honeymoon: gains only
   return { ...state, manager: { ...state.manager, confidence: clamp(state.manager.confidence + delta) } }
 }
